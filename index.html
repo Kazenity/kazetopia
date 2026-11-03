@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaze · Rangliste</title>
+<meta name="description" content="Zeni, Watchtime und Chat-Rangliste von twitch.tv/kazenity">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #180a1c; --flaeche: #26142c; --hover: #321c3a; --rand: #462c50;
+    --rosa: #ff9ebf; --rosa2: #c2396f; --lila: #6a2c8c; --hell: #f6ecf6; --grau: #a892af; --dunkel: #280c22;
+    --gold: #ffd27a; --silber: #dfe3ef; --bronze: #f0a774;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body { font-family: Poppins, "Segoe UI", sans-serif; color: var(--hell); background: radial-gradient(1200px 500px at 50% -120px, rgba(194,57,111,.35), transparent 70%), var(--bg); min-height: 100vh; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+
+  header { text-align: center; margin-bottom: 26px; }
+  header .kl { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--rosa); }
+  header h1 { font-size: clamp(30px, 7vw, 46px); font-weight: 800; line-height: 1.1; margin: 6px 0 8px; }
+  header h1 span { color: var(--rosa); }
+  header p { color: var(--grau); font-size: 14px; }
+  header a { color: var(--rosa); text-decoration: none; font-weight: 700; }
+
+  .reiter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; }
+  .reiter button { font-family: inherit; font-size: 14px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 6px; cursor: pointer; }
+  .reiter button:hover { background: var(--hover); }
+  .reiter button.aktiv { background: var(--rosa); color: var(--dunkel); }
+
+  .podest { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; margin-bottom: 22px; }
+  .platz { background: var(--flaeche); border-radius: 16px; padding: 16px 10px 14px; text-align: center; position: relative; min-width: 0; }
+  .platz.p1 { padding-top: 26px; background: linear-gradient(160deg, #c2396f, #5a2562); box-shadow: 0 10px 30px rgba(194,57,111,.35); }
+  .platz .m { font-size: 28px; line-height: 1; }
+  .platz .n { font-weight: 800; font-size: 15px; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .platz.p1 .n { font-size: 17px; }
+  .platz .w { font-size: 13px; color: var(--grau); margin-top: 2px; }
+  .platz.p1 .w { color: #ffd9e6; }
+
+  .suche { width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 11px 14px; outline: none; margin-bottom: 10px; }
+  .suche:focus { border-color: var(--rosa); }
+
+  .liste { background: var(--flaeche); border-radius: 16px; padding: 4px 14px; }
+  .zeile { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rand); }
+  .zeile:last-child { border-bottom: 0; }
+  .zeile .r { font-weight: 800; color: var(--grau); }
+  .zeile .n { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .zeile .w { font-weight: 700; color: var(--rosa); white-space: nowrap; }
+  .zeile.treffer { background: rgba(255,158,191,.12); border-radius: 10px; margin: 0 -8px; padding: 10px 8px; }
+  .leer { color: var(--grau); text-align: center; padding: 22px 0; }
+
+  footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
+  @media (max-width: 480px) {
+    .podest { gap: 6px; }
+    .platz { padding: 12px 6px 10px; }
+    .platz .n { font-size: 13px; } .platz.p1 .n { font-size: 14px; }
+    .platz .w { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kl">🌸 KAZE · TWITCH</div>
+    <h1>Die <span>Rangliste</span></h1>
+    <p>Wer hat die meisten Zeni, schaut am längsten zu und schreibt am meisten?<br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
+  </header>
+
+  <div class="reiter" id="reiter">
+    <button data-r="zeni" class="aktiv">💰 Zeni</button>
+    <button data-r="watchtime">⏱️ Watchtime</button>
+    <button data-r="chat">💬 Chat</button>
+  </div>
+
+  <div class="podest" id="podest"></div>
+  <input class="suche" id="suche" placeholder="Deinen Namen suchen …" autocomplete="off">
+  <div class="liste" id="liste"><div class="leer">Lade Rangliste …</div></div>
+
+  <footer>
+    <div id="stand"></div>
+    <div id="hinweis"></div>
+    <div>Wird während der Streams alle 10 Minuten aktualisiert.</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var daten = null, reiter = 'zeni';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function wert(w) {
+    if (reiter === 'watchtime') return Number(w).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' Std.';
+    if (reiter === 'chat') return Number(w).toLocaleString('de-DE') + ' Nachr.';
+    return Number(w).toLocaleString('de-DE') + ' Zeni';
+  }
+
+  function zeigen() {
+    if (!daten) return;
+    var l = daten[reiter] || [];
+    var such = $('suche').value.trim().toLowerCase();
+    var medaillen = ['🥇', '🥈', '🥉'];
+    var reihen = [1, 0, 2];
+    var p = '';
+    reihen.forEach(function (i) {
+      var x = l[i];
+      if (!x) { p += '<div></div>'; return; }
+      p += '<div class="platz p' + (i + 1) + '"><div class="m">' + medaillen[i] + '</div><div class="n">' + esc(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+    });
+    $('podest').innerHTML = p;
+
+    var h = '', gefunden = 0;
+    l.forEach(function (x, i) {
+      if (i < 3 && !such) return;
+      var treffer = such && x.n.toLowerCase().indexOf(such) >= 0;
+      if (such && !treffer) return;
+      gefunden++;
+      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="n">' + esc(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+    });
+    if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen in den Top ' + l.length + '.' : 'Noch keine Daten.') + '</div>';
+    $('liste').innerHTML = h;
+    $('hinweis').textContent = reiter === 'chat' && daten.chatGesamt ? 'Insgesamt ' + Number(daten.chatGesamt).toLocaleString('de-DE') + ' Chat-Nachrichten · gezählt von StreamElements' : 'Top ' + l.length;
+  }
+
+  $('reiter').onclick = function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    reiter = b.getAttribute('data-r');
+    Array.prototype.forEach.call(this.children, function (x) { x.className = x === b ? 'aktiv' : ''; });
+    zeigen();
+  };
+  $('suche').oninput = zeigen;
+
+  fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+    daten = d;
+    $('stand').textContent = 'Stand: ' + (d.stand || '–');
+    zeigen();
+  }).catch(function () { $('liste').innerHTML = '<div class="leer">Rangliste konnte nicht geladen werden.</div>'; });
+})();
+</script>
+</body>
+</html>
