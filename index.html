@@ -24,8 +24,8 @@
   header p { color: var(--grau); font-size: 14px; }
   header a { color: var(--rosa); text-decoration: none; font-weight: 700; }
 
-  .reiter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; }
-  .reiter button { font-family: inherit; font-size: 14px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 6px; cursor: pointer; }
+  .reiter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; }
+  .reiter button { font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 6px; cursor: pointer; }
   .reiter button:hover { background: var(--hover); }
   .reiter button.aktiv { background: var(--rosa); color: var(--dunkel); }
 
@@ -50,7 +50,25 @@
   .zeile.treffer { background: rgba(255,158,191,.12); border-radius: 10px; margin: 0 -8px; padding: 10px 8px; }
   .leer { color: var(--grau); text-align: center; padding: 22px 0; }
 
+  .bingo .zeile { grid-template-columns: 1fr auto; }
+  .bingo .zeile .n { color: var(--grau); font-weight: 600; }
+  .bingo .zeile .w { color: var(--hell); }
+  .bingo .zeile.neu .w { color: var(--gold); }
+  .serie { background: linear-gradient(135deg, #c2396f, #5a2562); border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 12px; }
+  .serie b { font-size: 20px; font-weight: 800; display: block; }
+  .serie span { font-size: 13px; color: #ffd9e6; }
+  .danke { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .danke .box { background: var(--flaeche); border-radius: 16px; padding: 14px; min-width: 0; }
+  .danke h3 { font-size: 13px; letter-spacing: 1px; color: var(--rosa); margin-bottom: 8px; }
+  .danke .p { padding: 6px 0; border-bottom: 1px solid var(--rand); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+  .danke .p:last-child { border-bottom: 0; }
+  .danke .p i { font-style: normal; color: var(--grau); margin-right: 6px; }
+  .danke-text { text-align: center; color: var(--grau); font-size: 14px; margin-bottom: 14px; }
   footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
+  @media (max-width: 560px) {
+    .reiter { grid-template-columns: repeat(3, 1fr); }
+    .danke { grid-template-columns: 1fr; }
+  }
   @media (max-width: 480px) {
     .podest { gap: 6px; }
     .platz { padding: 12px 6px 10px; }
@@ -71,6 +89,8 @@
     <button data-r="zeni" class="aktiv">💰 Zeni</button>
     <button data-r="watchtime">⏱️ Watchtime</button>
     <button data-r="chat">💬 Chat</button>
+    <button data-r="bingo">🎯 Bingo</button>
+    <button data-r="danke">💖 Danke</button>
   </div>
 
   <div class="podest" id="podest"></div>
@@ -95,8 +115,45 @@
     return Number(w).toLocaleString('de-DE') + ' Zeni';
   }
 
+  function sonder() {
+    var spezial = reiter === 'bingo' || reiter === 'danke';
+    $('podest').style.display = spezial ? 'none' : '';
+    $('suche').style.display = spezial ? 'none' : '';
+    if (!spezial) { $('liste').className = 'liste'; return false; }
+    if (reiter === 'bingo') {
+      var b = daten.bingo || [];
+      var h = '';
+      if (b.length) {
+        var serie = 1;
+        for (var i = 1; i < b.length && b[i].name === b[0].name; i++) serie++;
+        if (serie >= 2) h += '<div class="serie"><b>👑 ' + esc(b[0].name) + '</b><span>gewinnt das Bingo ' + serie + ' Monate in Folge · Wer schlägt ' + esc(b[0].name) + '?</span></div>';
+      }
+      h += '<div class="liste">';
+      if (!b.length) h += '<div class="leer">Noch keine Bingo-Gewinner eingetragen.</div>';
+      b.forEach(function (x, i) { h += '<div class="zeile' + (i === 0 ? ' neu' : '') + '"><div class="n">' + esc(x.monat) + '</div><div class="w">' + (i === 0 ? '🏆 ' : '') + esc(x.name) + '</div></div>'; });
+      h += '</div>';
+      $('liste').className = 'bingo';
+      $('liste').innerHTML = h;
+      $('hinweis').textContent = 'Jeden Monat Stream-Bingo mitspielen – der Gewinner landet hier.';
+    } else {
+      var d = daten.danke || {};
+      function spalte(t, arr) {
+        var s = '<div class="box"><h3>' + t + '</h3>';
+        if (!arr || !arr.length) s += '<div class="leer">–</div>';
+        (arr || []).forEach(function (n, i) { s += '<div class="p"><i>' + (i + 1) + '.</i>' + esc(n) + '</div>'; });
+        return s + '</div>';
+      }
+      $('liste').className = '';
+      $('liste').innerHTML = '<div class="danke-text">Danke an alle, die den Kanal unterstützen 🌸</div><div class="danke">' +
+        spalte('💸 SPENDEN', d.spenden) + spalte('🎁 GIFT SUBS', d.gifts) + spalte('🔔 BITS', d.bits) + '</div>';
+      $('hinweis').textContent = 'Die größten Unterstützer aller Zeiten';
+    }
+    return true;
+  }
+
   function zeigen() {
     if (!daten) return;
+    if (sonder()) return;
     var l = daten[reiter] || [];
     var such = $('suche').value.trim().toLowerCase();
     var medaillen = ['🥇', '🥈', '🥉'];
