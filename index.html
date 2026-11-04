@@ -195,6 +195,7 @@
   .symbole { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 4px; }
   .sym { width: 38px; height: 38px; border-radius: 12px; background: var(--bg); border: 1px solid var(--rand); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; position: relative; }
   .sym.ev { border-color: var(--gold); }
+  .sym:not(.ev) i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--rosa); color: #fff; border-radius: 5px; padding: 0 3px; }
   .sym.mehr { font-size: 13px; font-weight: 800; color: var(--grau); }
   .sym.ev i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 0 3px; }
   .trenn { width: 1px; height: 26px; background: var(--rand); margin: 0 4px; }
@@ -342,10 +343,15 @@
   ];
   var ABZEICHEN = [
     { id: 'og', icon: '👑', name: 'OG', text: 'Mindestens 2 Jahre Follower und 1.000 Std. Watchtime' },
+    { id: 'kw', icon: '💎', name: 'Kazes Wahl', text: 'Von Kaze persönlich vergeben' },
     { id: 'u', icon: '💜', name: 'Unterstützer', text: 'Hat den Kanal schon einmal unterstützt (Sub, Gift, Bits oder Spende)' },
-    { id: 'day1', icon: '🌱', name: 'Day One', text: 'Folgt Kaze schon seit 2019' },
+    { id: 'day1', icon: '🌱', name: 'Day One', text: 'Folgt Kaze schon seit 2019 und hat mindestens 100 Std. zugeschaut' },
     { id: 'g', icon: '🎂', name: 'Geburtstagskind', text: 'Hat seinen Geburtstag mit !geburtstag eingetragen' },
     { id: 't', icon: '🏆', name: 'Top 10', text: 'War schon einmal in einer Top 10 von Kazetopia' },
+    { id: 'ar', icon: '🌟', name: 'Allrounder', text: 'Hat einen Rang in Watchtime, Chat und Treue und mindestens Bronze in Zeni-Rekord, Regisseur und Dauerbrenner' },
+    { id: 'pk', icon: '⏰', name: 'Pünktlich', text: 'War bei 25 Streams in den ersten 5 Minuten im Chat' },
+    { id: 'wp', icon: '🔮', name: 'Wett-Profi', text: '5× unter den Top-Setzern einer Kanalpunkte-Wette auf der richtigen Seite' },
+    { id: 'az', icon: '👁️', name: 'Augenzeuge', text: 'War im Chat, als ein besonderer Moment festgehalten wurde' },
     { id: 'x', icon: '⚔️', name: 'Saber-Bezwinger', text: 'Hat einen Bingo-Monat gegen Saber gewonnen' },
     { id: 'eg', icon: '🐉', name: 'Endgegner', text: 'Hat die meisten Bingo-Siege aller Zeiten – wer ihn überholt, übernimmt das Abzeichen' }
   ];
@@ -358,6 +364,17 @@
   var EVENT_GRUPPEN = [
     { name: 'Saiyan Class 2026', jahr: '26', codes: ['sc26z', 'sc26s', 'sc26l'] }
   ];
+  function fortschritt(a, sp, ja) {
+    if (ja) return '';
+    if (a.id === 'pk' && sp.q) return ' <b>(' + sp.q + '/25)</b>';
+    if (a.id === 'wp' && sp.v) return ' <b>(' + sp.v + '/5)</b>';
+    return '';
+  }
+  function abzText(a, sp) {
+    if (a.id === 'kw' && sp.kw) return a.name + ' – ' + sp.kw;
+    if (a.id === 'az' && sp.a) { var m = (daten.momente || []); return a.name + ' – ' + sp.a.map(function (i) { var x = m[i] || {}; return (x.n || 'Moment') + (x.d ? ' (' + x.d.split('-').reverse().join('.') + ')' : ''); }).join(', '); }
+    return a.name + ' – ' + a.text;
+  }
   function eventStufe(sp, g) { var c = sp.e || [], best = null; g.codes.forEach(function (x) { if (c.indexOf(x) >= 0) best = x; }); return best; }
 
   function zahl(v) { return Number(v).toLocaleString('de-DE', { maximumFractionDigits: 1 }); }
@@ -396,7 +413,15 @@
   function hatAbzeichen(sp, id) {
     if (id === 'og') return !!(sp.f && tageSeit(sp.f) >= 730 && (sp.w || 0) >= 1000);
     if (id === 'eg') { var mx = 0, sl = (daten && daten.spieler) || {}; for (var l in sl) if ((sl[l].b || 0) > mx) mx = sl[l].b; return mx > 0 && (sp.b || 0) === mx; }
-    if (id === 'day1') return sp.f && sp.f < '2020';
+    if (id === 'day1') return !!(sp.f && sp.f < '2020' && (sp.w || 0) >= 100);
+    if (id === 'kw') return sp.kw !== undefined;
+    if (id === 'pk') return (sp.q || 0) >= 25;
+    if (id === 'wp') return (sp.v || 0) >= 5;
+    if (id === 'az') return !!(sp.a && sp.a.length);
+    if (id === 'ar') {
+      if (!['w', 'c', 'f'].every(function (k) { var g = GROSS.filter(function (x) { return x.k === k; })[0]; return !!leiterInfo(g.leiter, wertVon(sp, k), g.weiter).akt; })) return false;
+      return ['z', 'k', 'd'].every(function (k) { var e = KLEIN.filter(function (x) { return x.k === k; })[0]; return !!kleinInfo(e, wertVon(sp, k)).farbe; });
+    }
     return !!sp[id];
   }
 
@@ -457,7 +482,7 @@
     ev.reverse();   // neueste zuerst
     if (hat.length || ev.length) {
       h += '<div class="symbole">';
-      hat.forEach(function (a) { h += '<span class="sym" data-info="' + esc(a.name + ' – ' + a.text) + '" title="' + esc(a.name + ' – ' + a.text) + '">' + a.icon + '</span>'; });
+      hat.forEach(function (a) { var t = abzText(a, sp); h += '<span class="sym" data-info="' + esc(t) + '" title="' + esc(t) + '">' + a.icon + (a.id === 'az' && sp.a.length > 1 ? '<i>×' + sp.a.length + '</i>' : '') + '</span>'; });
       if (ev.length) {
         h += '<span class="trenn"></span>';
         ev.slice(0, 3).forEach(function (x) { var e = EVENTS[x.c], t = e[1] + ' – ' + e[2]; h += '<span class="sym ev" data-info="' + esc(t) + '" title="' + esc(t) + '">' + e[0] + '<i>' + x.g.jahr + '</i></span>'; });
@@ -501,7 +526,7 @@
       h += '</div>';
     }
     h += '<h4>ABZEICHEN</h4><div class="liste-abz">';
-    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + (ja ? ' ✓' : '') + '</div>'; });
+    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + esc(ja ? abzText(a, sp).slice(a.name.length + 3) : a.text) + fortschritt(a, sp, ja) + (ja ? ' ✓' : '') + '</div>'; });
     h += '</div></div>';
     karteOeffnen(h);
     $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
