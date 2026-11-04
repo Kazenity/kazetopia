@@ -245,8 +245,20 @@
   .vtw svg { width: 17px; height: 17px; fill: #fff; }
   .vlink { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .vfehler { background: rgba(255,90,110,.15); color: #ff9aa8; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 10px; }
-  .vzeile { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--rand); }
-  .vzeile:last-child { border-bottom: 0; } .vzeile .r { font-weight: 800; color: var(--grau); }
+  .vzeile { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rand); }
+  .vzeile:last-child { border-bottom: 0; }
+  .vzeile.erster { background: linear-gradient(90deg, rgba(255,158,191,.12), transparent); border-radius: 12px; margin: 4px -8px; padding: 10px 8px; }
+  .vcov { position: relative; width: 54px; height: 72px; border-radius: 8px; overflow: hidden; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .vcov img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .vcov i { position: absolute; left: 3px; top: 3px; font-style: normal; font-size: 10.5px; font-weight: 800; background: rgba(0,0,0,.7); color: #fff; border-radius: 5px; padding: 1px 5px; }
+  .vbtn:disabled, .vneu button:disabled { opacity: .4; cursor: default; }
+  .vtreffer { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+  .vtr { display: flex; align-items: center; gap: 10px; text-align: left; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 10px; padding: 6px 10px; cursor: pointer; }
+  .vtr:hover { border-color: var(--rosa); } .vtr img { width: 26px; height: 35px; border-radius: 4px; object-fit: cover; }
+  .vtr em { margin-left: auto; font-style: normal; font-size: 11px; color: var(--grau); } .vtr.gesperrt { opacity: .5; cursor: default; }
+  .vleer { font-size: 12.5px; color: var(--grau); padding: 6px 2px; }
+  .vgewaehlt { display: flex; align-items: center; gap: 12px; background: var(--flaeche); border: 1px solid var(--rosa); border-radius: 12px; padding: 8px 12px; }
+  .vgewaehlt img { width: 42px; height: 56px; border-radius: 6px; object-fit: cover; } .vgewaehlt b { display: block; } .vgewaehlt span { font-size: 12px; color: var(--grau); }
   .vzeile.meins .vn b { color: var(--rosa); }
   .vn { min-width: 0; } .vn b { display: block; font-size: 14.5px; } .vn span { font-size: 11.5px; color: var(--grau); }
   .vb { height: 5px; border-radius: 99px; background: var(--rand); margin: 6px 0 4px; overflow: hidden; } .vb i { display: block; height: 100%; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); border-radius: 99px; }
@@ -349,7 +361,7 @@
 
   // ================= Login mit Twitch + Spiele-Voting (Supabase) =================
   var SB_URL = 'https://deqkkuzjsieqwvamodzs.supabase.co', SB_KEY = 'sb_publishable_FiNFYUZPeSeaaDYtx69wNQ_nXzLm3Ui';
-  var sitzung = null, vote = { ergebnis: null, meine: null, offen: [], fehler: '' };
+  var sitzung = null, vote = { ergebnis: null, meine: null, offen: [], fehler: '', belegt: [], treffer: [], wahl: null, suche: '' }, suchTimer = null;
   function sLesen() { try { return JSON.parse(localStorage.getItem('kz_sitzung') || 'null'); } catch (x) { return null; } }
   function sSchreiben(v) { sitzung = v; try { if (v) localStorage.setItem('kz_sitzung', JSON.stringify(v)); else localStorage.removeItem('kz_sitzung'); } catch (x) { } }
   // Rückkehr vom Twitch-Login: Token steht in der Adresse
@@ -396,7 +408,10 @@
   function votingLaden() {
     vote.fehler = '';
     return nutzerLaden().then(function (s) {
-      var a = sbFetch('/rest/v1/ergebnis?select=*').then(function (r) { vote.ergebnis = r || []; });
+      var a = Promise.all([
+        sbFetch('/rest/v1/ergebnis?select=*').then(function (r) { vote.ergebnis = r || []; }),
+        sbFetch('/rest/v1/belegt?select=*').then(function (r) { vote.belegt = r || []; }).catch(function () { vote.belegt = []; })
+      ]);
       var b = s ? Promise.all([
         sbFetch('/rest/v1/stimmen?select=vorschlag').then(function (r) { vote.meine = r && r[0] ? r[0].vorschlag : null; }),
         sbFetch('/rest/v1/vorschlaege?select=id,spiel&freigegeben=eq.false').then(function (r) { vote.offen = r || []; })
@@ -411,11 +426,46 @@
       : sbFetch('/rest/v1/stimmen?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, geaendert: new Date().toISOString() } });
     sFrisch().then(function () { return p; }).then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = e.message; zeigen(); });
   }
-  function vorschlagen(name) {
-    name = String(name || '').trim();
-    if (name.length < 2) return;
-    sFrisch().then(function () { return sbFetch('/rest/v1/vorschlaege', { method: 'POST', body: { spiel: name.slice(0, 60) } }); })
-      .then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = /3 offene/.test(e.message) ? 'Du hast schon 3 Vorschläge, die auf Freigabe warten.' : e.message; zeigen(); });
+  function normName(n) { return String(n || '').toLowerCase().replace(/[^a-z0-9äöüß]+/g, ''); }
+  function gespieltId(g) {
+    var n = normName(g.name), treffer = false;
+    (daten && daten.spiele || []).forEach(function (x) {
+      var m = String(x.b || '').match(/ttv-boxart\/(\d+)/);
+      if ((m && m[1] === String(g.id)) || normName(x.n) === n) treffer = true;
+    });
+    return treffer;
+  }
+  function belegtStatus(g) {
+    var n = String(g.name || '').toLowerCase(), r = '';
+    vote.belegt.forEach(function (b) { if ((b.spiel_id && b.spiel_id === String(g.id)) || b.name === n) r = b.freigegeben ? 'frei' : 'wartet'; });
+    return r;
+  }
+  function suchen(q) {
+    vote.suche = q; vote.wahl = null;
+    clearTimeout(suchTimer);
+    if (String(q).trim().length < 2) { vote.treffer = []; trefferZeigen(); return; }
+    suchTimer = setTimeout(function () {
+      sbFetch('/functions/v1/spielsuche?q=' + encodeURIComponent(q.trim())).then(function (r) { if (vote.suche === q) { vote.treffer = r || []; trefferZeigen(); } }).catch(function () { vote.treffer = []; trefferZeigen(); });
+    }, 300);
+  }
+  function trefferZeigen() {
+    var box = $('vtreffer'); if (!box) return;
+    var h = '';
+    vote.treffer.forEach(function (g, i) {
+      var gs = gespieltId(g), bs = belegtStatus(g), sperre = gs || bs;
+      h += '<button class="vtr' + (sperre ? ' gesperrt' : '') + '" data-tr="' + i + '"' + (sperre ? ' disabled' : '') + '><img alt="" src="' + esc(String(g.cover).replace('144x192', '52x72')) + '"><span>' + esc(g.name) + '</span>' +
+        (gs ? '<em>✓ schon gespielt</em>' : bs === 'frei' ? '<em>steht schon zur Wahl</em>' : bs === 'wartet' ? '<em>schon vorgeschlagen</em>' : '') + '</button>';
+    });
+    if (vote.suche.trim().length >= 2 && !vote.treffer.length) h = '<div class="vleer">Kein Spiel gefunden – prüf die Schreibweise.</div>';
+    box.innerHTML = h;
+    Array.prototype.forEach.call(box.querySelectorAll('[data-tr]'), function (b) { b.onclick = function () { vote.wahl = vote.treffer[Number(b.getAttribute('data-tr'))]; vote.treffer = []; $('vinput').value = vote.wahl.name; box.innerHTML = '<div class="vgewaehlt"><img alt="" src="' + esc(vote.wahl.cover) + '"><div><b>' + esc(vote.wahl.name) + '</b><span>Bereit zum Vorschlagen</span></div></div>'; $('vsend').disabled = false; }; });
+  }
+  function vorschlagen() {
+    var g = vote.wahl;
+    if (!g) { vote.fehler = 'Bitte wähl ein Spiel aus der Liste aus.'; zeigen(); return; }
+    sFrisch().then(function () { return sbFetch('/rest/v1/vorschlaege', { method: 'POST', body: { spiel: String(g.name).slice(0, 60), spiel_id: String(g.id), cover: g.cover } }); })
+      .then(function () { vote.wahl = null; vote.suche = ''; }).then(votingLaden).then(zeigen)
+      .catch(function (e) { vote.fehler = /3 offene/.test(e.message) ? 'Du hast schon 3 Vorschläge, die auf Freigabe warten.' : /schon vorgeschlagen|duplicate/.test(e.message) ? 'Dieses Spiel wurde schon vorgeschlagen.' : e.message; zeigen(); });
   }
   function votingHtml() {
     var h = '';
@@ -428,12 +478,12 @@
     if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
     e.forEach(function (x, i) {
       var meins = vote.meine === x.id;
-      h += '<div class="vzeile' + (meins ? ' meins' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
+      h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + (x.cover ? '<img loading="lazy" alt="" src="' + esc(x.cover) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
         '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
     });
     h += '</div>';
     if (sitzung) {
-      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game vorschlagen …" autocomplete="off"><button id="vsend">Vorschlagen</button></div>';
+      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen und vorschlagen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
       if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
     }
     h += '<div class="vhinweis">Jeder hat <b>eine</b> Stimme und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
@@ -442,8 +492,8 @@
   function votingEvents() {
     if ($('vlogin')) $('vlogin').onclick = einloggen;
     if ($('vlogout')) $('vlogout').onclick = ausloggen;
-    if ($('vsend')) $('vsend').onclick = function () { vorschlagen($('vinput').value); };
-    if ($('vinput')) $('vinput').onkeydown = function (e) { if (e.key === 'Enter') vorschlagen(this.value); };
+    if ($('vsend')) $('vsend').onclick = vorschlagen;
+    if ($('vinput')) { $('vinput').oninput = function () { $('vsend').disabled = true; suchen(this.value); }; $('vinput').onkeydown = function (e) { if (e.key === 'Enter' && vote.wahl) vorschlagen(); }; }
     Array.prototype.forEach.call(document.querySelectorAll('[data-vote]'), function (b) { b.onclick = function () { abstimmen(Number(b.getAttribute('data-vote'))); }; });
   }
   var $ = function (id) { return document.getElementById(id); };
@@ -930,7 +980,7 @@
       return true;
     }
     if (reiter === 'spiele') {
-      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>🗳️ Was spielen wir als Nächstes?</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Bewertungen</button></div>';
+      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>✨ Voting</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Bewertungen</button></div>';
       if (spieleAnsicht === 'voting') {
         $('liste').className = '';
         $('liste').innerHTML = sw + votingHtml();
