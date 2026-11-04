@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kaze · Rangliste</title>
-<meta name="description" content="Zeni, Watchtime und Chat-Rangliste von twitch.tv/kazenity">
+<meta name="description" content="Zeni, Watchtime, Bingo, Chat und Unterstützer – die Rangliste von twitch.tv/kazenity">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -97,14 +97,14 @@
   <header>
     <div class="kl">🌸 KAZE · TWITCH</div>
     <h1>Die <span>Rangliste</span></h1>
-    <p>Wer hat die meisten Zeni, schaut am längsten zu und schreibt am meisten?<br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
+    <p><span id="unter">Wer hat die meisten Zeni?</span><br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
   </header>
 
   <div class="reiter" id="reiter">
     <button data-r="zeni" class="aktiv">💰 Zeni</button>
     <button data-r="watchtime">⏱️ Watchtime</button>
-    <button data-r="chat">💬 Chat</button>
     <button data-r="bingo">🎯 Bingo</button>
+    <button data-r="chat">💬 Chat</button>
     <button data-r="danke">💖 Danke</button>
   </div>
 
@@ -177,7 +177,15 @@
     return true;
   }
 
+  var untertitel = {
+    zeni: 'Wer hat die meisten Zeni?',
+    watchtime: 'Wer schaut am längsten zu?',
+    bingo: 'Wer hat das Stream-Bingo gewonnen?',
+    chat: 'Wer schreibt am meisten im Chat?',
+    danke: 'Die größten Unterstützer des Kanals'
+  };
   function zeigen() {
+    $('unter').textContent = untertitel[reiter] || '';
     if (!daten) return;
     if (sonder()) return;
     var l = daten[reiter] || [];
