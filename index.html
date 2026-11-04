@@ -243,6 +243,9 @@
   .vkopf b { color: var(--hell); }
   .vtw { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13px; font-weight: 800; color: #fff; background: #9146ff; border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer; }
   .vtw svg { width: 17px; height: 17px; fill: #fff; }
+  .vknoepfe { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vok { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin: 14px 0 12px; cursor: pointer; } .vok input { width: 18px; height: 18px; accent-color: #ff9ebf; }
+  .vtw:disabled { opacity: .45; cursor: default; } .vtw.rot { background: #d6455d; margin-top: 8px; }
   .vlink { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .vfehler { background: rgba(255,90,110,.15); color: #ff9aa8; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 10px; }
   .vzeile { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rand); }
@@ -404,6 +407,32 @@
       });
     }).catch(function () { return null; });
   }
+  function einloggenFragen() {
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Mit Twitch anmelden</b><div class="kk">Freiwillig – nur für das Spiele-Voting nötig</div></div></div>' +
+      '<p>Beim Anmelden speichern wir in einer Datenbank in Frankfurt (Supabase):</p>' +
+      '<p>• deine Twitch-ID und deinen Twitch-Namen<br>• deine bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch mitgeschickt, nie angezeigt und nicht genutzt)<br>• deine Spiele-Vorschläge (sichtbar mit deinem Namen) und deine Stimme (öffentlich nur als Gesamtzahl)</p>' +
+      '<p>Die Seite bekommt <b>keine Rechte</b> auf dein Twitch-Konto. Du kannst dich jederzeit abmelden und dein Konto mit <b>„Meine Daten löschen“</b> sofort selbst komplett entfernen.</p>' +
+      '<p><a href="#datenschutz" id="dslink2">Datenschutzerklärung lesen</a></p>' +
+      '<label class="vok"><input type="checkbox" id="vok"> Ich habe das gelesen und bin einverstanden.</label>' +
+      '<button class="vtw" id="vweiter" disabled><svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Weiter zu Twitch</button></div>';
+    karteOeffnen(h);
+    $('vok').onchange = function () { $('vweiter').disabled = !this.checked; };
+    $('vweiter').onclick = function () { if ($('vok').checked) einloggen(); };
+    $('dslink2').onclick = function (e) { e.preventDefault(); datenschutz(); };
+  }
+  function datenLoeschenFragen() {
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Meine Daten löschen</b><div class="kk">Das kann nicht rückgängig gemacht werden</div></div></div>' +
+      '<p>Gelöscht werden sofort und endgültig: dein Login-Konto, deine Stimme und deine Spiele-Vorschläge.</p>' +
+      '<p>Deine Ranglisten-Werte (Watchtime, Zeni, Chat …) bleiben davon unberührt – die stammen aus dem Stream. Wenn du auch dort nicht mehr erscheinen willst, schreib im Twitch-Chat <b>!kazetopia aus</b>.</p>' +
+      '<button class="vtw rot" id="vloeschen">Ja, alles löschen</button></div>';
+    karteOeffnen(h);
+    $('vloeschen').onclick = function () {
+      this.disabled = true; this.textContent = 'Lösche …';
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/konto_loeschen', { method: 'POST', body: {} }); })
+        .then(function () { sSchreiben(null); vote.meine = null; vote.offen = []; vote.ergebnis = null; profilZu(); zeigen(); })
+        .catch(function (e) { $('vloeschen').textContent = 'Fehler: ' + e.message; });
+    };
+  }
   function einloggen() { location.href = SB_URL + '/auth/v1/authorize?provider=twitch&redirect_to=' + encodeURIComponent(location.origin + location.pathname); }
   function ausloggen() { var at = sitzung && sitzung.at; if (at) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + at } }).catch(function () { }); sSchreiben(null); vote.meine = null; vote.offen = []; zeigen(); }
   function votingLaden() {
@@ -421,7 +450,7 @@
     }).catch(function (e) { vote.fehler = e.message || 'Voting gerade nicht erreichbar.'; if (!vote.ergebnis) vote.ergebnis = []; });
   }
   function abstimmen(id) {
-    if (!sitzung) return einloggen();
+    if (!sitzung) return einloggenFragen();
     var weg = vote.meine === id;
     var p = weg ? sbFetch('/rest/v1/stimmen?nutzer=eq.' + sitzung.id, { method: 'DELETE' })
       : sbFetch('/rest/v1/stimmen?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, geaendert: new Date().toISOString() } });
@@ -477,7 +506,7 @@
   function votingHtml() {
     var h = '';
     if (vote.ergebnis === null) { votingLaden().then(zeigen); return '<div class="liste"><div class="leer">Lade Voting …</div></div>'; }
-    h += '<div class="vkopf">' + (sitzung && sitzung.name ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><button class="vlink" id="vlogout">Abmelden</button>'
+    h += '<div class="vkopf">' + (sitzung && sitzung.name ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><span class="vknoepfe"><button class="vlink" id="vdel">Meine Daten löschen</button><button class="vlink" id="vlogout">Abmelden</button></span>'
       : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
     if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
     var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
@@ -497,7 +526,8 @@
     return h;
   }
   function votingEvents() {
-    if ($('vlogin')) $('vlogin').onclick = einloggen;
+    if ($('vlogin')) $('vlogin').onclick = einloggenFragen;
+    if ($('vdel')) $('vdel').onclick = datenLoeschenFragen;
     if ($('vlogout')) $('vlogout').onclick = ausloggen;
     if ($('vsend')) $('vsend').onclick = vorschlagen;
     if ($('vinput')) { $('vinput').oninput = function () { $('vsend').disabled = true; suchen(this.value); }; $('vinput').onkeydown = function (e) { if (e.key === 'Enter' && vote.wahl) vorschlagen(); }; }
@@ -915,8 +945,8 @@
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover werden direkt von Servern von Twitch (Twitch Interactive, Inc., USA) geladen. Dabei wird deine IP-Adresse an Twitch übertragen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer ansprechenden Darstellung). Mehr: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" target="_blank" rel="noopener">Datenschutzhinweis von Twitch</a>.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
-      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit formlos über die Kontaktdaten im Impressum oder im Twitch-Chat widersprechen – der Eintrag wird dann entfernt und nicht mehr angezeigt.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Auf Wunsch löschen wir dein Konto samt Daten – kurze Nachricht über die Kontaktdaten im Impressum genügt. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
