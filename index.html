@@ -821,7 +821,6 @@
       if (such && !treffer) return;
       gefunden++;
       var lg = String(x.n).toLowerCase(), zus = '', pwH = '';
-      if (reiter === 'watchtime' && daten.spieler && daten.spieler[lg]) { var rr = leiterInfo(WT, daten.spieler[lg].w || 0, 0).akt; if (rr) zus += '<i class="rg" title="' + esc(rr[2]) + '">' + rr[1] + '</i>'; }
       if (alt) { var vp = alt[lg]; if (vp && vp !== i + 1) pwH = '<i class="pw ' + (vp > i + 1 ? 'hoch">▲' + (vp - i - 1) : 'runter">▼' + (i + 1 - vp)) + '</i>'; else if (!vp && Object.keys(alt).length) pwH = '<i class="pw hoch">neu</i>'; }
       h += '<div class="zeile' + (treffer ? ' treffer' : '') + (lg === ich ? ' treffer' : '') + '"' + dl(x.n) + '><div class="r">#' + (i + 1) + pwH + '</div><div class="n">' + person(x.n, zus) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
