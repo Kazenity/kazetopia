@@ -239,6 +239,22 @@
   .sbox .plz div b { display: block; font-size: 16px; color: var(--hell); }
   .sbox .clip img { width: 100%; border-radius: 10px; display: block; } .sbox .clip span { display: block; font-size: 12.5px; font-weight: 700; margin-top: 7px; color: var(--hell); }
   .sbox .clip { text-decoration: none; }
+  .vkopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: var(--grau); }
+  .vkopf b { color: var(--hell); }
+  .vtw { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13px; font-weight: 800; color: #fff; background: #9146ff; border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+  .vtw svg { width: 17px; height: 17px; fill: #fff; }
+  .vlink { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+  .vfehler { background: rgba(255,90,110,.15); color: #ff9aa8; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 10px; }
+  .vzeile { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--rand); }
+  .vzeile:last-child { border-bottom: 0; } .vzeile .r { font-weight: 800; color: var(--grau); }
+  .vzeile.meins .vn b { color: var(--rosa); }
+  .vn { min-width: 0; } .vn b { display: block; font-size: 14.5px; } .vn span { font-size: 11.5px; color: var(--grau); }
+  .vb { height: 5px; border-radius: 99px; background: var(--rand); margin: 6px 0 4px; overflow: hidden; } .vb i { display: block; height: 100%; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); border-radius: 99px; }
+  .vbtn { font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--rosa); background: transparent; border: 1px solid var(--rosa); border-radius: 999px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+  .vbtn.an { background: var(--rosa); color: var(--dunkel); }
+  .vneu { display: flex; gap: 8px; margin-top: 10px; } .vneu input { flex: 1; min-width: 0; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 11px 14px; outline: none; }
+  .vneu button { font-family: inherit; font-size: 13px; font-weight: 800; color: var(--dunkel); background: var(--rosa); border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; }
+  .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -329,6 +345,107 @@
 (function () {
   var daten = null, reiter = 'zeni', clipZeit = 'monat', monatsModus = false, alleZeigen = false, vorher = {}, ich = '';
   try { ich = localStorage.getItem('kz_ich') || ''; } catch (x) { }
+  var spieleAnsicht = 'voting';
+
+  // ================= Login mit Twitch + Spiele-Voting (Supabase) =================
+  var SB_URL = 'https://deqkkuzjsieqwvamodzs.supabase.co', SB_KEY = 'sb_publishable_FiNFYUZPeSeaaDYtx69wNQ_nXzLm3Ui';
+  var sitzung = null, vote = { ergebnis: null, meine: null, offen: [], fehler: '' };
+  function sLesen() { try { return JSON.parse(localStorage.getItem('kz_sitzung') || 'null'); } catch (x) { return null; } }
+  function sSchreiben(v) { sitzung = v; try { if (v) localStorage.setItem('kz_sitzung', JSON.stringify(v)); else localStorage.removeItem('kz_sitzung'); } catch (x) { } }
+  // Rückkehr vom Twitch-Login: Token steht in der Adresse
+  (function () {
+    var h = location.hash;
+    if (h.indexOf('access_token=') >= 0) {
+      var q = {}; h.substring(1).split('&').forEach(function (t) { var i = t.indexOf('='); q[decodeURIComponent(t.substring(0, i))] = decodeURIComponent(t.substring(i + 1)); });
+      sSchreiben({ at: q.access_token, rt: q.refresh_token, bis: Date.now() + (Number(q.expires_in) || 3600) * 1000, name: '' });
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (x) { }
+      reiter = 'spiele'; spieleAnsicht = 'voting';
+    } else sitzung = sLesen();
+  })();
+  function sbFetch(pfad, opt) {
+    opt = opt || {}; var hd = { apikey: SB_KEY, 'Content-Type': 'application/json' };
+    if (sitzung && sitzung.at) hd.Authorization = 'Bearer ' + sitzung.at;
+    for (var k in (opt.headers || {})) hd[k] = opt.headers[k];
+    return fetch(SB_URL + pfad, { method: opt.method || 'GET', headers: hd, body: opt.body ? JSON.stringify(opt.body) : undefined }).then(function (r) {
+      return r.text().then(function (t) { var j = null; try { j = t ? JSON.parse(t) : null; } catch (x) { } if (!r.ok) throw new Error((j && (j.message || j.msg || j.error_description)) || ('Fehler ' + r.status)); return j; });
+    });
+  }
+  function sFrisch() {
+    if (!sitzung) return Promise.resolve(null);
+    if (sitzung.bis - Date.now() > 60000) return Promise.resolve(sitzung);
+    return fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: sitzung.rt }) })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { sSchreiben({ at: j.access_token, rt: j.refresh_token, bis: Date.now() + (j.expires_in || 3600) * 1000, name: sitzung.name, id: sitzung.id }); return sitzung; })
+      .catch(function () { sSchreiben(null); return null; });
+  }
+  function nutzerLaden() {
+    return sFrisch().then(function (s) {
+      if (!s) return null;
+      if (s.name && s.id) return s;
+      return sbFetch('/auth/v1/user').then(function (u) {
+        var m = (u && u.user_metadata) || {};
+        sitzung.id = u.id; sitzung.name = String(m.preferred_username || m.nickname || m.name || m.full_name || m.slug || '').toLowerCase();
+        sSchreiben(sitzung);
+        if (sitzung.name && !ich) { ich = sitzung.name; try { localStorage.setItem('kz_ich', ich); } catch (x) { } }
+        return sitzung;
+      });
+    }).catch(function () { return null; });
+  }
+  function einloggen() { location.href = SB_URL + '/auth/v1/authorize?provider=twitch&redirect_to=' + encodeURIComponent(location.origin + location.pathname); }
+  function ausloggen() { var at = sitzung && sitzung.at; if (at) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + at } }).catch(function () { }); sSchreiben(null); vote.meine = null; vote.offen = []; zeigen(); }
+  function votingLaden() {
+    vote.fehler = '';
+    return nutzerLaden().then(function (s) {
+      var a = sbFetch('/rest/v1/ergebnis?select=*').then(function (r) { vote.ergebnis = r || []; });
+      var b = s ? Promise.all([
+        sbFetch('/rest/v1/stimmen?select=vorschlag').then(function (r) { vote.meine = r && r[0] ? r[0].vorschlag : null; }),
+        sbFetch('/rest/v1/vorschlaege?select=id,spiel&freigegeben=eq.false').then(function (r) { vote.offen = r || []; })
+      ]) : Promise.resolve();
+      return Promise.all([a, b]);
+    }).catch(function (e) { vote.fehler = e.message || 'Voting gerade nicht erreichbar.'; if (!vote.ergebnis) vote.ergebnis = []; });
+  }
+  function abstimmen(id) {
+    if (!sitzung) return einloggen();
+    var weg = vote.meine === id;
+    var p = weg ? sbFetch('/rest/v1/stimmen?nutzer=eq.' + sitzung.id, { method: 'DELETE' })
+      : sbFetch('/rest/v1/stimmen?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, geaendert: new Date().toISOString() } });
+    sFrisch().then(function () { return p; }).then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = e.message; zeigen(); });
+  }
+  function vorschlagen(name) {
+    name = String(name || '').trim();
+    if (name.length < 2) return;
+    sFrisch().then(function () { return sbFetch('/rest/v1/vorschlaege', { method: 'POST', body: { spiel: name.slice(0, 60) } }); })
+      .then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = /3 offene/.test(e.message) ? 'Du hast schon 3 Vorschläge, die auf Freigabe warten.' : e.message; zeigen(); });
+  }
+  function votingHtml() {
+    var h = '';
+    if (vote.ergebnis === null) { votingLaden().then(zeigen); return '<div class="liste"><div class="leer">Lade Voting …</div></div>'; }
+    h += '<div class="vkopf">' + (sitzung && sitzung.name ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><button class="vlink" id="vlogout">Abmelden</button>'
+      : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
+    if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
+    var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
+    h += '<div class="liste">';
+    if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
+    e.forEach(function (x, i) {
+      var meins = vote.meine === x.id;
+      h += '<div class="vzeile' + (meins ? ' meins' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
+        '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
+    });
+    h += '</div>';
+    if (sitzung) {
+      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game vorschlagen …" autocomplete="off"><button id="vsend">Vorschlagen</button></div>';
+      if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
+    }
+    h += '<div class="vhinweis">Jeder hat <b>eine</b> Stimme und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
+    return h;
+  }
+  function votingEvents() {
+    if ($('vlogin')) $('vlogin').onclick = einloggen;
+    if ($('vlogout')) $('vlogout').onclick = ausloggen;
+    if ($('vsend')) $('vsend').onclick = function () { vorschlagen($('vinput').value); };
+    if ($('vinput')) $('vinput').onkeydown = function (e) { if (e.key === 'Enter') vorschlagen(this.value); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-vote]'), function (b) { b.onclick = function () { abstimmen(Number(b.getAttribute('data-vote'))); }; });
+  }
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function prof(n) {
@@ -723,12 +840,13 @@
   function datenschutz() {
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Datenschutzerklärung</b><div class="kk">Kazetopia · kazenity.github.io/kazetopia · Stand: November 2026</div></div></div>' +
       '<h4>1. VERANTWORTLICHER</h4><p>Giuseppe Auner (Kazenity). Kontaktdaten und Anschrift stehen im <a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a>.</p>' +
-      '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools.</p>' +
+      '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Pflicht-Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools.</p>' +
       '<h4>3. HOSTING (GITHUB PAGES)</h4><p>Die Seite und ihre Daten werden über GitHub Pages bzw. raw.githubusercontent.com der GitHub, Inc. (88 Colin P Kelly Jr St, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Browser-Informationen, um die Seite auszuliefern und vor Missbrauch zu schützen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer sicheren, funktionierenden Website). Eine Übermittlung in die USA ist möglich; GitHub ist nach dem EU-US Data Privacy Framework zertifiziert. Mehr: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>' +
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover werden direkt von Servern von Twitch (Twitch Interactive, Inc., USA) geladen. Dabei wird deine IP-Adresse an Twitch übertragen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer ansprechenden Darstellung). Mehr: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" target="_blank" rel="noopener">Datenschutzhinweis von Twitch</a>.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit formlos über die Kontaktdaten im Impressum oder im Twitch-Chat widersprechen – der Eintrag wird dann entfernt und nicht mehr angezeigt.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Auf Wunsch löschen wir dein Konto samt Daten – kurze Nachricht über die Kontaktdaten im Impressum genügt. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
@@ -812,13 +930,23 @@
       return true;
     }
     if (reiter === 'spiele') {
+      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>🗳️ Was spielen wir als Nächstes?</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Bewertungen</button></div>';
+      if (spieleAnsicht === 'voting') {
+        $('liste').className = '';
+        $('liste').innerHTML = sw + votingHtml();
+        $('spschalter').onclick = function (e) { var b = e.target.closest('button'); if (b) { spieleAnsicht = b.getAttribute('data-s'); zeigen(); } };
+        votingEvents();
+        $('hinweis').textContent = 'Community-Voting für das nächste Story-Game';
+        return true;
+      }
       var sp = daten.spiele || [];
       var hs = '';
       sp.forEach(function (x) {
         hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
       });
       $('liste').className = '';
-      $('liste').innerHTML = sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>';
+      $('liste').innerHTML = sw + (sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>');
+      $('spschalter').onclick = function (e) { var b = e.target.closest('button'); if (b) { spieleAnsicht = b.getAttribute('data-s'); zeigen(); } };
       $('hinweis').textContent = 'Unsere Story-Games mit Kazes Bewertung';
       return true;
     }
@@ -861,7 +989,7 @@
     danke: 'Die größten Unterstützer des Kanals',
     emotes: 'Welche Emotes lieben wir am meisten?',
     clips: 'Die besten Momente aus dem Stream',
-    spiele: 'Welche Story-Games haben wir schon gespielt?'
+    spiele: 'Was spielen wir als Nächstes? Stimm mit ab!'
   };
   function zeigen() {
     $('unter').textContent = untertitel[reiter] || '';
@@ -935,6 +1063,7 @@
   datenLaden().then(function (d) {
     daten = d;
     plaetzeMerken(d);
+    Array.prototype.forEach.call($('reiter').children, function (x) { x.className = x.getAttribute('data-r') === reiter ? 'aktiv' : ''; });
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d.live && d.live.an) {
       $('live').innerHTML = '<div class="punkt"></div><div class="txt"><b>Kaze ist gerade live' + (d.live.spiel ? ' · ' + esc(d.live.spiel) : '') + '</b><span>' + esc(d.live.titel || '') + '</span></div><div class="los">Zuschauen</div>';
