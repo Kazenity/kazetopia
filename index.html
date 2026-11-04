@@ -112,7 +112,7 @@
   .emotes.rest .emote .rg { top: 6px; left: 8px; font-size: 10.5px; }
   .emotes.rest .emote .n { font-size: 10.5px; }
   .emotes.rest .emote .w { font-size: 11px; }
-  .spiel .rt { display: inline-block; margin-top: 5px; font-size: 12px; font-weight: 800; color: var(--gold); }
+  .spiel .rt { display: inline-block; margin-top: 3px; font-size: 13px; font-weight: 800; color: var(--gold); }
   .spiel .rt.laeuft { color: var(--rosa); }
   .clip { background: var(--flaeche); border-radius: 14px; overflow: hidden; text-decoration: none; color: var(--hell); display: block; min-width: 0; transition: transform .15s; }
   .clip:hover { transform: translateY(-2px); background: var(--hover); }
@@ -266,7 +266,7 @@
       var sp = daten.spiele || [];
       var hs = '';
       sp.forEach(function (x) {
-        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b><span>' + (x.s ? x.s + (x.s == 1 ? ' Stream' : ' Streams') : '&nbsp;') + '</span><br>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
+        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
       });
       $('liste').className = '';
       $('liste').innerHTML = sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>';
