@@ -179,6 +179,15 @@
   .profil-link { color: var(--rosa); font-weight: 700; }
   .karte { max-height: calc(100vh - 80px); overflow-y: auto; }
   .karte .un { font-size: 11.5px; color: var(--grau); }
+  .kacheln4 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kachel { background: var(--bg); border-radius: 12px; padding: 10px 11px; min-width: 0; }
+  .kachel .kt { font-size: 11px; font-weight: 700; color: var(--grau); }
+  .kachel .kr { font-size: 13.5px; font-weight: 800; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kachel .balken { height: 5px; margin-top: 7px; border-radius: 99px; background: var(--rand); overflow: hidden; }
+  .kachel .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  .kachel .kn { font-size: 11px; color: var(--grau); margin-top: 5px; line-height: 1.35; }
+  .naechste div { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 700; padding: 7px 10px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+  .naechste div span { color: var(--grau); font-weight: 600; white-space: nowrap; }
   .erfolg .erkl, .karte .erkl { margin-top: 2px; font-style: italic; }
   .erfolg .un b { color: var(--hell); }
   .symbole { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 4px; }
@@ -398,6 +407,17 @@
     }
     return h + '</div>';
   }
+  // kompakte Kachel für die Profil-Übersicht
+  function grossKachel(g, sp) {
+    var v = wertVon(sp, g.k), info = leiterInfo(g.leiter, v, g.weiter);
+    var von = info.akt ? info.akt[0] : 0;
+    var proz = info.nx ? balken(v, von, info.nx[0]) : (g.k === 'w' ? Math.max(2, (Math.floor(v * 10) % 10000) / 100) : 100);
+    var noch = info.nx ? 'noch ' + g.fmt(Math.ceil((info.nx[0] - v) * 10) / 10) : (g.k === 'w' ? 'Höchster Rang ✦' : '');
+    return '<div class="kachel" title="' + esc(g.text) + '"><div class="kt">' + g.icon + ' ' + g.titel + '</div>' +
+      '<div class="kr">' + (info.akt ? info.akt[1] + ' ' + esc(info.akt[2]) : '–') + '</div>' +
+      '<div class="balken"><i style="width:' + proz + '%"></i></div>' +
+      '<div class="kn">' + g.fmt(v) + (noch ? ' · ' + noch : '') + '</div></div>';
+  }
   function kleinZeile(e, sp) {
     var v = wertVon(sp, e.k), ki = kleinInfo(e, v);
     return '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.titel + (ki.farbe ? ' · ' + ki.farbe[0] + ' ' + ki.farbe[1] + (ki.extra ? ' ✦' + ki.extra : '') : '') + '<span>' + zahl(v) + ' ' + e.einheit + '</span></div>' +
@@ -431,9 +451,10 @@
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
-    // Ränge (nur mit Fortschritt)
-    h += '<h4>🏅 RÄNGE</h4>';
-    GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossZeile(g, sp); });
+    // Ränge als 2×2-Kacheln (Details unter „Alle Erfolge anzeigen“)
+    h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
+    GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossKachel(g, sp); });
+    h += '</div>';
 
     // freigeschaltete kleine Erfolge kompakt
     var kleinHat = KLEIN.filter(function (e) { return wertVon(sp, e.k) > 0 && kleinInfo(e, wertVon(sp, e.k)).farbe; });
@@ -445,10 +466,14 @@
 
     // Als Nächstes: die 3 nächsten Ziele (größter Fortschritt)
     var ziele = [];
-    KLEIN.forEach(function (e) { var v = wertVon(sp, e.k); if (v > 0) { var ki = kleinInfo(e, v); ziele.push({ p: (v - ki.vorher) / Math.max(1, ki.ziel - ki.vorher), html: kleinZeile(e, sp) }); } });
-    if (!hatAbzeichen(sp, 'og')) { var pOg = Math.min((sp.w || 0) / 500, sp.f ? tageSeit(sp.f) / 730 : 0); ziele.push({ p: pOg, html: '<div class="erfolg"><div class="ob">👑 OG<span>' + zahl(sp.w || 0) + ' / 500 Std.</span></div><div class="un erkl">' + ABZEICHEN[0].text + '</div><div class="balken"><i style="width:' + Math.max(2, pOg * 100) + '%"></i></div></div>' }); }
+    KLEIN.forEach(function (e) { var v = wertVon(sp, e.k); if (v > 0) { var ki = kleinInfo(e, v); ziele.push({ p: (v - ki.vorher) / Math.max(1, ki.ziel - ki.vorher), kurz: e.icon + ' ' + e.titel + ' ' + ki.nxFarbe[0] + ' ' + ki.nxFarbe[1] + ' <span>noch ' + zahl(ki.ziel - v) + ' ' + e.einheit + '</span>' }); } });
+    if (!hatAbzeichen(sp, 'og')) { var pOg = Math.min((sp.w || 0) / 500, sp.f ? tageSeit(sp.f) / 730 : 0); ziele.push({ p: pOg, kurz: '👑 OG-Abzeichen <span>2 Jahre + 500 Std.</span>' }); }
     ziele.sort(function (a, b) { return b.p - a.p; });
-    if (ziele.length) { h += '<h4>🎯 ALS NÄCHSTES</h4>'; ziele.slice(0, 3).forEach(function (z) { h += z.html; }); }
+    if (ziele.length) {
+      h += '<h4>🎯 ALS NÄCHSTES</h4><div class="naechste">';
+      ziele.slice(0, 3).forEach(function (z) { h += '<div>' + z.kurz + '</div>'; });
+      h += '</div>';
+    }
 
     // Alle Erfolge (aufklappbar)
     h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
