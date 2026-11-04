@@ -197,7 +197,7 @@
   .sym.ev { border-color: var(--gold); }
   .sym:not(.ev) i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--rosa); color: #fff; border-radius: 5px; padding: 0 3px; }
   .evb { vertical-align: middle; image-rendering: auto; }
-  .ichips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 12px 0 6px; padding-bottom: 2px; }
+  .ichips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; }
   .ichips::-webkit-scrollbar { display: none; }
   .ichips button { flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 7px 11px; cursor: pointer; white-space: nowrap; }
   .ichips button.aktiv { background: var(--rosa); color: var(--dunkel); border-color: var(--rosa); }
@@ -213,7 +213,19 @@
   .tab div { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 4px 0; border-bottom: 1px solid var(--rand); }
   .tab div span:last-child { color: var(--grau); white-space: nowrap; }
   .infoknopf { display: inline-block; margin-top: 6px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
+  .pw { display: block; font-style: normal; font-size: 10px; font-weight: 800; line-height: 1.1; }
+  .pw.hoch { color: #5fd38d; } .pw.runter { color: #ff7a8a; }
+  .rg { margin-left: 5px; font-size: 13px; font-style: normal; flex: 0 0 auto; }
+  .person span.lang { font-size: 13px; }
+  .ichbar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); width: calc(100% - 32px); max-width: 560px; z-index: 40; display: none; align-items: center; gap: 10px; background: var(--rosa); color: var(--dunkel); border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.4); cursor: pointer; }
+  .ichbar b { font-weight: 800; } .ichbar .pf { margin-left: auto; white-space: nowrap; }
+  body.mit-ich { padding-bottom: 76px; }
+  .ichknopf { margin-top: 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+  .ichknopf.ja { color: var(--dunkel); background: var(--rosa); border-color: var(--rosa); }
   @media (max-width: 560px) {
+    .reiter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .reiter button { padding: 9px 2px; font-size: 12px; }
     .danke { grid-template-columns: 1fr; }
     .emotes.rest { grid-template-columns: repeat(4, 1fr); }
     .emotes.top3 .emote img { width: 60px; height: 60px; } .emotes.top3 .emote.e1 img { width: 76px; height: 76px; }
@@ -231,6 +243,7 @@
     .platz .w { font-size: 11.5px; }
     .platz .av { width: 46px; height: 46px; } .platz.p1 .av { width: 56px; height: 56px; }
     .av { width: 30px; height: 30px; }
+    .zeile .person span { font-size: 14.5px; } .zeile .person span.lang { font-size: 12.5px; }
   }
 </style>
 </head>
@@ -269,6 +282,7 @@
     <a href="https://www.instagram.com/kazenity" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 7.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6Zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2Zm6.1-8.1a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.9 8.2c-.1-1.6-.4-3-1.6-4.2S17.5 2.4 15.8 2.3C14.1 2.2 9.9 2.2 8.2 2.3 6.5 2.4 5.1 2.7 3.9 3.9S2.4 6.6 2.3 8.2c-.1 1.7-.1 5.9 0 7.6.1 1.6.4 3 1.6 4.2s2.6 1.5 4.3 1.6c1.7.1 5.9.1 7.6 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-5.9 0-7.6Zm-2.2 9.4a3.2 3.2 0 0 1-1.8 1.8c-1.2.5-4.2.4-5.9.4s-4.7.1-5.9-.4a3.2 3.2 0 0 1-1.8-1.8c-.5-1.2-.4-4.2-.4-5.6s-.1-4.4.4-5.6a3.2 3.2 0 0 1 1.8-1.8c1.2-.5 4.2-.4 5.9-.4s4.7-.1 5.9.4a3.2 3.2 0 0 1 1.8 1.8c.5 1.2.4 4.2.4 5.6s.1 4.4-.4 5.6Z"/></svg>Instagram</a>
   </nav>
 
+  <div class="ichbar" id="ichbar"></div>
   <footer>
     <div id="stand"></div>
     <div id="hinweis"></div>
@@ -280,7 +294,8 @@
 
 <script>
 (function () {
-  var daten = null, reiter = 'zeni', clipZeit = 'monat', monatsModus = false;
+  var daten = null, reiter = 'zeni', clipZeit = 'monat', monatsModus = false, alleZeigen = false, vorher = {}, ich = '';
+  try { ich = localStorage.getItem('kz_ich') || ''; } catch (x) { }
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function prof(n) {
@@ -296,7 +311,7 @@
     if (!p.b) return '<span class="av">' + buchstabe + '</span>';
     return '<img class="av" loading="lazy" alt="" src="' + esc(p.b.replace('300x300', gross ? '150x150' : '70x70')) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
   }
-  function person(n) { return '<div class="person">' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; }
+  function person(n, zusatz) { var nm = String(prof(n).n || n); return '<div class="person">' + bild(n) + '<span' + (nm.length > 13 ? ' class="lang"' : '') + '>' + esc(nm) + '</span>' + (zusatz || '') + '</div>'; }
 
   // ================= ERFOLGE =================
   // Große Leitern: [ab, Symbol, Name]
@@ -384,6 +399,33 @@
     if (a.id === 'pk' && sp.q) return ' <b>(' + sp.q + '/25)</b>';
     if (a.id === 'wp' && sp.v) return ' <b>(' + sp.v + '/5)</b>';
     return '';
+  }
+  // „Das bin ich“-Leiste unten
+  function ichLeiste(l, monat) {
+    var bar = $('ichbar');
+    if (!ich || !l || ['zeni', 'watchtime', 'chat'].indexOf(reiter) < 0) { bar.style.display = 'none'; document.body.classList.remove('mit-ich'); return; }
+    var pos = -1; l.forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) pos = i; });
+    var t = '👤 <span>Du: ';
+    if (pos < 0) t += '<b>nicht in den Top ' + l.length + '</b>';
+    else {
+      t += '<b>Platz ' + (pos + 1) + '</b>';
+      if (pos > 0) { var d = l[pos - 1].w - l[pos].w; t += ' · ' + (reiter === 'watchtime' ? zahl(Math.max(0.1, Math.ceil(d * 10) / 10)) + ' Std.' : Number(Math.max(1, d)).toLocaleString('de-DE')) + ' bis #' + pos; }
+    }
+    bar.innerHTML = t + '</span><span class="pf">Profil ›</span>';
+    bar.style.display = 'flex'; document.body.classList.add('mit-ich');
+  }
+  // Platzwechsel seit dem letzten Besuch (nur im Browser gespeichert)
+  function plaetzeMerken(d) {
+    var jetzt = {};
+    ['zeni', 'watchtime', 'chat'].forEach(function (k) {
+      var m = {}; (d[k] || []).forEach(function (x, i) { m[String(x.n).toLowerCase()] = i + 1; }); jetzt[k] = m;
+      if (d.monat && d.monat[k]) { var mm = {}; d.monat[k].forEach(function (x, i) { mm[String(x.n).toLowerCase()] = i + 1; }); jetzt[k + '_m'] = mm; }
+    });
+    try {
+      var g = JSON.parse(localStorage.getItem('kz_plaetze') || 'null');
+      if (g && g.stand === d.stand) vorher = g.vorher || {};
+      else { vorher = g ? g.jetzt || {} : {}; localStorage.setItem('kz_plaetze', JSON.stringify({ stand: d.stand, jetzt: jetzt, vorher: vorher })); }
+    } catch (x) { vorher = {}; }
   }
   // Rivale: wer liegt in der Watchtime direkt vor einem?
   function rivale(platz, std) {
@@ -530,7 +572,8 @@
     var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
     h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
       (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
-      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div>' + rivale(platz, std) + '</div></div>';
+      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div>' + rivale(platz, std) +
+      '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button></div></div>';
 
     // Abzeichen (nur freigeschaltete, als Symbole)
     var hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
@@ -585,6 +628,13 @@
     h += '</div></div>';
     karteOeffnen(h);
     $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
+    $('ichknopf').onclick = function () {
+      var l2 = this.getAttribute('data-ich');
+      ich = ich === l2 ? '' : l2;
+      try { if (ich) localStorage.setItem('kz_ich', ich); else localStorage.removeItem('kz_ich'); } catch (x) { }
+      this.className = 'ichknopf' + (ich ? ' ja' : ''); this.textContent = ich ? '✓ Das bist du' : '⭐ Das bin ich';
+      zeigen();
+    };
     Array.prototype.forEach.call(document.querySelectorAll('#karte .sym'), function (el) { el.onclick = function () { $('syminfo').textContent = el.getAttribute('data-info'); }; });
   }
   function karteOeffnen(h) {
@@ -749,7 +799,7 @@
     var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
     $('zeitwahl').style.display = mitMonat ? '' : 'none';
     if (mitMonat) $('zeitwahl').innerHTML = '<button data-m="0"' + (monatsModus ? '' : ' class="aktiv"') + '>Gesamt</button><button data-m="1"' + (monatsModus ? ' class="aktiv"' : '') + '>' + esc(daten.monat.name || 'Dieser Monat') + '</button>';
-    if (sonder()) return;
+    if (sonder()) { ichLeiste(null); return; }
     var monat = mitMonat && monatsModus;
     var l = (monat ? daten.monat[reiter] : daten[reiter]) || [];
     var such = $('suche').value.trim().toLowerCase();
@@ -763,13 +813,17 @@
     });
     $('podest').innerHTML = p;
 
-    var h = '', gefunden = 0;
+    var h = '', gefunden = 0, schluessel = reiter + (monat ? '_m' : ''), alt = vorher[schluessel] || null;
     l.forEach(function (x, i) {
       if (i < 3 && !such) return;
+      if (!such && !alleZeigen && i >= 25) return;
       var treffer = such && (x.n.toLowerCase().indexOf(such) >= 0 || String(prof(x.n).n).toLowerCase().indexOf(such) >= 0);
       if (such && !treffer) return;
       gefunden++;
-      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"' + dl(x.n) + '><div class="r">#' + (i + 1) + '</div><div class="n">' + person(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      var lg = String(x.n).toLowerCase(), zus = '', pwH = '';
+      if (reiter === 'watchtime' && daten.spieler && daten.spieler[lg]) { var rr = leiterInfo(WT, daten.spieler[lg].w || 0, 0).akt; if (rr) zus += '<i class="rg" title="' + esc(rr[2]) + '">' + rr[1] + '</i>'; }
+      if (alt) { var vp = alt[lg]; if (vp && vp !== i + 1) pwH = '<i class="pw ' + (vp > i + 1 ? 'hoch">▲' + (vp - i - 1) : 'runter">▼' + (i + 1 - vp)) + '</i>'; else if (!vp && Object.keys(alt).length) pwH = '<i class="pw hoch">neu</i>'; }
+      h += '<div class="zeile' + (treffer ? ' treffer' : '') + (lg === ich ? ' treffer' : '') + '"' + dl(x.n) + '><div class="r">#' + (i + 1) + pwH + '</div><div class="n">' + person(x.n, zus) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
     if (such && daten.spieler) {
       // Profile auch für Leute außerhalb der Top 100 finden
@@ -782,7 +836,10 @@
       extra.forEach(function (k) { h += '<div class="zeile"' + dl(k) + '><div class="r">👤</div><div class="n">' + person(k) + '</div><div class="w profil-link">Profil ›</div></div>'; });
     }
     if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen gefunden.' : 'Noch keine Daten.') + '</div>';
+    if (!such && !alleZeigen && l.length > 25) h += '<button class="mehr-btn" id="mehrbtn">Weitere ' + (l.length - 25) + ' anzeigen ▾</button>';
     $('liste').innerHTML = h;
+    if ($('mehrbtn')) $('mehrbtn').onclick = function (e) { e.stopPropagation(); alleZeigen = true; zeigen(); };
+    ichLeiste(l, monat);
     if (monat) { $('hinweis').textContent = 'Zuwachs seit dem 1. ' + (daten.monat.name || '') + ' · Top ' + l.length + (reiter === 'chat' && daten.monat.name === 'November' ? ' · Chat wird im November erst ab dem 4. gezählt' : ''); return; }
     $('hinweis').textContent = reiter === 'chat' && daten.chatGesamt ? 'Insgesamt ' + Number(daten.chatGesamt).toLocaleString('de-DE') + ' Chat-Nachrichten · gezählt von StreamElements' : 'Top ' + l.length;
   }
@@ -790,16 +847,18 @@
   $('reiter').onclick = function (e) {
     var b = e.target.closest('button');
     if (!b) return;
-    reiter = b.getAttribute('data-r');
+    reiter = b.getAttribute('data-r'); alleZeigen = false;
     Array.prototype.forEach.call(this.children, function (x) { x.className = x === b ? 'aktiv' : ''; });
     try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (x) { }
     zeigen();
   };
   $('suche').oninput = zeigen;
+  $('ichbar').onclick = function () { if (ich) profilZeigen(ich); };
   $('zeitwahl').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; monatsModus = b.getAttribute('data-m') === '1'; zeigen(); };
 
   fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
     daten = d;
+    plaetzeMerken(d);
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d.live && d.live.an) {
       $('live').innerHTML = '<div class="punkt"></div><div class="txt"><b>Kaze ist gerade live' + (d.live.spiel ? ' · ' + esc(d.live.spiel) : '') + '</b><span>' + esc(d.live.titel || '') + '</span></div><div class="los">Zuschauen</div>';
