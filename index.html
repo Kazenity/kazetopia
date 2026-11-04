@@ -339,6 +339,8 @@
 
       // Abzeichen
       var abz = [
+        // OG: mind. 2 Jahre Follower + 500 Std. Watchtime – oder ab 1.000 Std. immer (falls das Follow-Datum fehlt)
+        [((sp.f && tageSeit(sp.f) >= 730 && (sp.w || 0) >= 500) || (sp.w || 0) >= 1000), '👑 OG'],
         [sp.u, '💜 Unterstützer'], [sp.f && sp.f < '2020', '🌱 Day One'], [sp.g, '🎂 Geburtstagskind'],
         [sp.t, '🏆 Top 10'], [sp.x, '⚔️ Saber-Bezwinger']
       ];
