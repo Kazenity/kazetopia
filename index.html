@@ -195,6 +195,7 @@
   .symbole { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 4px; }
   .sym { width: 38px; height: 38px; border-radius: 12px; background: var(--bg); border: 1px solid var(--rand); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; position: relative; }
   .sym.ev { border-color: var(--gold); }
+  .sym.mehr { font-size: 13px; font-weight: 800; color: var(--grau); }
   .sym.ev i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 0 3px; }
   .trenn { width: 1px; height: 26px; background: var(--rand); margin: 0 4px; }
   .syminfo { font-size: 12px; color: var(--grau); min-height: 16px; }
@@ -352,6 +353,11 @@
     sc26s: ['⚡', 'Super Saiyajin', 'Saiyan Class 2026 · 3 Subs im Event'],
     sc26l: ['💙', 'Legendärer Krieger', 'Saiyan Class 2026 · Top 3 Gifter im Event']
   };
+  // Pro Event zählt nur die höchste Stufe (Reihenfolge: niedrig → hoch). Neueste Events nach unten anhängen.
+  var EVENT_GRUPPEN = [
+    { name: 'Saiyan Class 2026', jahr: '26', codes: ['sc26z', 'sc26s', 'sc26l'] }
+  ];
+  function eventStufe(sp, g) { var c = sp.e || [], best = null; g.codes.forEach(function (x) { if (c.indexOf(x) >= 0) best = x; }); return best; }
 
   function zahl(v) { return Number(v).toLocaleString('de-DE', { maximumFractionDigits: 1 }); }
   function tageSeit(d) { var t = Date.parse(d); return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); }
@@ -445,11 +451,16 @@
 
     // Abzeichen (nur freigeschaltete, als Symbole)
     var hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
-    var ev = (sp.e || []).filter(function (c) { return EVENTS[c]; });
+    var ev = []; EVENT_GRUPPEN.forEach(function (g) { var c = eventStufe(sp, g); if (c) ev.push({ g: g, c: c }); });
+    ev.reverse();   // neueste zuerst
     if (hat.length || ev.length) {
       h += '<div class="symbole">';
       hat.forEach(function (a) { h += '<span class="sym" data-info="' + esc(a.name + ' – ' + a.text) + '" title="' + esc(a.name + ' – ' + a.text) + '">' + a.icon + '</span>'; });
-      if (ev.length) { h += '<span class="trenn"></span>'; ev.forEach(function (c) { var e = EVENTS[c]; h += '<span class="sym ev" data-info="' + esc(e[1] + ' – ' + e[2]) + '" title="' + esc(e[1] + ' – ' + e[2]) + '">' + e[0] + '<i>26</i></span>'; }); }
+      if (ev.length) {
+        h += '<span class="trenn"></span>';
+        ev.slice(0, 3).forEach(function (x) { var e = EVENTS[x.c], t = e[1] + ' – ' + e[2]; h += '<span class="sym ev" data-info="' + esc(t) + '" title="' + esc(t) + '">' + e[0] + '<i>' + x.g.jahr + '</i></span>'; });
+        if (ev.length > 3) h += '<span class="sym mehr" data-info="' + (ev.length - 3) + ' weitere Events – siehe „Alle Erfolge anzeigen“">+' + (ev.length - 3) + '</span>';
+      }
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
@@ -479,6 +490,14 @@
     h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
     h += '<h4>RÄNGE</h4>'; GROSS.forEach(function (g) { h += grossZeile(g, sp); });
     h += '<h4>ERFOLGE</h4>'; KLEIN.forEach(function (e) { h += kleinZeile(e, sp); });
+    if (EVENT_GRUPPEN.length) {
+      h += '<h4>EVENTS</h4><div class="liste-abz">';
+      EVENT_GRUPPEN.slice().reverse().forEach(function (g) {
+        var c = eventStufe(sp, g);
+        h += '<div class="' + (c ? '' : 'aus') + '"><b>' + g.name + '</b>: ' + g.codes.map(function (x) { var e = EVENTS[x]; return (x === c ? '<b>' + e[0] + ' ' + e[1] + ' ✓</b>' : '<span style="opacity:.5">' + e[0] + ' ' + e[1] + '</span>'); }).join(' · ') + '</div>';
+      });
+      h += '</div>';
+    }
     h += '<h4>ABZEICHEN</h4><div class="liste-abz">';
     ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + (ja ? ' ✓' : '') + '</div>'; });
     h += '</div></div>';
@@ -507,6 +526,7 @@
     });
     h += '<h4>✨ ABZEICHEN</h4><div class="liste-abz">';
     ABZEICHEN.forEach(function (a) { h += '<div>' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + '</div>'; });
+    h += '<div class="un erkl" style="border:0">Events: Pro Event zählt nur die höchste erreichte Stufe.</div>';
     Object.keys(EVENTS).forEach(function (c) { var e = EVENTS[c]; h += '<div>' + e[0] + ' <b>' + e[1] + '</b> – ' + e[2] + '</div>'; });
     h += '</div><div class="un erkl" style="margin-top:10px">Ganz große Erfolge werden live im Chat gefeiert 🏅</div>';
     karteOeffnen(h);
