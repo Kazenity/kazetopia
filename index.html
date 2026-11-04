@@ -24,20 +24,34 @@
   header p { color: var(--grau); font-size: 14px; }
   header a { color: var(--rosa); text-decoration: none; font-weight: 700; }
 
-  .reiter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; }
-  .reiter button { font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 6px; cursor: pointer; }
+  .reiter { display: flex; gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .reiter::-webkit-scrollbar { display: none; }
+  .reiter button { flex: 1 0 auto; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 14px; cursor: pointer; white-space: nowrap; }
   .reiter button:hover { background: var(--hover); }
   .reiter button.aktiv { background: var(--rosa); color: var(--dunkel); }
 
   .podest { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; margin-bottom: 22px; }
   .platz { background: var(--flaeche); border-radius: 16px; padding: 16px 10px 14px; text-align: center; position: relative; min-width: 0; }
   .platz.p1 { padding-top: 26px; background: linear-gradient(160deg, #c2396f, #5a2562); box-shadow: 0 10px 30px rgba(194,57,111,.35); }
-  .platz .m { font-size: 28px; line-height: 1; }
+  .platz .m { font-size: 24px; line-height: 1; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); }
+  .platz { margin-top: 12px; }
   .platz .n { font-weight: 800; font-size: 15px; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .platz.p1 .n { font-size: 17px; }
   .platz .w { font-size: 13px; color: var(--grau); margin-top: 2px; }
   .platz.p1 .w { color: #ffd9e6; }
 
+  .av { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; background: var(--lila); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: var(--hell); }
+  .platz .av { width: 56px; height: 56px; font-size: 22px; margin: 8px auto 0; border: 3px solid var(--rand); display: flex; }
+  .platz.p1 .av { width: 70px; height: 70px; border-color: var(--gold); }
+  .platz.p2 .av { border-color: var(--silber); }
+  .platz.p3 .av { border-color: var(--bronze); }
+  .person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .person span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .danke .av { width: 26px; height: 26px; font-size: 11px; }
+  .danke .p { display: flex; align-items: center; gap: 8px; }
+  .danke .p span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bingo .zeile .w { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .bingo .av { width: 26px; height: 26px; font-size: 11px; }
   .suche { width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 11px 14px; outline: none; margin-bottom: 10px; }
   .suche:focus { border-color: var(--rosa); }
 
@@ -62,11 +76,10 @@
   .danke h3 { font-size: 13px; letter-spacing: 1px; color: var(--rosa); margin-bottom: 8px; }
   .danke .p { padding: 6px 0; border-bottom: 1px solid var(--rand); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
   .danke .p:last-child { border-bottom: 0; }
-  .danke .p i { font-style: normal; color: var(--grau); margin-right: 6px; }
+  .danke .p i { font-style: normal; color: var(--grau); min-width: 24px; flex: 0 0 auto; }
   .danke-text { text-align: center; color: var(--grau); font-size: 14px; margin-bottom: 14px; }
   footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
   @media (max-width: 560px) {
-    .reiter { grid-template-columns: repeat(3, 1fr); }
     .danke { grid-template-columns: 1fr; }
   }
   @media (max-width: 480px) {
@@ -74,6 +87,8 @@
     .platz { padding: 12px 6px 10px; }
     .platz .n { font-size: 13px; } .platz.p1 .n { font-size: 14px; }
     .platz .w { font-size: 11.5px; }
+    .platz .av { width: 46px; height: 46px; } .platz.p1 .av { width: 56px; height: 56px; }
+    .av { width: 30px; height: 30px; }
   }
 </style>
 </head>
@@ -109,6 +124,17 @@
   var daten = null, reiter = 'zeni';
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function prof(n) {
+    var p = daten && daten.profile ? daten.profile[String(n || '').toLowerCase()] : null;
+    return { n: p && p.n ? p.n : n, b: p && p.b ? p.b : '' };
+  }
+  function bild(n, gross) {
+    var p = prof(n);
+    var buchstabe = esc(String(p.n || '?').charAt(0).toUpperCase());
+    if (!p.b) return '<span class="av">' + buchstabe + '</span>';
+    return '<img class="av" loading="lazy" alt="" src="' + esc(p.b.replace('300x300', gross ? '150x150' : '70x70')) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
+  }
+  function person(n) { return '<div class="person">' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; }
   function wert(w) {
     if (reiter === 'watchtime') return Number(w).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' Std.';
     if (reiter === 'chat') return Number(w).toLocaleString('de-DE') + ' Nachr.';
@@ -130,7 +156,7 @@
       }
       h += '<div class="liste">';
       if (!b.length) h += '<div class="leer">Noch keine Bingo-Gewinner eingetragen.</div>';
-      b.forEach(function (x, i) { h += '<div class="zeile' + (i === 0 ? ' neu' : '') + '"><div class="n">' + esc(x.monat) + '</div><div class="w">' + (i === 0 ? '🏆 ' : '') + esc(x.name) + '</div></div>'; });
+      b.forEach(function (x, i) { h += '<div class="zeile' + (i === 0 ? ' neu' : '') + '"><div class="n">' + esc(x.monat) + '</div><div class="w">' + (i === 0 ? '🏆 ' : '') + bild(x.name) + '<span>' + esc(prof(x.name).n) + '</span></div></div>'; });
       h += '</div>';
       $('liste').className = 'bingo';
       $('liste').innerHTML = h;
@@ -140,7 +166,7 @@
       function spalte(t, arr) {
         var s = '<div class="box"><h3>' + t + '</h3>';
         if (!arr || !arr.length) s += '<div class="leer">–</div>';
-        (arr || []).forEach(function (n, i) { s += '<div class="p"><i>' + (i + 1) + '.</i>' + esc(n) + '</div>'; });
+        (arr || []).forEach(function (n, i) { s += '<div class="p"><i>' + (i + 1) + '.</i>' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; });
         return s + '</div>';
       }
       $('liste').className = '';
@@ -162,17 +188,17 @@
     reihen.forEach(function (i) {
       var x = l[i];
       if (!x) { p += '<div></div>'; return; }
-      p += '<div class="platz p' + (i + 1) + '"><div class="m">' + medaillen[i] + '</div><div class="n">' + esc(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      p += '<div class="platz p' + (i + 1) + '"><div class="m">' + medaillen[i] + '</div>' + bild(x.n, true) + '<div class="n">' + esc(prof(x.n).n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
     $('podest').innerHTML = p;
 
     var h = '', gefunden = 0;
     l.forEach(function (x, i) {
       if (i < 3 && !such) return;
-      var treffer = such && x.n.toLowerCase().indexOf(such) >= 0;
+      var treffer = such && (x.n.toLowerCase().indexOf(such) >= 0 || String(prof(x.n).n).toLowerCase().indexOf(such) >= 0);
       if (such && !treffer) return;
       gefunden++;
-      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="n">' + esc(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="n">' + person(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
     if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen in den Top ' + l.length + '.' : 'Noch keine Daten.') + '</div>';
     $('liste').innerHTML = h;
@@ -184,6 +210,7 @@
     if (!b) return;
     reiter = b.getAttribute('data-r');
     Array.prototype.forEach.call(this.children, function (x) { x.className = x === b ? 'aktiv' : ''; });
+    try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (x) { }
     zeigen();
   };
   $('suche').oninput = zeigen;
