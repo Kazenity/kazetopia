@@ -169,6 +169,7 @@
   .erfolg .balken { height: 7px; border-radius: 99px; background: var(--rand); margin-top: 8px; overflow: hidden; }
   .erfolg .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
   .erfolg .un { font-size: 11.5px; color: var(--grau); margin-top: 5px; }
+  .balken.gold i { background: linear-gradient(90deg, #f0c060, var(--gold)) !important; }
   .erfolg.max .balken i { background: linear-gradient(90deg, #f0c060, var(--gold)); }
   .abz { display: flex; flex-wrap: wrap; gap: 6px; }
   .abz span { font-size: 12.5px; font-weight: 700; background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 5px 10px; }
@@ -176,6 +177,22 @@
   .ms { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
   .ms span { font-size: 11px; font-weight: 800; color: var(--gold); background: rgba(255,210,122,.1); border-radius: 6px; padding: 2px 6px; }
   .profil-link { color: var(--rosa); font-weight: 700; }
+  .karte { max-height: calc(100vh - 80px); overflow-y: auto; }
+  .karte .un { font-size: 11.5px; color: var(--grau); }
+  .erfolg .erkl, .karte .erkl { margin-top: 2px; font-style: italic; }
+  .erfolg .un b { color: var(--hell); }
+  .symbole { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 4px; }
+  .sym { width: 38px; height: 38px; border-radius: 12px; background: var(--bg); border: 1px solid var(--rand); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; position: relative; }
+  .sym.ev { border-color: var(--gold); }
+  .sym.ev i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 0 3px; }
+  .trenn { width: 1px; height: 26px; background: var(--rand); margin: 0 4px; }
+  .syminfo { font-size: 12px; color: var(--grau); min-height: 16px; }
+  .aufklapp { width: 100%; margin-top: 10px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--rosa); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px; cursor: pointer; }
+  .liste-abz div { font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid var(--rand); }
+  .liste-abz div.aus { opacity: .45; }
+  .tab div { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 4px 0; border-bottom: 1px solid var(--rand); }
+  .tab div span:last-child { color: var(--grau); white-space: nowrap; }
+  .infoknopf { display: inline-block; margin-top: 6px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
   @media (max-width: 560px) {
     .danke { grid-template-columns: 1fr; }
     .emotes.rest { grid-template-columns: repeat(4, 1fr); }
@@ -203,6 +220,7 @@
     <div class="kl">🌸 KAZE · TWITCH</div>
     <h1>Kaze<span>topia</span></h1>
     <p><span id="unter">Wer hat die meisten Zeni?</span><br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
+    <button class="infoknopf" id="infoknopf">ℹ️ Wie bekomme ich Erfolge?</button>
   </header>
 
   <a class="live" id="live" href="https://twitch.tv/kazenity" target="_blank" rel="noopener" style="display:none"></a>
@@ -260,8 +278,8 @@
   function person(n) { return '<div class="person">' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; }
 
   // ================= ERFOLGE =================
-  // Hauptrang: Watchtime als Dragon-Ball-Leiter
-  var RAENGE = [
+  // Große Leitern: [ab, Symbol, Name]
+  var WT = [
     [1, '🧑', 'Erdling'], [5, '🥋', 'Kampfschüler'], [10, '🐢', 'Kame-Schüler'], [25, '🏟️', 'Budokai-Kämpfer'],
     [50, '🐒', 'Saiyajin'], [75, '🌕', 'Oozaru'], [100, '🔥', 'Kaioken'], [150, '🔵', 'Genkidama-Meister'],
     [200, '💛', 'Super-Saiyajin'], [250, '💛', 'Super-Saiyajin 2'], [300, '💛', 'Super-Saiyajin 3'], [400, '🐉', 'Super-Saiyajin 4'],
@@ -271,91 +289,209 @@
     [3000, '🐈', 'Anwärter Gott der Zerstörung'], [3250, '🐈', 'Gott der Zerstörung'], [4000, '👼', 'Engel'],
     [5000, '🌌', 'Großpriester'], [6000, '👑', 'Zeno – Allkönig']
   ];
-  function rangVon(h) { var r = null; RAENGE.forEach(function (x) { if (h >= x[0]) r = x; }); return r; }
-  function naechsterRang(h) { for (var i = 0; i < RAENGE.length; i++) if (RAENGE[i][0] > h) return RAENGE[i]; return null; }
-
-  // Stufen der anderen Erfolge: feste Liste, danach endlos im gleichen Abstand
-  var ERFOLGE = [
-    { k: 'c', icon: '💬', name: 'Plaudertasche', einheit: 'Nachrichten', stufen: [10, 50, 100, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 7500, 10000], dann: 2500 },
-    { k: 'f', icon: '🌸', name: 'Treue', einheit: 'Tage Follower', stufen: [7, 30, 90, 180, 365], dann: 365, tage: true },
-    { k: 's', icon: '⭐', name: 'Sub-Treue', einheit: 'Sub-Monate', stufen: [1, 3, 6, 9, 12, 18, 24, 30, 36], dann: 12 },
-    { k: 'z', icon: '💰', name: 'Zeni-Rekord', einheit: 'Zeni', stufen: [1000, 5000, 10000, 25000, 50000, 100000, 150000, 250000, 500000, 750000, 1000000], dann: 500000 },
-    { k: 'b', icon: '🎯', name: 'Bingo-Sieger', einheit: 'Monatssiege', stufen: [1, 3, 6, 12], dann: 12 },
-    { k: 'k', icon: '🎬', name: 'Regisseur', einheit: 'Clips', stufen: [1, 5, 10, 25, 50], dann: 50 }
+  var NARUTO = [
+    ['📚', 'Akademie-Schüler', [10, 25, 50]], ['🍥', 'Genin', [100, 200, 350]], ['🎖️', 'Chūnin', [500, 750, 1000]],
+    ['🗡️', 'Spezial-Jōnin', [1500, 2000, 3000]], ['🥷', 'Jōnin', [4000, 5500, 7500]], ['🎭', 'ANBU', [10000, 12500, 15000]],
+    ['🐸', 'Sannin', [20000, 25000, 30000]], ['🟠', 'Sennin-Modus', [40000, 50000, 60000]], ['🏯', 'Kage', [75000, 90000, 110000]],
+    ['🔥', 'Hokage', [130000, 160000, 200000]], ['🦊', 'Bijū-Modus', [250000, 300000, 375000]], ['☯️', 'Sechs-Pfade-Modus', [450000, 550000, 650000]],
+    ['👁️', 'Rinne-Sharingan', [800000, 1000000, 1250000]], ['🌙', 'Ōtsutsuki', [1500000, 1750000, 2000000]]
   ];
-  function stufeInfo(e, wertV) {
-    var st = e.stufen.slice(), letzte = st[st.length - 1];
-    while (letzte <= wertV) { letzte += e.dann; st.push(letzte); }   // endlos verlängern
-    var erreicht = 0, ziel = st[0], vorher = 0;
-    for (var i = 0; i < st.length; i++) { if (wertV >= st[i]) { erreicht = i + 1; vorher = st[i]; } else { ziel = st[i]; break; } }
-    return { stufe: erreicht, ziel: ziel, vorher: vorher };
-  }
+  var CHAT = []; NARUTO.forEach(function (r) { ['I', 'II', 'III'].forEach(function (st, i) { CHAT.push([r[2][i], r[0], r[1] + ' ' + st]); }); });
+  var TREUE = [   // in Tagen
+    [1, '🧹', 'Schiffsjunge'], [7, '⚓', 'Matrose'], [30, '🏴‍☠️', 'Pirat'], [60, '📜', 'Kopfgeld-Pirat'], [90, '🧭', 'Kapitän'],
+    [120, '🌊', 'Rookie der Grand Line'], [180, '🍇', 'Teufelsfrucht-Nutzer'], [270, '👁️', 'Observations-Haki'], [365, '🛡️', 'Rüstungs-Haki'],
+    [548, '⭐', 'Supernova'], [730, '⚔️', 'Samurai der Meere'], [913, '🎖️', 'Kommandant einer Kaiserbande'], [1095, '💥', 'Allstar'],
+    [1278, '🥈', 'Vize-Kapitän eines Kaisers'], [1460, '👑', 'Königs-Haki'], [1825, '🌀', 'Erwachte Teufelsfrucht'], [2190, '🌊', 'Kaiser der Meere'],
+    [2555, '⚔️', 'Bezwinger eines Kaisers'], [2920, '🔥', 'Wille des D.'], [3650, '🏝️', 'Entdecker von Laugh Tale'], [4380, '👒', 'Piratenkönig'],
+    [5475, '☀️', 'Joy Boy'], [7300, '🌞', 'Sonnengott Nika']
+  ];
+  var BLEACH = [   // in Sub-Monaten
+    [1, '📚', 'Shinō-Akademie-Schüler'], [2, '⚫', 'Shinigami'], [3, '⚫', '20. Offizier'], [4, '⚫', '18. Offizier'], [5, '⚫', '16. Offizier'],
+    [6, '⚫', '14. Offizier'], [8, '⚫', '12. Offizier'], [10, '⚫', '10. Offizier'], [12, '🗡️', 'Shikai'], [15, '⚫', '8. Offizier'],
+    [18, '⚫', '7. Offizier'], [21, '⚫', '6. Offizier'], [24, '⚫', '5. Offizier'], [27, '⚫', '4. Offizier'], [30, '⚫', '3. Offizier'],
+    [36, '🎖️', 'Vizekommandant'], [42, '⚔️', 'Bankai'], [48, '🥋', 'Kommandant'], [54, '🔥', 'Vollendetes Bankai'],
+    [60, '🏯', 'Generalkommandant'], [72, '👑', 'Zero-Division'], [84, '🌌', 'Kopf der Zero-Division'], [96, '✨', 'Wächter des Seelenkönigs'],
+    [120, '👁️', 'Seelenkönig']
+  ];
+  var GROSS = [
+    { k: 'w', icon: '⏱️', titel: 'Watchtime', anime: 'Dragon Ball', text: 'Wie viele Stunden du live zugeschaut hast', leiter: WT, fmt: function (v) { return zahl(v) + ' Std.'; }, weiter: 0 },
+    { k: 'c', icon: '💬', titel: 'Chat', anime: 'Naruto', text: 'Wie viele Nachrichten du im Chat geschrieben hast (ohne !Befehle)', leiter: CHAT, fmt: function (v) { return zahl(v) + ' Nachrichten'; }, weiter: 250000 },
+    { k: 'f', icon: '🌸', titel: 'Treue', anime: 'One Piece', text: 'Wie lange du Kaze schon folgst', leiter: TREUE, fmt: dauerText, weiter: 730 },
+    { k: 's', icon: '⭐', titel: 'Sub-Treue', anime: 'Bleach', text: 'Wie viele Monate du insgesamt abonniert hast', leiter: BLEACH, fmt: function (v) { return v + (v == 1 ? ' Sub-Monat' : ' Sub-Monate'); }, weiter: 24 }
+  ];
+  var FARBEN = [['🟤', 'Bronze'], ['⚪', 'Silber'], ['🟡', 'Gold'], ['🔷', 'Platin'], ['💎', 'Diamant'], ['🟣', 'Meister'], ['🔴', 'Großmeister'], ['🌈', 'Legende'], ['🌌', 'Mythisch'], ['✨', 'Göttlich']];
+  var KLEIN = [
+    { k: 'z', icon: '💰', titel: 'Zeni-Rekord', text: 'Dein höchster Zeni-Stand aller Zeiten (Ausgeben senkt ihn nicht)', stufen: [25000, 100000, 250000, 500000, 1000000, 2500000, 5000000, 10000000, 25000000, 50000000], einheit: 'Zeni' },
+    { k: 'j', icon: '🎰', titel: 'Jackpot-Knacker', text: 'Wie oft du den Rubbellos-Jackpot geknackt hast', stufen: [1, 3, 5, 10, 25, 50, 100, 250, 500, 1000], einheit: 'Jackpots' },
+    { k: 'p', icon: '🍀', titel: 'Pechvogel', text: 'Wie viele Rubbellose bei dir Nieten waren', stufen: [25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000], einheit: 'Nieten' },
+    { k: 'b', icon: '🎯', titel: 'Bingo-Sieger', text: 'Wie viele Monate du das Stream-Bingo gewonnen hast', stufen: [1, 3, 6, 12, 24, 36, 60, 100, 150, 200], einheit: 'Monatssiege' },
+    { k: 'k', icon: '🎬', titel: 'Regisseur', text: 'Wie viele Clips du auf dem Kanal erstellt hast', stufen: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500], einheit: 'Clips' },
+    { k: 'd', icon: '🔥', titel: 'Dauerbrenner', text: 'Deine längste Watch-Streak: Streams am Stück ohne Pause (wenn du sie im Chat teilst)', stufen: [10, 25, 50, 100, 200, 365, 500, 1000, 1500, 2000], einheit: 'Streams am Stück' }
+  ];
+  var ABZEICHEN = [
+    { id: 'og', icon: '👑', name: 'OG', text: 'Mindestens 2 Jahre Follower und 500 Std. Watchtime – oder ab 1.000 Std.' },
+    { id: 'u', icon: '💜', name: 'Unterstützer', text: 'Hat den Kanal schon einmal unterstützt (Sub, Gift, Bits oder Spende)' },
+    { id: 'day1', icon: '🌱', name: 'Day One', text: 'Folgt Kaze schon seit 2019' },
+    { id: 'g', icon: '🎂', name: 'Geburtstagskind', text: 'Hat seinen Geburtstag mit !geburtstag eingetragen' },
+    { id: 't', icon: '🏆', name: 'Top 10', text: 'War schon einmal in einer Top 10 von Kazetopia' },
+    { id: 'x', icon: '⚔️', name: 'Saber-Bezwinger', text: 'Hat einen Bingo-Monat gegen Saber gewonnen' }
+  ];
+  var EVENTS = {
+    sc26z: ['⏳', 'Zeitreisender', 'Saiyan Class 2026 · 10 Std. Watchtime im Event'],
+    sc26s: ['⚡', 'Super Saiyajin', 'Saiyan Class 2026 · 3 Subs im Event'],
+    sc26l: ['💙', 'Legendärer Krieger', 'Saiyan Class 2026 · Top 3 Gifter im Event']
+  };
+
   function zahl(v) { return Number(v).toLocaleString('de-DE', { maximumFractionDigits: 1 }); }
   function tageSeit(d) { var t = Date.parse(d); return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); }
+  function dauerText(t) {
+    if (t >= 365) { var j = Math.floor(t / 365 * 10) / 10; return zahl(j) + (j == 1 ? ' Jahr' : ' Jahre'); }
+    if (t >= 30) { var m = Math.floor(t / 30); return m + (m == 1 ? ' Monat' : ' Monate'); }
+    return t + (t == 1 ? ' Tag' : ' Tage');
+  }
+  function wertVon(sp, k) { if (k === 'f') return sp.f ? tageSeit(sp.f) : 0; return sp[k] || 0; }
+
+  // Leiter auswerten (endlos: nach dem letzten Eintrag gleichbleibender Abstand)
+  function leiterInfo(leiter, v, weiter) {
+    var akt = null, nx = null;
+    for (var i = 0; i < leiter.length; i++) { if (v >= leiter[i][0]) akt = leiter[i]; else { nx = leiter[i]; break; } }
+    if (!nx && weiter) {
+      var last = leiter[leiter.length - 1], n = Math.floor((v - last[0]) / weiter) + 1;
+      if (v >= last[0]) akt = [last[0] + (n - 1) * weiter, last[1], last[2] + (n > 1 ? ' ✦' + (n - 1) : '')];
+      nx = [last[0] + n * weiter, last[1], last[2] + ' ✦' + n];
+    }
+    return { akt: akt, nx: nx };
+  }
+  function kleinInfo(e, v) {
+    var st = e.stufen.slice(), stufe = -1;
+    for (var i = 0; i < st.length; i++) if (v >= st[i]) stufe = i;
+    var schritt = st[st.length - 1] - st[st.length - 2];
+    var ziel = stufe + 1 < st.length ? st[stufe + 1] : st[st.length - 1] + schritt * (Math.floor((v - st[st.length - 1]) / schritt) + 1);
+    var vorher = stufe >= 0 ? (stufe < st.length ? st[stufe] : 0) : 0;
+    if (stufe === st.length - 1 && v >= st[st.length - 1]) vorher = ziel - schritt;
+    var farbe = stufe >= 0 ? FARBEN[Math.min(stufe, FARBEN.length - 1)] : null;
+    var extra = stufe === st.length - 1 ? Math.floor((v - st[st.length - 1]) / schritt) : 0;
+    var nxFarbe = stufe + 1 < FARBEN.length ? FARBEN[stufe + 1] : FARBEN[FARBEN.length - 1];
+    return { farbe: farbe, extra: extra, ziel: ziel, vorher: vorher, nxFarbe: nxFarbe };
+  }
+  function balken(v, von, bis) { return Math.max(2, Math.min(100, (v - von) / Math.max(1, bis - von) * 100)); }
+  function hatAbzeichen(sp, id) {
+    if (id === 'og') return ((sp.f && tageSeit(sp.f) >= 730 && (sp.w || 0) >= 500) || (sp.w || 0) >= 1000);
+    if (id === 'day1') return sp.f && sp.f < '2020';
+    return !!sp[id];
+  }
+
+  function grossZeile(g, sp) {
+    var v = wertVon(sp, g.k), info = leiterInfo(g.leiter, v, g.weiter);
+    var h = '<div class="erfolg"><div class="ob">' + g.icon + ' ' + g.titel + (info.akt ? ' · ' + info.akt[1] + ' ' + esc(info.akt[2]) : '') + '<span>' + g.fmt(v) + '</span></div>' +
+      '<div class="un erkl">' + g.text + '</div>';
+    if (info.nx) {
+      var von = info.akt ? info.akt[0] : 0;
+      h += '<div class="balken"><i style="width:' + balken(v, von, info.nx[0]) + '%"></i></div>' +
+        '<div class="un">Nächster Rang: ' + info.nx[1] + ' ' + esc(info.nx[2]) + ' – ab ' + g.fmt(info.nx[0]) + ' · <b>noch ' + g.fmt(Math.ceil((info.nx[0] - v) * 10) / 10) + '</b></div>';
+    }
+    else if (g.k === 'w') {
+      // Höchster Rang erreicht: Kampfkraft-Meilensteine alle 10.000 (= 1.000 Std.)
+      var kk = Math.floor(v * 10), ziel = (Math.floor(kk / 10000) + 1) * 10000;
+      h += '<div class="balken gold"><i style="width:' + Math.max(2, (kk % 10000) / 100) + '%"></i></div>' +
+        '<div class="un">✦ Höchster Rang erreicht – nächster Kampfkraft-Meilenstein ' + zahl(ziel) + ' · <b>noch ' + zahl((ziel - kk) / 10) + ' Std.</b></div>';
+    }
+    return h + '</div>';
+  }
+  function kleinZeile(e, sp) {
+    var v = wertVon(sp, e.k), ki = kleinInfo(e, v);
+    return '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.titel + (ki.farbe ? ' · ' + ki.farbe[0] + ' ' + ki.farbe[1] + (ki.extra ? ' ✦' + ki.extra : '') : '') + '<span>' + zahl(v) + ' ' + e.einheit + '</span></div>' +
+      '<div class="un erkl">' + e.text + '</div>' +
+      '<div class="balken"><i style="width:' + balken(v, ki.vorher, ki.ziel) + '%"></i></div>' +
+      '<div class="un">Nächste Stufe: ' + ki.nxFarbe[0] + ' ' + ki.nxFarbe[1] + ' – ab ' + zahl(ki.ziel) + ' ' + e.einheit + ' · <b>noch ' + zahl(ki.ziel - v) + '</b></div></div>';
+  }
 
   function profilZeigen(login) {
     if (!daten) return;
     var sp = (daten.spieler || {})[login];
-    var p = prof(login);
-    var name = p.n || login;
+    var p = prof(login), name = p.n || login;
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button>';
     if (!sp) {
       h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b><div class="kk">Noch keine Erfolge – einfach im Stream vorbeischauen 🌸</div></div></div>';
-    } else {
-      var std = sp.w || 0, r = rangVon(std), nx = naechsterRang(std), kk = Math.floor(std * 10);
-      var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
-      h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
-        (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
-        '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + '</div></div></div>';
+      return karteOeffnen(h);
+    }
+    var std = sp.w || 0, r = leiterInfo(WT, std, 0).akt, kk = Math.floor(std * 10);
+    var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
+    h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
+      (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
+      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div></div></div>';
 
-      // Hauptrang
-      h += '<h4>⏱️ WATCHTIME · ' + zahl(std) + ' STD.' + (platz ? ' · PLATZ ' + platz : '') + '</h4>';
-      if (nx) {
-        var von = r ? r[0] : 0, proz = Math.max(2, Math.min(100, (std - von) / (nx[0] - von) * 100));
-        h += '<div class="erfolg"><div class="ob">Nächster Rang: ' + nx[1] + ' ' + esc(nx[2]) + '<span>ab ' + zahl(nx[0]) + ' Std.</span></div>' +
-          '<div class="balken"><i style="width:' + proz + '%"></i></div><div class="un">noch ' + zahl(Math.ceil((nx[0] - std) * 10) / 10) + ' Std.</div></div>';
-      } else {
-        var naechsteKK = (Math.floor(kk / 10000) + 1) * 10000, proz2 = Math.max(2, (kk % 10000) / 100);
-        h += '<div class="erfolg max"><div class="ob">✦ Höchster Rang erreicht ✦<span>nächster Meilenstein ' + zahl(naechsteKK) + '</span></div>' +
-          '<div class="balken"><i style="width:' + proz2 + '%"></i></div><div class="un">noch ' + zahl((naechsteKK - kk) / 10) + ' Std.</div></div>';
-      }
-      if (kk >= 9000) {
-        h += '<div class="ms">'; h += '<span>9.000 · über 9000!</span>';
-        for (var m = 10000; m <= kk; m += 10000) h += '<span>' + zahl(m) + '</span>';
-        h += '</div>';
-      }
+    // Abzeichen (nur freigeschaltete, als Symbole)
+    var hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
+    var ev = (sp.e || []).filter(function (c) { return EVENTS[c]; });
+    if (hat.length || ev.length) {
+      h += '<div class="symbole">';
+      hat.forEach(function (a) { h += '<span class="sym" data-info="' + esc(a.name + ' – ' + a.text) + '" title="' + esc(a.name + ' – ' + a.text) + '">' + a.icon + '</span>'; });
+      if (ev.length) { h += '<span class="trenn"></span>'; ev.forEach(function (c) { var e = EVENTS[c]; h += '<span class="sym ev" data-info="' + esc(e[1] + ' – ' + e[2]) + '" title="' + esc(e[1] + ' – ' + e[2]) + '">' + e[0] + '<i>26</i></span>'; }); }
+      h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
+    }
 
-      // weitere Erfolge
-      h += '<h4>🏅 ERFOLGE</h4>';
-      ERFOLGE.forEach(function (e) {
-        var v = e.tage ? (sp.f ? tageSeit(sp.f) : 0) : (sp[e.k] || 0);
-        if (!v && (e.k === 'b' || e.k === 'k')) return;   // Bingo/Clips nur zeigen, wenn schon etwas da ist
-        var s = stufeInfo(e, v);
-        var proz = Math.max(2, Math.min(100, (v - s.vorher) / (s.ziel - s.vorher) * 100));
-        var anzeige = e.tage ? (v >= 365 ? zahl(Math.floor(v / 365 * 10) / 10) + ' Jahre' : v + ' Tage') : zahl(v) + ' ' + e.einheit;
-        h += '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.name + (s.stufe ? ' · Stufe ' + s.stufe : '') + '<span>' + anzeige + '</span></div>' +
-          '<div class="balken"><i style="width:' + proz + '%"></i></div><div class="un">nächste Stufe bei ' + (e.tage ? (s.ziel >= 365 ? zahl(s.ziel / 365) + ' Jahren' : s.ziel + ' Tagen') : zahl(s.ziel) + ' ' + e.einheit) + '</div></div>';
-      });
+    // Ränge (nur mit Fortschritt)
+    h += '<h4>🏅 RÄNGE</h4>';
+    GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossZeile(g, sp); });
 
-      // Abzeichen
-      var abz = [
-        // OG: mind. 2 Jahre Follower + 500 Std. Watchtime – oder ab 1.000 Std. immer (falls das Follow-Datum fehlt)
-        [((sp.f && tageSeit(sp.f) >= 730 && (sp.w || 0) >= 500) || (sp.w || 0) >= 1000), '👑 OG'],
-        [sp.u, '💜 Unterstützer'], [sp.f && sp.f < '2020', '🌱 Day One'], [sp.g, '🎂 Geburtstagskind'],
-        [sp.t, '🏆 Top 10'], [sp.x, '⚔️ Saber-Bezwinger']
-      ];
-      h += '<h4>✨ ABZEICHEN</h4><div class="abz">';
-      abz.forEach(function (a) { h += '<span' + (a[0] ? '' : ' class="aus"') + '>' + a[1] + '</span>'; });
+    // freigeschaltete kleine Erfolge kompakt
+    var kleinHat = KLEIN.filter(function (e) { return wertVon(sp, e.k) > 0 && kleinInfo(e, wertVon(sp, e.k)).farbe; });
+    if (kleinHat.length) {
+      h += '<h4>🎨 ERFOLGE</h4><div class="abz">';
+      kleinHat.forEach(function (e) { var ki = kleinInfo(e, wertVon(sp, e.k)); h += '<span>' + e.icon + ' ' + e.titel + ' · ' + ki.farbe[0] + ' ' + ki.farbe[1] + (ki.extra ? ' ✦' + ki.extra : '') + '</span>'; });
       h += '</div>';
     }
+
+    // Als Nächstes: die 3 nächsten Ziele (größter Fortschritt)
+    var ziele = [];
+    KLEIN.forEach(function (e) { var v = wertVon(sp, e.k); if (v > 0) { var ki = kleinInfo(e, v); ziele.push({ p: (v - ki.vorher) / Math.max(1, ki.ziel - ki.vorher), html: kleinZeile(e, sp) }); } });
+    if (!hatAbzeichen(sp, 'og')) { var pOg = Math.min((sp.w || 0) / 500, sp.f ? tageSeit(sp.f) / 730 : 0); ziele.push({ p: pOg, html: '<div class="erfolg"><div class="ob">👑 OG<span>' + zahl(sp.w || 0) + ' / 500 Std.</span></div><div class="un erkl">' + ABZEICHEN[0].text + '</div><div class="balken"><i style="width:' + Math.max(2, pOg * 100) + '%"></i></div></div>' }); }
+    ziele.sort(function (a, b) { return b.p - a.p; });
+    if (ziele.length) { h += '<h4>🎯 ALS NÄCHSTES</h4>'; ziele.slice(0, 3).forEach(function (z) { h += z.html; }); }
+
+    // Alle Erfolge (aufklappbar)
+    h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
+    h += '<h4>RÄNGE</h4>'; GROSS.forEach(function (g) { h += grossZeile(g, sp); });
+    h += '<h4>ERFOLGE</h4>'; KLEIN.forEach(function (e) { h += kleinZeile(e, sp); });
+    h += '<h4>ABZEICHEN</h4><div class="liste-abz">';
+    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + (ja ? ' ✓' : '') + '</div>'; });
+    h += '</div></div>';
+    karteOeffnen(h);
+    $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
+    Array.prototype.forEach.call(document.querySelectorAll('#karte .sym'), function (el) { el.onclick = function () { $('syminfo').textContent = el.getAttribute('data-info'); }; });
+  }
+  function karteOeffnen(h) {
     $('karte').innerHTML = h;
     $('kartebg').className = 'karte-bg offen';
     $('zu').onclick = profilZu;
+    $('karte').scrollTop = 0;
   }
+
+  // ℹ️ Übersicht: alle Ränge, Erfolge und Abzeichen
+  function uebersicht() {
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>Wie bekomme ich Erfolge?</b><div class="kk">Klick auf einen Namen zeigt dessen Profil. Alles wird automatisch gezählt.</div></div></div>';
+    GROSS.forEach(function (g) {
+      h += '<h4>' + g.icon + ' ' + g.titel.toUpperCase() + ' · ' + g.anime.toUpperCase() + '</h4><div class="un erkl">' + g.text + '</div><div class="tab">';
+      g.leiter.forEach(function (x) { h += '<div><span>' + x[1] + ' ' + esc(x[2]) + '</span><span>' + g.fmt(x[0]) + '</span></div>'; });
+      h += '</div>';
+    });
+    h += '<h4>🎨 ERFOLGE · ' + FARBEN.map(function (f) { return f[0]; }).join(' ') + '</h4><div class="un erkl">Stufen: ' + FARBEN.map(function (f) { return f[1]; }).join(' → ') + '</div>';
+    KLEIN.forEach(function (e) {
+      h += '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.titel + '</div><div class="un erkl">' + e.text + '</div><div class="un">' + e.stufen.map(function (x, i) { return FARBEN[i][0] + ' ' + zahl(x); }).join(' · ') + '</div></div>';
+    });
+    h += '<h4>✨ ABZEICHEN</h4><div class="liste-abz">';
+    ABZEICHEN.forEach(function (a) { h += '<div>' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + '</div>'; });
+    Object.keys(EVENTS).forEach(function (c) { var e = EVENTS[c]; h += '<div>' + e[0] + ' <b>' + e[1] + '</b> – ' + e[2] + '</div>'; });
+    h += '</div><div class="un erkl" style="margin-top:10px">Ganz große Erfolge werden live im Chat gefeiert 🏅</div>';
+    karteOeffnen(h);
+  }
+
   function profilZu() { $('kartebg').className = 'karte-bg'; }
   $('kartebg').onclick = function (e) { if (e.target === this) profilZu(); };
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') profilZu(); });
   document.addEventListener('click', function (e) {
+    if (e.target.closest('#infoknopf')) { uebersicht(); return; }
     var t = e.target.closest('[data-l]');
     if (!t || t.closest('#karte')) return;
     profilZeigen(t.getAttribute('data-l'));
