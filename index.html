@@ -218,6 +218,27 @@
   .tab div { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 4px 0; border-bottom: 1px solid var(--rand); }
   .tab div span:last-child { color: var(--grau); white-space: nowrap; }
   .infoknopf { display: inline-block; margin-top: 6px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .seite { display: none; }
+  @media (min-width: 1100px) {
+    .wrap { max-width: 1240px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
+    .seite { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 16px; }
+    .ichbar { display: none !important; } body.mit-ich { padding-bottom: 0; }
+    .platz .av { width: 76px; height: 76px; } .platz.p1 .av { width: 92px; height: 92px; }
+  }
+  .sbox { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 16px; padding: 14px 16px; }
+  .sbox h3 { font-size: 11.5px; letter-spacing: .12em; color: var(--rosa); margin: 0 0 10px; font-weight: 800; }
+  .sbox .z { display: flex; align-items: center; gap: 9px; padding: 6px 0; font-size: 13px; font-weight: 700; cursor: pointer; border-bottom: 1px solid var(--rand); }
+  .sbox .z:last-child { border-bottom: 0; } .sbox .z .av { width: 28px; height: 28px; }
+  .sbox .z b { margin-left: auto; color: var(--rosa); white-space: nowrap; font-size: 12.5px; }
+  .sbox .z .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sbox .leise { font-size: 12.5px; color: var(--grau); line-height: 1.5; }
+  .sbox .ich { display: flex; align-items: center; gap: 12px; cursor: pointer; } .sbox .ich .av { width: 48px; height: 48px; }
+  .sbox .plz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .sbox .plz div { background: var(--bg); border-radius: 10px; padding: 8px 4px; text-align: center; font-size: 11px; color: var(--grau); font-weight: 700; }
+  .sbox .plz div b { display: block; font-size: 16px; color: var(--hell); }
+  .sbox .clip img { width: 100%; border-radius: 10px; display: block; } .sbox .clip span { display: block; font-size: 12.5px; font-weight: 700; margin-top: 7px; color: var(--hell); }
+  .sbox .clip { text-decoration: none; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -265,6 +286,7 @@
 
   <a class="live" id="live" href="https://twitch.tv/kazenity" target="_blank" rel="noopener" style="display:none"></a>
 
+  <div class="layout"><main class="haupt">
   <div class="reiter" id="reiter">
     <button data-r="zeni" class="aktiv">💰 Zeni</button>
     <button data-r="watchtime">⏱️ Watchtime</button>
@@ -280,6 +302,9 @@
   <div class="podest" id="podest"></div>
   <input class="suche" id="suche" placeholder="Deinen Namen suchen …" autocomplete="off">
   <div class="liste" id="liste"><div class="leer">Lade Rangliste …</div></div>
+  </main>
+  <aside class="seite" id="seite"></aside>
+  </div>
 
   <nav class="socials">
     <a href="https://twitch.tv/kazenity" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Twitch</a>
@@ -407,6 +432,26 @@
     if (a.id === 'pk' && sp.q) return ' <b>(' + sp.q + '/25)</b>';
     if (a.id === 'wp' && sp.v) return ' <b>(' + sp.v + '/5)</b>';
     return '';
+  }
+  // Seitenleiste am PC
+  function seiteZeigen() {
+    if (!daten) return;
+    function platzIn(l) { var p = 0; (l || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) p = i + 1; }); return p ? '#' + p : '–'; }
+    function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm">' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
+    var h = '';
+    if (ich) {
+      var nm = prof(ich).n || ich;
+      h += '<div class="sbox"><h3>👤 DU</h3><div class="ich"' + dl(ich) + '>' + bild(ich, true) + '<div><b>' + esc(nm) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
+        '<div class="plz"><div><b>' + platzIn(daten.zeni) + '</b>Zeni</div><div><b>' + platzIn(daten.watchtime) + '</b>Watchtime</div><div><b>' + platzIn(daten.chat) + '</b>Chat</div></div></div>';
+    } else h += '<div class="sbox"><h3>👤 DU</h3><div class="leise">Klick auf deinen Namen und dann auf <b>⭐ Das bin ich</b> – dann siehst du hier immer deine Plätze.</div></div>';
+    if (daten.monat) {
+      var mn = (daten.monat.name || 'Monat').toUpperCase();
+      h += '<div class="sbox"><h3>⏱️ WATCHTIME · ' + esc(mn) + '</h3>' + mini(daten.monat.watchtime, function (w) { return zahl(w) + ' Std.'; }) + '</div>';
+      h += '<div class="sbox"><h3>💬 CHAT · ' + esc(mn) + '</h3>' + mini(daten.monat.chat, function (w) { return Number(w).toLocaleString('de-DE'); }) + '</div>';
+    }
+    var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
+    if (cw) h += '<div class="sbox"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(cw.bild) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + ' · ▶ ' + Number(cw.aufrufe).toLocaleString('de-DE') + '</div></div>';
+    $('seite').innerHTML = h;
   }
   // „Das bin ich“-Leiste unten
   function ichLeiste(l, monat) {
@@ -824,7 +869,7 @@
     var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
     $('zeitwahl').style.display = mitMonat ? '' : 'none';
     if (mitMonat) $('zeitwahl').innerHTML = '<button data-m="0"' + (monatsModus ? '' : ' class="aktiv"') + '>Gesamt</button><button data-m="1"' + (monatsModus ? ' class="aktiv"' : '') + '>' + esc(daten.monat.name || 'Dieser Monat') + '</button>';
-    if (sonder()) { ichLeiste(null); return; }
+    if (sonder()) { ichLeiste(null); seiteZeigen(); return; }
     var monat = mitMonat && monatsModus;
     var l = (monat ? daten.monat[reiter] : daten[reiter]) || [];
     var such = $('suche').value.trim().toLowerCase();
@@ -864,6 +909,7 @@
     $('liste').innerHTML = h;
     if ($('mehrbtn')) $('mehrbtn').onclick = function (e) { e.stopPropagation(); alleZeigen = true; zeigen(); };
     ichLeiste(l, monat);
+    seiteZeigen();
     if (monat) { $('hinweis').textContent = 'Zuwachs seit dem 1. ' + (daten.monat.name || '') + ' · Top ' + l.length + (reiter === 'chat' && daten.monat.name === 'November' ? ' · Chat wird im November erst ab dem 4. gezählt' : ''); return; }
     $('hinweis').textContent = reiter === 'chat' && daten.chatGesamt ? 'Insgesamt ' + Number(daten.chatGesamt).toLocaleString('de-DE') + ' Chat-Nachrichten · gezählt von StreamElements' : 'Top ' + l.length;
   }
