@@ -396,7 +396,7 @@
     return '<div class="kk riv">⚔️ Noch <b>' + zahl(noch) + ' Std.</b> bis du <b>' + esc(name) + '</b> überholst' + (platz ? '' : ' (Platz ' + l.length + ')') + '</div>';
   }
   // Seltenheit: Anteil aller Zuschauer (ab 1 Std. Watchtime), die etwas haben
-  var basisCache = null;
+  var basisCache = null, maxBingo = null, anteilCache = {};
   function basis() {
     if (basisCache) return basisCache;
     var sl = daten.spieler || {}, b = [];
@@ -408,10 +408,21 @@
     var n = b.filter(fn).length, p = n / b.length * 100;
     return p < 1 ? 'unter 1 %' : (p < 10 ? zahl(Math.round(p * 10) / 10) : Math.round(p)) + ' %';
   }
-  function abzAnteil(a) { return '📊 ' + anteil(function (x) { return hatAbzeichen(x, a.id); }) + ' haben das'; }
+  function abzAnteil(a) {
+    if (anteilCache[a.id] === undefined) anteilCache[a.id] = anteil(function (x) { return hatAbzeichen(x, a.id); });
+    return '📊 ' + anteilCache[a.id] + ' haben das';
+  }
   // Reiter in Karte/Info
   function chips(sek) {
     return '<div class="ichips">' + sek.map(function (x, i) { return '<button data-sek="' + x[0] + '"' + (i ? '' : ' class="aktiv"') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+  }
+  function kleinAnteil(e, farbe) {
+    var key = e.k + '_' + farbe[1];
+    if (anteilCache[key] === undefined) {
+      var ab = FARBEN.indexOf(farbe), min = e.stufen[Math.min(ab, e.stufen.length - 1)];
+      anteilCache[key] = anteil(function (x) { return wertVon(x, e.k) >= min; });
+    }
+    return anteilCache[key];
   }
   function abzText(a, sp) {
     if (a.id === 'kw' && sp.kw) return a.name + ' – ' + sp.kw;
@@ -455,7 +466,7 @@
   function balken(v, von, bis) { return Math.max(2, Math.min(100, (v - von) / Math.max(1, bis - von) * 100)); }
   function hatAbzeichen(sp, id) {
     if (id === 'og') return !!(sp.f && tageSeit(sp.f) >= 730 && (sp.w || 0) >= 1000);
-    if (id === 'eg') { var mx = 0, sl = (daten && daten.spieler) || {}; for (var l in sl) if ((sl[l].b || 0) > mx) mx = sl[l].b; return mx > 0 && (sp.b || 0) === mx; }
+    if (id === 'eg') { if (maxBingo === null) { maxBingo = 0; var sl = (daten && daten.spieler) || {}; for (var l in sl) if ((sl[l].b || 0) > maxBingo) maxBingo = sl[l].b; } return maxBingo > 0 && (sp.b || 0) === maxBingo; }
     if (id === 'day1') return !!(sp.f && sp.f < '2020' && (sp.w || 0) >= 100);
     if (id === 'kw') return sp.kw !== undefined;
     if (id === 'pk') return (sp.q || 0) >= 25;
@@ -502,7 +513,7 @@
       '<div class="un erkl">' + e.text + '</div>' +
       '<div class="balken"><i style="width:' + balken(v, ki.vorher, ki.ziel) + '%"></i></div>' +
       '<div class="un">Nächste Stufe: ' + ki.nxFarbe[0] + ' ' + ki.nxFarbe[1] + ' – ab ' + zahl(ki.ziel) + ' ' + e.einheit + ' · <b>noch ' + zahl(ki.ziel - v) + '</b></div>' +
-      (ki.farbe ? '<div class="un selten">📊 ' + anteil(function (x) { var w = wertVon(x, e.k), k2 = kleinInfo(e, w); return k2.farbe && FARBEN.indexOf(k2.farbe) >= FARBEN.indexOf(ki.farbe); }) + ' haben ' + ki.farbe[1] + ' oder höher</div>' : '') + '</div>';
+      (ki.farbe ? '<div class="un selten">📊 ' + kleinAnteil(e, ki.farbe) + ' haben ' + ki.farbe[1] + ' oder höher</div>' : '') + '</div>';
   }
 
   function profilZeigen(login) {
