@@ -855,7 +855,13 @@
   $('ichbar').onclick = function () { if (ich) profilZeigen(ich); };
   $('zeitwahl').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; monatsModus = b.getAttribute('data-m') === '1'; zeigen(); };
 
-  fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+  // Daten direkt aus dem Repo laden (ohne auf den Neubau von GitHub Pages zu warten), sonst die Kopie der Seite
+  function datenLaden() {
+    return fetch('https://raw.githubusercontent.com/Kazenity/kazetopia/main/daten.json?t=' + Date.now())
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .catch(function () { return fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }); });
+  }
+  datenLaden().then(function (d) {
     daten = d;
     plaetzeMerken(d);
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
