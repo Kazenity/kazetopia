@@ -267,6 +267,7 @@
   .vneu { display: flex; gap: 8px; margin-top: 10px; } .vneu input { flex: 1; min-width: 0; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 11px 14px; outline: none; }
   .vneu button { font-family: inherit; font-size: 13px; font-weight: 800; color: var(--dunkel); background: var(--rosa); border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; }
   .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
+  .platz.p1 .n { color: #fff !important; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -426,18 +427,24 @@
       : sbFetch('/rest/v1/stimmen?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, geaendert: new Date().toISOString() } });
     sFrisch().then(function () { return p; }).then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = e.message; zeigen(); });
   }
-  function normName(n) { return String(n || '').toLowerCase().replace(/[^a-z0-9äöüß]+/g, ''); }
+  function normName(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9ß]+/g, ''); }
+  // Grundname ohne Editionen: „Ghost of Yōtei: Complete Edition“ -> „ghostofyotei“
+  function basisName(n) {
+    var t = String(n || '').split(/\s[-–—]\s|:/)[0];
+    t = t.replace(/\b(complete|definitive|deluxe|ultimate|gold|goty|game of the year|remastered|remaster|director'?s cut|edition|enhanced|anniversary|standard)\b/gi, '');
+    return normName(t);
+  }
   function gespieltId(g) {
     var n = normName(g.name), treffer = false;
     (daten && daten.spiele || []).forEach(function (x) {
       var m = String(x.b || '').match(/ttv-boxart\/(\d+)/);
-      if ((m && m[1] === String(g.id)) || normName(x.n) === n) treffer = true;
+      if ((m && m[1] === String(g.id)) || normName(x.n) === n || basisName(x.n) === basisName(g.name)) treffer = true;
     });
     return treffer;
   }
   function belegtStatus(g) {
     var n = String(g.name || '').toLowerCase(), r = '';
-    vote.belegt.forEach(function (b) { if ((b.spiel_id && b.spiel_id === String(g.id)) || b.name === n) r = b.freigegeben ? 'frei' : 'wartet'; });
+    vote.belegt.forEach(function (b) { if ((b.spiel_id && b.spiel_id === String(g.id)) || b.name === n || basisName(b.name) === basisName(g.name)) r = b.freigegeben ? 'frei' : 'wartet'; });
     return r;
   }
   function suchen(q) {
@@ -511,7 +518,20 @@
     if (!p.b) return '<span class="av">' + buchstabe + '</span>';
     return '<img class="av" loading="lazy" alt="" src="' + esc(p.b.replace('300x300', gross ? '150x150' : '70x70')) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
   }
-  function person(n, zusatz) { var nm = String(prof(n).n || n); return '<div class="person">' + bild(n) + '<span' + (nm.length > 13 ? ' class="lang"' : '') + '>' + esc(nm) + '</span>' + (zusatz || '') + '</div>'; }
+  // Twitch-Chatfarbe, bei zu dunklen Farben aufgehellt (lesbar auf dunklem Hintergrund)
+  var farbCache = {};
+  function farbe(n) {
+    var l = String(n || '').toLowerCase(), f = daten && daten.farben && daten.farben[l];
+    if (!f) return '';
+    if (farbCache[f]) return farbCache[f];
+    var r = parseInt(f.substr(1, 2), 16), g = parseInt(f.substr(3, 2), 16), b = parseInt(f.substr(5, 2), 16);
+    if (isNaN(r + g + b)) return '';
+    var hell = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    if (hell < 0.55) { var k = Math.min(0.7, (0.55 - hell) * 1.6 + 0.15); r = Math.round(r + (255 - r) * k); g = Math.round(g + (255 - g) * k); b = Math.round(b + (255 - b) * k); }
+    return (farbCache[f] = 'rgb(' + r + ',' + g + ',' + b + ')');
+  }
+  function fs(n) { var f = farbe(n); return f ? ' style="color:' + f + '"' : ''; }
+  function person(n, zusatz) { var nm = String(prof(n).n || n); return '<div class="person">' + bild(n) + '<span' + (nm.length > 13 ? ' class="lang"' : '') + fs(n) + '>' + esc(nm) + '</span>' + (zusatz || '') + '</div>'; }
 
   // ================= ERFOLGE =================
   // Große Leitern: [ab, Symbol, Name]
@@ -604,7 +624,7 @@
   function seiteZeigen() {
     if (!daten) return;
     function platzIn(l) { var p = 0; (l || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) p = i + 1; }); return p ? '#' + p : '–'; }
-    function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm">' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
+    function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
     var h = '';
     if (ich) {
       var nm = prof(ich).n || ich;
@@ -790,7 +810,7 @@
     try { history.replaceState(null, '', '#profil=' + encodeURIComponent(login)); } catch (x) { }
     var std = sp.w || 0, r = leiterInfo(WT, std, 0).akt, kk = Math.floor(std * 10);
     var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
-    h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
+    h += '<div class="kopf">' + bild(login, true) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' +
       (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
       '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div>' + rivale(platz, std) +
       '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button></div></div>';
@@ -1057,7 +1077,7 @@
     reihen.forEach(function (i) {
       var x = l[i];
       if (!x) { p += '<div></div>'; return; }
-      p += '<div class="platz p' + (i + 1) + '"' + dl(x.n) + '><div class="m">' + medaillen[i] + '</div>' + bild(x.n, true) + '<div class="n">' + esc(prof(x.n).n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      p += '<div class="platz p' + (i + 1) + '"' + dl(x.n) + '><div class="m">' + medaillen[i] + '</div>' + bild(x.n, true) + '<div class="n"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
     $('podest').innerHTML = p;
 
