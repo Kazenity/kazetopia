@@ -271,6 +271,7 @@
   .vneu button { font-family: inherit; font-size: 13px; font-weight: 800; color: var(--dunkel); background: var(--rosa); border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; }
   .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
   .platz.p1 .n { color: #fff !important; }
+  img[src=""] { visibility: hidden; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -489,12 +490,12 @@
     var h = '';
     vote.treffer.forEach(function (g, i) {
       var gs = gespieltId(g), bs = belegtStatus(g), sperre = gs || bs;
-      h += '<button class="vtr' + (sperre ? ' gesperrt' : '') + '" data-tr="' + i + '"' + (sperre ? ' disabled' : '') + '><img alt="" src="' + esc(String(g.cover).replace('144x192', '52x72')) + '"><span>' + esc(g.name) + '</span>' +
+      h += '<button class="vtr' + (sperre ? ' gesperrt' : '') + '" data-tr="' + i + '"' + (sperre ? ' disabled' : '') + '><img alt="" src="' + esc(sicher(g.cover)) + '"><span>' + esc(g.name) + '</span>' +
         (gs ? '<em>✓ schon gespielt</em>' : bs === 'frei' ? '<em>steht schon zur Wahl</em>' : bs === 'wartet' ? '<em>schon vorgeschlagen</em>' : '') + '</button>';
     });
     if (vote.suche.trim().length >= 2 && !vote.treffer.length) h = '<div class="vleer">Kein Spiel gefunden – prüf die Schreibweise.</div>';
     box.innerHTML = h;
-    Array.prototype.forEach.call(box.querySelectorAll('[data-tr]'), function (b) { b.onclick = function () { vote.wahl = vote.treffer[Number(b.getAttribute('data-tr'))]; vote.treffer = []; $('vinput').value = vote.wahl.name; box.innerHTML = '<div class="vgewaehlt"><img alt="" src="' + esc(vote.wahl.cover) + '"><div><b>' + esc(vote.wahl.name) + '</b><span>Bereit zum Vorschlagen</span></div></div>'; $('vsend').disabled = false; }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-tr]'), function (b) { b.onclick = function () { vote.wahl = vote.treffer[Number(b.getAttribute('data-tr'))]; vote.treffer = []; $('vinput').value = vote.wahl.name; box.innerHTML = '<div class="vgewaehlt"><img alt="" src="' + esc(sicher(vote.wahl.cover)) + '"><div><b>' + esc(vote.wahl.name) + '</b><span>Bereit zum Vorschlagen</span></div></div>'; $('vsend').disabled = false; }; });
   }
   function vorschlagen() {
     var g = vote.wahl;
@@ -514,7 +515,7 @@
     if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
     e.forEach(function (x, i) {
       var meins = vote.meine === x.id;
-      h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + (x.cover ? '<img loading="lazy" alt="" src="' + esc(x.cover) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
+      h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + (sicher(x.cover) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.cover)) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
         '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
     });
     h += '</div>';
@@ -542,11 +543,13 @@
     return { n: p && p.n ? p.n : (sp && sp.n ? sp.n : n), b: p && p.b ? p.b : '' };
   }
   function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
+  // Datenschutz: nur Bilder von GitHub (eigene Kopien) oder eingebettete Bilddaten anzeigen – nie direkt von Twitch
+  function sicher(u) { u = String(u || ''); return (u.indexOf('data:image/') === 0 || u.indexOf('https://raw.githubusercontent.com/Kazenity/') === 0 || u.indexOf('bilder/') === 0) ? u : ''; }
   function bild(n, gross) {
     var p = prof(n);
     var buchstabe = esc(String(p.n || '?').charAt(0).toUpperCase());
-    if (!p.b) return '<span class="av">' + buchstabe + '</span>';
-    return '<img class="av" loading="lazy" alt="" src="' + esc(p.b.replace('300x300', gross ? '150x150' : '70x70')) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
+    if (!sicher(p.b)) return '<span class="av">' + buchstabe + '</span>';
+    return '<img class="av" loading="lazy" alt="" src="' + esc(sicher(p.b)) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
   }
   // Twitch-Chatfarbe, bei zu dunklen Farben aufgehellt (lesbar auf dunklem Hintergrund)
   var farbCache = {};
@@ -667,7 +670,7 @@
       h += '<div class="sbox"><h3>💬 CHAT · ' + esc(mn) + '</h3>' + mini(daten.monat.chat, function (w) { return Number(w).toLocaleString('de-DE'); }) + '</div>';
     }
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
-    if (cw) h += '<div class="sbox"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(cw.bild) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + ' · ▶ ' + Number(cw.aufrufe).toLocaleString('de-DE') + '</div></div>';
+    if (cw) h += '<div class="sbox"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + ' · ▶ ' + Number(cw.aufrufe).toLocaleString('de-DE') + '</div></div>';
     $('seite').innerHTML = h;
   }
   // „Das bin ich“-Leiste unten
@@ -942,11 +945,11 @@
       '<h4>1. VERANTWORTLICHER</h4><p>Giuseppe Auner (Kazenity). Kontaktdaten und Anschrift stehen im <a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a>.</p>' +
       '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Pflicht-Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools.</p>' +
       '<h4>3. HOSTING (GITHUB PAGES)</h4><p>Die Seite und ihre Daten werden über GitHub Pages bzw. raw.githubusercontent.com der GitHub, Inc. (88 Colin P Kelly Jr St, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Browser-Informationen, um die Seite auszuliefern und vor Missbrauch zu schützen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer sicheren, funktionierenden Website). Eine Übermittlung in die USA ist möglich; GitHub ist nach dem EU-US Data Privacy Framework zertifiziert. Mehr: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>' +
-      '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover werden direkt von Servern von Twitch (Twitch Interactive, Inc., USA) geladen. Dabei wird deine IP-Adresse an Twitch übertragen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer ansprechenden Darstellung). Mehr: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" target="_blank" rel="noopener">Datenschutzhinweis von Twitch</a>.</p>' +
+      '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
@@ -985,7 +988,7 @@
       var em = daten.emotes || [];
       var he = '';
       function kachel(x, i) {
-        return '<div class="emote' + (i === 0 ? ' e1' : '') + '"><div class="rg">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1)) + '</div><img loading="lazy" alt="' + esc(x.n) + '" src="' + esc(x.b) + '"><div class="n">' + esc(x.n) + '</div><div class="w">' + Number(x.w).toLocaleString('de-DE') + '×</div></div>';
+        return '<div class="emote' + (i === 0 ? ' e1' : '') + '"><div class="rg">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1)) + '</div><img loading="lazy" alt="' + esc(x.n) + '" src="' + esc(sicher(x.b)) + '"><div class="n">' + esc(x.n) + '</div><div class="w">' + Number(x.w).toLocaleString('de-DE') + '×</div></div>';
       }
       if (em.length) {
         he += '<div class="kacheln emotes top3">';
@@ -1014,7 +1017,7 @@
       if (tc.length) {
         hc += '<div class="kacheln clips">';
         tc.forEach(function (x, i) {
-          hc += '<a class="clip" href="' + esc(x.url) + '" target="_blank" rel="noopener"><div class="vb"><img loading="lazy" alt="" src="' + esc(x.bild) + '"><i>#' + (i + 1) + '</i><u>▶ ' + Number(x.aufrufe).toLocaleString('de-DE') + '</u></div><div class="t"><b>' + esc(x.titel) + '</b><span>von ' + esc(prof(x.von).n) + (x.datum ? ' · ' + esc(x.datum) : '') + '</span></div></a>';
+          hc += '<a class="clip" href="' + esc(x.url) + '" target="_blank" rel="noopener"><div class="vb"><img loading="lazy" alt="" src="' + esc(sicher(x.bild)) + '"><i>#' + (i + 1) + '</i><u>▶ ' + Number(x.aufrufe).toLocaleString('de-DE') + '</u></div><div class="t"><b>' + esc(x.titel) + '</b><span>von ' + esc(prof(x.von).n) + (x.datum ? ' · ' + esc(x.datum) : '') + '</span></div></a>';
         });
         hc += '</div>';
       } else hc += '<div class="liste"><div class="leer">In diesem Zeitraum gibt es noch keine Clips.</div></div>';
@@ -1042,7 +1045,7 @@
       var sp = daten.spiele || [];
       var hs = '';
       sp.forEach(function (x) {
-        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
+        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (sicher(x.b) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.b)) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
       });
       $('liste').className = '';
       $('liste').innerHTML = sw + (sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>');
