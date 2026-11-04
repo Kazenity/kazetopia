@@ -150,6 +150,32 @@
   .socials a:hover { border-color: var(--rosa); color: var(--rosa); }
   .socials svg { width: 16px; height: 16px; fill: currentColor; }
   footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
+  [data-l] { cursor: pointer; }
+  .zeile[data-l]:hover, .danke .p[data-l]:hover { background: rgba(255,158,191,.07); border-radius: 10px; }
+  .karte-bg { position: fixed; inset: 0; background: rgba(10,4,12,.72); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 50; }
+  .karte-bg.offen { display: flex; }
+  .karte { width: 100%; max-width: 460px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 20px; padding: 22px 20px 18px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .karte .zu { position: absolute; top: 10px; right: 12px; background: none; border: 0; color: var(--grau); font-size: 24px; cursor: pointer; line-height: 1; }
+  .karte .kopf { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+  .karte .kopf .av { width: 72px; height: 72px; font-size: 28px; border: 3px solid var(--rosa); }
+  .karte .kopf b { display: block; font-size: 20px; font-weight: 800; }
+  .karte .rang { display: inline-block; margin-top: 4px; font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg, #c2396f, #5a2562); }
+  .karte .kk { margin-top: 5px; font-size: 13px; color: var(--grau); font-weight: 600; }
+  .karte .kk b { display: inline; font-size: 13px; color: var(--gold); }
+  .karte h4 { font-size: 12px; letter-spacing: 1.5px; color: var(--rosa); margin: 16px 0 8px; }
+  .erfolg { background: var(--bg); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+  .erfolg .ob { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; font-weight: 700; }
+  .erfolg .ob span { color: var(--grau); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  .erfolg .balken { height: 7px; border-radius: 99px; background: var(--rand); margin-top: 8px; overflow: hidden; }
+  .erfolg .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  .erfolg .un { font-size: 11.5px; color: var(--grau); margin-top: 5px; }
+  .erfolg.max .balken i { background: linear-gradient(90deg, #f0c060, var(--gold)); }
+  .abz { display: flex; flex-wrap: wrap; gap: 6px; }
+  .abz span { font-size: 12.5px; font-weight: 700; background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 5px 10px; }
+  .abz span.aus { opacity: .35; }
+  .ms { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .ms span { font-size: 11px; font-weight: 800; color: var(--gold); background: rgba(255,210,122,.1); border-radius: 6px; padding: 2px 6px; }
+  .profil-link { color: var(--rosa); font-weight: 700; }
   @media (max-width: 560px) {
     .danke { grid-template-columns: 1fr; }
     .emotes.rest { grid-template-columns: repeat(4, 1fr); }
@@ -207,9 +233,11 @@
   <footer>
     <div id="stand"></div>
     <div id="hinweis"></div>
-    <div>Wird während der Streams alle 10 Minuten aktualisiert.</div>
+    <div>Klick auf einen Namen für Rang &amp; Erfolge · Wird während der Streams alle 10 Minuten aktualisiert.</div>
   </footer>
 </div>
+
+<div class="karte-bg" id="kartebg"><div class="karte" id="karte"></div></div>
 
 <script>
 (function () {
@@ -217,9 +245,12 @@
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function prof(n) {
-    var p = daten && daten.profile ? daten.profile[String(n || '').toLowerCase()] : null;
-    return { n: p && p.n ? p.n : n, b: p && p.b ? p.b : '' };
+    var l = String(n || '').toLowerCase();
+    var p = daten && daten.profile ? daten.profile[l] : null;
+    var sp = daten && daten.spieler ? daten.spieler[l] : null;
+    return { n: p && p.n ? p.n : (sp && sp.n ? sp.n : n), b: p && p.b ? p.b : '' };
   }
+  function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
   function bild(n, gross) {
     var p = prof(n);
     var buchstabe = esc(String(p.n || '?').charAt(0).toUpperCase());
@@ -227,6 +258,106 @@
     return '<img class="av" loading="lazy" alt="" src="' + esc(p.b.replace('300x300', gross ? '150x150' : '70x70')) + '" onerror="this.outerHTML=\'<span class=&quot;av&quot;>' + buchstabe + '</span>\'">';
   }
   function person(n) { return '<div class="person">' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; }
+
+  // ================= ERFOLGE =================
+  // Hauptrang: Watchtime als Dragon-Ball-Leiter
+  var RAENGE = [
+    [1, '🧑', 'Erdling'], [5, '🥋', 'Kampfschüler'], [10, '🐢', 'Kame-Schüler'], [25, '🏟️', 'Budokai-Kämpfer'],
+    [50, '🐒', 'Saiyajin'], [75, '🌕', 'Oozaru'], [100, '🔥', 'Kaioken'], [150, '🔵', 'Genkidama-Meister'],
+    [200, '💛', 'Super-Saiyajin'], [250, '💛', 'Super-Saiyajin 2'], [300, '💛', 'Super-Saiyajin 3'], [400, '🐉', 'Super-Saiyajin 4'],
+    [500, '❤️', 'Super-Saiyajin God'], [650, '💙', 'Super-Saiyajin Blue'], [800, '💙', 'Blue Kaioken'], [1000, '🪄', 'Whis-Schüler'],
+    [1250, '🏟️', 'Turnier der Kraft · Teilnehmer'], [1500, '🤍', 'Ultra Instinct Omen'], [1750, '🏟️', 'Turnier der Kraft · Finalist'],
+    [2000, '🤍', 'Ultra Instinct'], [2250, '💜', 'Ultra Ego'], [2500, '🔴', 'Beast'], [2750, '💥', 'Hakai-Meister'],
+    [3000, '🐈', 'Anwärter Gott der Zerstörung'], [3250, '🐈', 'Gott der Zerstörung'], [4000, '👼', 'Engel'],
+    [5000, '🌌', 'Großpriester'], [6000, '👑', 'Zeno – Allkönig']
+  ];
+  function rangVon(h) { var r = null; RAENGE.forEach(function (x) { if (h >= x[0]) r = x; }); return r; }
+  function naechsterRang(h) { for (var i = 0; i < RAENGE.length; i++) if (RAENGE[i][0] > h) return RAENGE[i]; return null; }
+
+  // Stufen der anderen Erfolge: feste Liste, danach endlos im gleichen Abstand
+  var ERFOLGE = [
+    { k: 'c', icon: '💬', name: 'Plaudertasche', einheit: 'Nachrichten', stufen: [10, 50, 100, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 7500, 10000], dann: 2500 },
+    { k: 'f', icon: '🌸', name: 'Treue', einheit: 'Tage Follower', stufen: [7, 30, 90, 180, 365], dann: 365, tage: true },
+    { k: 's', icon: '⭐', name: 'Sub-Treue', einheit: 'Sub-Monate', stufen: [1, 3, 6, 9, 12, 18, 24, 30, 36], dann: 12 },
+    { k: 'z', icon: '💰', name: 'Zeni-Rekord', einheit: 'Zeni', stufen: [1000, 5000, 10000, 25000, 50000, 100000, 150000, 250000, 500000, 750000, 1000000], dann: 500000 },
+    { k: 'b', icon: '🎯', name: 'Bingo-Sieger', einheit: 'Monatssiege', stufen: [1, 3, 6, 12], dann: 12 },
+    { k: 'k', icon: '🎬', name: 'Regisseur', einheit: 'Clips', stufen: [1, 5, 10, 25, 50], dann: 50 }
+  ];
+  function stufeInfo(e, wertV) {
+    var st = e.stufen.slice(), letzte = st[st.length - 1];
+    while (letzte <= wertV) { letzte += e.dann; st.push(letzte); }   // endlos verlängern
+    var erreicht = 0, ziel = st[0], vorher = 0;
+    for (var i = 0; i < st.length; i++) { if (wertV >= st[i]) { erreicht = i + 1; vorher = st[i]; } else { ziel = st[i]; break; } }
+    return { stufe: erreicht, ziel: ziel, vorher: vorher };
+  }
+  function zahl(v) { return Number(v).toLocaleString('de-DE', { maximumFractionDigits: 1 }); }
+  function tageSeit(d) { var t = Date.parse(d); return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); }
+
+  function profilZeigen(login) {
+    if (!daten) return;
+    var sp = (daten.spieler || {})[login];
+    var p = prof(login);
+    var name = p.n || login;
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button>';
+    if (!sp) {
+      h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b><div class="kk">Noch keine Erfolge – einfach im Stream vorbeischauen 🌸</div></div></div>';
+    } else {
+      var std = sp.w || 0, r = rangVon(std), nx = naechsterRang(std), kk = Math.floor(std * 10);
+      var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
+      h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
+        (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
+        '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + '</div></div></div>';
+
+      // Hauptrang
+      h += '<h4>⏱️ WATCHTIME · ' + zahl(std) + ' STD.' + (platz ? ' · PLATZ ' + platz : '') + '</h4>';
+      if (nx) {
+        var von = r ? r[0] : 0, proz = Math.max(2, Math.min(100, (std - von) / (nx[0] - von) * 100));
+        h += '<div class="erfolg"><div class="ob">Nächster Rang: ' + nx[1] + ' ' + esc(nx[2]) + '<span>ab ' + zahl(nx[0]) + ' Std.</span></div>' +
+          '<div class="balken"><i style="width:' + proz + '%"></i></div><div class="un">noch ' + zahl(Math.ceil((nx[0] - std) * 10) / 10) + ' Std.</div></div>';
+      } else {
+        var naechsteKK = (Math.floor(kk / 10000) + 1) * 10000, proz2 = Math.max(2, (kk % 10000) / 100);
+        h += '<div class="erfolg max"><div class="ob">✦ Höchster Rang erreicht ✦<span>nächster Meilenstein ' + zahl(naechsteKK) + '</span></div>' +
+          '<div class="balken"><i style="width:' + proz2 + '%"></i></div><div class="un">noch ' + zahl((naechsteKK - kk) / 10) + ' Std.</div></div>';
+      }
+      if (kk >= 9000) {
+        h += '<div class="ms">'; h += '<span>9.000 · über 9000!</span>';
+        for (var m = 10000; m <= kk; m += 10000) h += '<span>' + zahl(m) + '</span>';
+        h += '</div>';
+      }
+
+      // weitere Erfolge
+      h += '<h4>🏅 ERFOLGE</h4>';
+      ERFOLGE.forEach(function (e) {
+        var v = e.tage ? (sp.f ? tageSeit(sp.f) : 0) : (sp[e.k] || 0);
+        if (!v && (e.k === 'b' || e.k === 'k')) return;   // Bingo/Clips nur zeigen, wenn schon etwas da ist
+        var s = stufeInfo(e, v);
+        var proz = Math.max(2, Math.min(100, (v - s.vorher) / (s.ziel - s.vorher) * 100));
+        var anzeige = e.tage ? (v >= 365 ? zahl(Math.floor(v / 365 * 10) / 10) + ' Jahre' : v + ' Tage') : zahl(v) + ' ' + e.einheit;
+        h += '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.name + (s.stufe ? ' · Stufe ' + s.stufe : '') + '<span>' + anzeige + '</span></div>' +
+          '<div class="balken"><i style="width:' + proz + '%"></i></div><div class="un">nächste Stufe bei ' + (e.tage ? (s.ziel >= 365 ? zahl(s.ziel / 365) + ' Jahren' : s.ziel + ' Tagen') : zahl(s.ziel) + ' ' + e.einheit) + '</div></div>';
+      });
+
+      // Abzeichen
+      var abz = [
+        [sp.u, '💜 Unterstützer'], [sp.f && sp.f < '2020', '🌱 Day One'], [sp.g, '🎂 Geburtstagskind'],
+        [sp.t, '🏆 Top 10'], [sp.x, '⚔️ Saber-Bezwinger']
+      ];
+      h += '<h4>✨ ABZEICHEN</h4><div class="abz">';
+      abz.forEach(function (a) { h += '<span' + (a[0] ? '' : ' class="aus"') + '>' + a[1] + '</span>'; });
+      h += '</div>';
+    }
+    $('karte').innerHTML = h;
+    $('kartebg').className = 'karte-bg offen';
+    $('zu').onclick = profilZu;
+  }
+  function profilZu() { $('kartebg').className = 'karte-bg'; }
+  $('kartebg').onclick = function (e) { if (e.target === this) profilZu(); };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') profilZu(); });
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-l]');
+    if (!t || t.closest('#karte')) return;
+    profilZeigen(t.getAttribute('data-l'));
+  });
   function wert(w) {
     if (reiter === 'watchtime') return Number(w).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' Std.';
     if (reiter === 'chat') return Number(w).toLocaleString('de-DE') + ' Nachr.';
@@ -307,7 +438,7 @@
       }
       h += '<div class="liste">';
       if (!b.length) h += '<div class="leer">Noch keine Bingo-Gewinner eingetragen.</div>';
-      b.forEach(function (x, i) { h += '<div class="zeile' + (i === 0 ? ' neu' : '') + '"><div class="n">' + esc(x.monat) + '</div><div class="w">' + (i === 0 ? '🏆 ' : '') + bild(x.name) + '<span>' + esc(prof(x.name).n) + '</span></div></div>'; });
+      b.forEach(function (x, i) { h += '<div class="zeile' + (i === 0 ? ' neu' : '') + '"' + dl(x.name) + '><div class="n">' + esc(x.monat) + '</div><div class="w">' + (i === 0 ? '🏆 ' : '') + bild(x.name) + '<span>' + esc(prof(x.name).n) + '</span></div></div>'; });
       h += '</div>';
       $('liste').className = 'bingo';
       $('liste').innerHTML = h;
@@ -317,7 +448,7 @@
       function spalte(t, arr) {
         var s = '<div class="box"><h3>' + t + '</h3>';
         if (!arr || !arr.length) s += '<div class="leer">–</div>';
-        (arr || []).forEach(function (n, i) { s += '<div class="p"><i>' + (i + 1) + '.</i>' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; });
+        (arr || []).forEach(function (n, i) { s += '<div class="p"' + dl(n) + '><i>' + (i + 1) + '.</i>' + bild(n) + '<span>' + esc(prof(n).n) + '</span></div>'; });
         return s + '</div>';
       }
       $('liste').className = '';
@@ -350,7 +481,7 @@
     reihen.forEach(function (i) {
       var x = l[i];
       if (!x) { p += '<div></div>'; return; }
-      p += '<div class="platz p' + (i + 1) + '"><div class="m">' + medaillen[i] + '</div>' + bild(x.n, true) + '<div class="n">' + esc(prof(x.n).n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      p += '<div class="platz p' + (i + 1) + '"' + dl(x.n) + '><div class="m">' + medaillen[i] + '</div>' + bild(x.n, true) + '<div class="n">' + esc(prof(x.n).n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
     $('podest').innerHTML = p;
 
@@ -360,9 +491,19 @@
       var treffer = such && (x.n.toLowerCase().indexOf(such) >= 0 || String(prof(x.n).n).toLowerCase().indexOf(such) >= 0);
       if (such && !treffer) return;
       gefunden++;
-      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"><div class="r">#' + (i + 1) + '</div><div class="n">' + person(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
+      h += '<div class="zeile' + (treffer ? ' treffer' : '') + '"' + dl(x.n) + '><div class="r">#' + (i + 1) + '</div><div class="n">' + person(x.n) + '</div><div class="w">' + wert(x.w) + '</div></div>';
     });
-    if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen in den Top ' + l.length + '.' : 'Noch keine Daten.') + '</div>';
+    if (such && daten.spieler) {
+      // Profile auch für Leute außerhalb der Top 100 finden
+      var extra = [];
+      Object.keys(daten.spieler).forEach(function (k) {
+        if (extra.length >= 8) return;
+        var n = String(prof(k).n || k).toLowerCase();
+        if ((k.indexOf(such) >= 0 || n.indexOf(such) >= 0) && !l.some(function (x) { return String(x.n).toLowerCase() === k; })) extra.push(k);
+      });
+      extra.forEach(function (k) { h += '<div class="zeile"' + dl(k) + '><div class="r">👤</div><div class="n">' + person(k) + '</div><div class="w profil-link">Profil ›</div></div>'; });
+    }
+    if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen gefunden.' : 'Noch keine Daten.') + '</div>';
     $('liste').innerHTML = h;
     $('hinweis').textContent = reiter === 'chat' && daten.chatGesamt ? 'Insgesamt ' + Number(daten.chatGesamt).toLocaleString('de-DE') + ' Chat-Nachrichten · gezählt von StreamElements' : 'Top ' + l.length;
   }
@@ -385,6 +526,8 @@
       $('live').style.display = 'flex';
     }
     zeigen();
+    var m = location.hash.match(/^#profil=(.+)$/);
+    if (m) profilZeigen(decodeURIComponent(m[1]).toLowerCase());
   }).catch(function () { $('liste').innerHTML = '<div class="leer">Rangliste konnte nicht geladen werden.</div>'; });
 })();
 </script>
