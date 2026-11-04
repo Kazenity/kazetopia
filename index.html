@@ -197,6 +197,10 @@
   .sym.ev { border-color: var(--gold); }
   .sym:not(.ev) i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--rosa); color: #fff; border-radius: 5px; padding: 0 3px; }
   .evb { vertical-align: middle; image-rendering: auto; }
+  .ichips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 12px 0 6px; padding-bottom: 2px; }
+  .ichips::-webkit-scrollbar { display: none; }
+  .ichips button { flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 7px 11px; cursor: pointer; white-space: nowrap; }
+  .ichips button.aktiv { background: var(--rosa); color: var(--dunkel); border-color: var(--rosa); }
   .kk.riv { margin-top: 3px; }
   .selten { color: var(--gold); font-size: 11.5px; font-weight: 700; }
   .sym.mehr { font-size: 13px; font-weight: 800; color: var(--grau); }
@@ -252,6 +256,7 @@
     <button data-r="spiele">🎮 Spiele</button>
   </div>
 
+  <div class="schalter" id="zeitwahl" style="display:none"></div>
   <div class="podest" id="podest"></div>
   <input class="suche" id="suche" placeholder="Deinen Namen suchen …" autocomplete="off">
   <div class="liste" id="liste"><div class="leer">Lade Rangliste …</div></div>
@@ -275,7 +280,7 @@
 
 <script>
 (function () {
-  var daten = null, reiter = 'zeni', clipZeit = 'monat';
+  var daten = null, reiter = 'zeni', clipZeit = 'monat', monatsModus = false;
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function prof(n) {
@@ -404,6 +409,10 @@
     return p < 1 ? 'unter 1 %' : (p < 10 ? zahl(Math.round(p * 10) / 10) : Math.round(p)) + ' %';
   }
   function abzAnteil(a) { return '📊 ' + anteil(function (x) { return hatAbzeichen(x, a.id); }) + ' haben das'; }
+  // Reiter in Karte/Info
+  function chips(sek) {
+    return '<div class="ichips">' + sek.map(function (x, i) { return '<button data-sek="' + x[0] + '"' + (i ? '' : ' class="aktiv"') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+  }
   function abzText(a, sp) {
     if (a.id === 'kw' && sp.kw) return a.name + ' – ' + sp.kw;
     if (a.id === 'az' && sp.a) { var m = (daten.momente || []); return a.name + ' – ' + sp.a.map(function (i) { var x = m[i] || {}; return (x.n || 'Moment') + (x.d ? ' (' + x.d.split('-').reverse().join('.') + ')' : ''); }).join(', '); }
@@ -546,18 +555,22 @@
 
     // Alle Erfolge (aufklappbar)
     h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
-    h += '<h4>RÄNGE</h4>'; GROSS.forEach(function (g) { h += grossZeile(g, sp); });
-    h += '<h4>ERFOLGE</h4>'; KLEIN.forEach(function (e) { h += kleinZeile(e, sp); });
+    var sek = [['r', '🏅 Ränge'], ['e', '🎨 Erfolge'], ['a', '✨ Abzeichen']];
+    if (EVENT_GRUPPEN.length) sek.push(['v', '🎟️ Events']);
+    h += chips(sek);
+    h += '<div class="isek" data-sek="r">'; GROSS.forEach(function (g) { h += grossZeile(g, sp); }); h += '</div>';
+    h += '<div class="isek" data-sek="e" style="display:none">'; KLEIN.forEach(function (e) { h += kleinZeile(e, sp); }); h += '</div>';
+    h += '<div class="isek" data-sek="a" style="display:none"><div class="liste-abz">';
+    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + esc(ja ? abzText(a, sp).slice(a.name.length + 3) : a.text) + fortschritt(a, sp, ja) + (ja ? ' ✓' : '') + ' <span class="selten">' + abzAnteil(a) + '</span></div>'; });
+    h += '</div></div>';
     if (EVENT_GRUPPEN.length) {
-      h += '<h4>EVENTS</h4><div class="liste-abz">';
+      h += '<div class="isek" data-sek="v" style="display:none"><div class="liste-abz">';
       EVENT_GRUPPEN.slice().reverse().forEach(function (g) {
         var c = eventStufe(sp, g);
         h += '<div class="' + (c ? '' : 'aus') + '"><b>' + g.name + '</b>: ' + g.codes.map(function (x) { var e = EVENTS[x]; return (x === c ? '<b>' + evIcon(x, 20) + ' ' + e[1] + ' ✓</b>' : '<span style="opacity:.5">' + evIcon(x, 20) + ' ' + e[1] + '</span>'); }).join(' · ') + '</div>';
       });
-      h += '</div>';
+      h += '</div></div>';
     }
-    h += '<h4>ABZEICHEN</h4><div class="liste-abz">';
-    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + esc(ja ? abzText(a, sp).slice(a.name.length + 3) : a.text) + fortschritt(a, sp, ja) + (ja ? ' ✓' : '') + ' <span class="selten">' + abzAnteil(a) + '</span></div>'; });
     h += '</div></div>';
     karteOeffnen(h);
     $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
@@ -573,18 +586,20 @@
   // ℹ️ Übersicht: alle Ränge, Erfolge und Abzeichen
   function uebersicht() {
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>Wie bekomme ich Erfolge?</b><div class="kk">Klick auf einen Namen zeigt dessen Profil. Alles wird automatisch gezählt.</div></div></div>';
-    GROSS.forEach(function (g) {
-      h += '<h4>' + g.icon + ' ' + g.titel.toUpperCase() + ' · ' + g.anime.toUpperCase() + '</h4><div class="un erkl">' + g.text + '</div><div class="tab">';
+    var sek = GROSS.map(function (g) { return [g.k, g.icon + ' ' + g.titel]; }).concat([['e', '🎨 Erfolge'], ['a', '✨ Abzeichen'], ['v', '🎟️ Events']]);
+    h += chips(sek);
+    GROSS.forEach(function (g, i) {
+      h += '<div class="isek" data-sek="' + g.k + '"' + (i ? ' style="display:none"' : '') + '><h4>' + g.icon + ' ' + g.titel.toUpperCase() + ' · ' + g.anime.toUpperCase() + '</h4><div class="un erkl">' + g.text + '</div><div class="tab">';
       g.leiter.forEach(function (x) { h += '<div><span>' + x[1] + ' ' + esc(x[2]) + '</span><span>' + g.fmt(x[0]) + '</span></div>'; });
-      h += '</div>';
+      h += '</div></div>';
     });
-    h += '<h4>🎨 ERFOLGE · ' + FARBEN.map(function (f) { return f[0]; }).join(' ') + '</h4><div class="un erkl">Stufen: ' + FARBEN.map(function (f) { return f[1]; }).join(' → ') + '</div>';
+    h += '<div class="isek" data-sek="e" style="display:none"><h4>🎨 ERFOLGE · ' + FARBEN.map(function (f) { return f[0]; }).join(' ') + '</h4><div class="un erkl">Stufen: ' + FARBEN.map(function (f) { return f[1]; }).join(' → ') + '</div>';
     KLEIN.forEach(function (e) {
       h += '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.titel + '</div><div class="un erkl">' + e.text + '</div><div class="un">' + e.stufen.map(function (x, i) { return FARBEN[i][0] + ' ' + zahl(x); }).join(' · ') + '</div></div>';
     });
-    h += '<h4>✨ ABZEICHEN</h4><div class="liste-abz">';
+    h += '</div><div class="isek" data-sek="a" style="display:none"><h4>✨ ABZEICHEN</h4><div class="liste-abz">';
     ABZEICHEN.forEach(function (a) { h += '<div>' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + '</div>'; });
-    h += '<div class="un erkl" style="border:0">Events: Pro Event zählt nur die höchste erreichte Stufe.</div>';
+    h += '</div></div><div class="isek" data-sek="v" style="display:none"><h4>🎟️ EVENTS</h4><div class="liste-abz"><div class="un erkl" style="border:0">Pro Event zählt nur die höchste erreichte Stufe.</div>';
     Object.keys(EVENTS).forEach(function (c) { var e = EVENTS[c]; h += '<div>' + evIcon(c, 20) + ' <b>' + e[1] + '</b> – ' + e[2] + '</div>'; });
     h += '</div><div class="un erkl" style="margin-top:10px">Ganz große Erfolge werden live im Chat gefeiert 🏅</div>';
     karteOeffnen(h);
@@ -595,6 +610,13 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') profilZu(); });
   document.addEventListener('click', function (e) {
     if (e.target.closest('#infoknopf')) { uebersicht(); return; }
+    var c = e.target.closest('.ichips button');
+    if (c) {
+      var box = c.parentNode.parentNode, id = c.getAttribute('data-sek');
+      Array.prototype.forEach.call(c.parentNode.children, function (b) { b.className = b === c ? 'aktiv' : ''; });
+      Array.prototype.forEach.call(box.querySelectorAll('.isek'), function (d) { d.style.display = d.getAttribute('data-sek') === id ? '' : 'none'; });
+      return;
+    }
     var t = e.target.closest('[data-l]');
     if (!t || t.closest('#karte')) return;
     profilZeigen(t.getAttribute('data-l'));
@@ -713,8 +735,12 @@
   function zeigen() {
     $('unter').textContent = untertitel[reiter] || '';
     if (!daten) return;
+    var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
+    $('zeitwahl').style.display = mitMonat ? '' : 'none';
+    if (mitMonat) $('zeitwahl').innerHTML = '<button data-m="0"' + (monatsModus ? '' : ' class="aktiv"') + '>Gesamt</button><button data-m="1"' + (monatsModus ? ' class="aktiv"' : '') + '>' + esc(daten.monat.name || 'Dieser Monat') + '</button>';
     if (sonder()) return;
-    var l = daten[reiter] || [];
+    var monat = mitMonat && monatsModus;
+    var l = (monat ? daten.monat[reiter] : daten[reiter]) || [];
     var such = $('suche').value.trim().toLowerCase();
     var medaillen = ['🥇', '🥈', '🥉'];
     var reihen = [1, 0, 2];
@@ -746,6 +772,7 @@
     }
     if (!h) h = '<div class="leer">' + (such ? 'Niemand mit diesem Namen gefunden.' : 'Noch keine Daten.') + '</div>';
     $('liste').innerHTML = h;
+    if (monat) { $('hinweis').textContent = 'Zuwachs seit dem 1. ' + (daten.monat.name || '') + ' · Top ' + l.length + (reiter === 'chat' && daten.monat.name === 'November' ? ' · Chat wird im November erst ab dem 4. gezählt' : ''); return; }
     $('hinweis').textContent = reiter === 'chat' && daten.chatGesamt ? 'Insgesamt ' + Number(daten.chatGesamt).toLocaleString('de-DE') + ' Chat-Nachrichten · gezählt von StreamElements' : 'Top ' + l.length;
   }
 
@@ -758,6 +785,7 @@
     zeigen();
   };
   $('suche').oninput = zeigen;
+  $('zeitwahl').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; monatsModus = b.getAttribute('data-m') === '1'; zeigen(); };
 
   fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
     daten = d;
