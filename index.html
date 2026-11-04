@@ -98,6 +98,22 @@
   .emote.e1 .w { color: #ffd9e6; }
 
   .clips { grid-template-columns: repeat(3, 1fr); }
+  .schalter { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
+  .schalter button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  .schalter button.aktiv { background: var(--rosa); color: var(--dunkel); border-color: var(--rosa); }
+  .emotes.top3 { grid-template-columns: 1fr 1.15fr 1fr; align-items: end; margin-bottom: 10px; }
+  .emotes.top3 .emote img { width: 84px; height: 84px; }
+  .emotes.top3 .emote.e1 img { width: 104px; height: 104px; }
+  .emotes.top3 .emote .n { font-size: 14px; }
+  .emotes.top3 .emote .w { font-size: 13px; }
+  .emotes.rest { grid-template-columns: repeat(6, 1fr); }
+  .emotes.rest .emote { padding: 10px 6px 8px; border-radius: 12px; }
+  .emotes.rest .emote img { width: 44px; height: 44px; margin: 6px auto 6px; }
+  .emotes.rest .emote .rg { top: 6px; left: 8px; font-size: 10.5px; }
+  .emotes.rest .emote .n { font-size: 10.5px; }
+  .emotes.rest .emote .w { font-size: 11px; }
+  .spiel .rt { display: inline-block; margin-top: 5px; font-size: 12px; font-weight: 800; color: var(--gold); }
+  .spiel .rt.laeuft { color: var(--rosa); }
   .clip { background: var(--flaeche); border-radius: 14px; overflow: hidden; text-decoration: none; color: var(--hell); display: block; min-width: 0; transition: transform .15s; }
   .clip:hover { transform: translateY(-2px); background: var(--hover); }
   .clip .vb { position: relative; aspect-ratio: 16 / 9; background: var(--dunkel); }
@@ -120,13 +136,14 @@
   footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
   @media (max-width: 560px) {
     .danke { grid-template-columns: 1fr; }
-    .emotes { grid-template-columns: repeat(3, 1fr); }
+    .emotes.rest { grid-template-columns: repeat(4, 1fr); }
+    .emotes.top3 .emote img { width: 60px; height: 60px; } .emotes.top3 .emote.e1 img { width: 76px; height: 76px; }
+    .emotes.top3 .emote .n { font-size: 11.5px; }
     .clips { grid-template-columns: 1fr 1fr; }
-    .spiele { grid-template-columns: repeat(3, 1fr); }
+    .spiele { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 380px) {
     .clips { grid-template-columns: 1fr; }
-    .spiele { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 480px) {
     .podest { gap: 6px; }
@@ -172,7 +189,7 @@
 
 <script>
 (function () {
-  var daten = null, reiter = 'zeni';
+  var daten = null, reiter = 'zeni', clipZeit = 'monat';
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function prof(n) {
@@ -200,40 +217,60 @@
     if (reiter === 'emotes') {
       var em = daten.emotes || [];
       var he = '';
-      em.forEach(function (x, i) {
-        he += '<div class="emote' + (i === 0 ? ' e1' : '') + '"><div class="rg">#' + (i + 1) + '</div><img loading="lazy" alt="' + esc(x.n) + '" src="' + esc(x.b) + '"><div class="n">' + esc(x.n) + '</div><div class="w">' + Number(x.w).toLocaleString('de-DE') + '×</div></div>';
-      });
+      function kachel(x, i) {
+        return '<div class="emote' + (i === 0 ? ' e1' : '') + '"><div class="rg">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1)) + '</div><img loading="lazy" alt="' + esc(x.n) + '" src="' + esc(x.b) + '"><div class="n">' + esc(x.n) + '</div><div class="w">' + Number(x.w).toLocaleString('de-DE') + '×</div></div>';
+      }
+      if (em.length) {
+        he += '<div class="kacheln emotes top3">';
+        [1, 0, 2].forEach(function (i) { he += em[i] ? kachel(em[i], i) : '<div></div>'; });
+        he += '</div>';
+        if (em.length > 3) {
+          he += '<div class="kacheln emotes rest">';
+          for (var k = 3; k < em.length; k++) he += kachel(em[k], k);
+          he += '</div>';
+        }
+      }
       $('liste').className = '';
-      $('liste').innerHTML = em.length ? '<div class="kacheln emotes">' + he + '</div>' : '<div class="liste"><div class="leer">Noch keine Emote-Daten.</div></div>';
-      $('hinweis').textContent = 'Die beliebtesten Kanal-Emotes im Chat';
+      $('liste').innerHTML = em.length ? he : '<div class="liste"><div class="leer">Noch keine Emote-Daten.</div></div>';
+      $('hinweis').textContent = 'Alle ' + em.length + ' Kanal-Emotes, sortiert nach Beliebtheit im Chat';
       return true;
     }
     if (reiter === 'clips') {
       var c = daten.clips || {};
       var hc = '';
       if (c.woche) hc += '<div class="serie"><b>🎬 Clipper der Woche: ' + esc(prof(c.woche.name).n) + '</b><span>' + c.woche.anzahl + (c.woche.anzahl == 1 ? ' Clip' : ' Clips') + ' seit Sonntag, ' + esc(c.woche.seit) + ' · Clippt mit !clip mit!</span></div>';
-      var tc = c.top || [];
+      var zeitraeume = [['woche', 'Diese Woche', c.wocheTop], ['monat', 'Letzte 30 Tage', c.monat], ['top', 'Alle Zeiten', c.top]];
+      hc += '<div class="schalter" id="schalter">';
+      zeitraeume.forEach(function (z) { hc += '<button data-z="' + z[0] + '"' + (z[0] === clipZeit ? ' class="aktiv"' : '') + '>' + z[1] + '</button>'; });
+      hc += '</div>';
+      var tc = (clipZeit === 'woche' ? c.wocheTop : clipZeit === 'top' ? c.top : c.monat) || [];
       if (tc.length) {
         hc += '<div class="kacheln clips">';
         tc.forEach(function (x, i) {
           hc += '<a class="clip" href="' + esc(x.url) + '" target="_blank" rel="noopener"><div class="vb"><img loading="lazy" alt="" src="' + esc(x.bild) + '"><i>#' + (i + 1) + '</i><u>▶ ' + Number(x.aufrufe).toLocaleString('de-DE') + '</u></div><div class="t"><b>' + esc(x.titel) + '</b><span>von ' + esc(prof(x.von).n) + (x.datum ? ' · ' + esc(x.datum) : '') + '</span></div></a>';
         });
         hc += '</div>';
-      } else hc += '<div class="liste"><div class="leer">Noch keine Clips.</div></div>';
+      } else hc += '<div class="liste"><div class="leer">In diesem Zeitraum gibt es noch keine Clips.</div></div>';
       $('liste').className = '';
       $('liste').innerHTML = hc;
-      $('hinweis').textContent = 'Die meistgesehenen Clips aller Zeiten';
+      $('schalter').onclick = function (e) {
+        var b = e.target.closest('button');
+        if (!b) return;
+        clipZeit = b.getAttribute('data-z');
+        zeigen();
+      };
+      $('hinweis').textContent = 'Die meistgesehenen Clips · ' + (clipZeit === 'woche' ? 'seit Sonntag' : clipZeit === 'top' ? 'aller Zeiten' : 'der letzten 30 Tage');
       return true;
     }
     if (reiter === 'spiele') {
       var sp = daten.spiele || [];
       var hs = '';
       sp.forEach(function (x) {
-        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b><span>' + (x.s ? x.s + (x.s == 1 ? ' Stream' : ' Streams') : '&nbsp;') + '</span>' + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ Auf YouTube</a>' : '') + '</div></div>';
+        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b><span>' + (x.s ? x.s + (x.s == 1 ? ' Stream' : ' Streams') : '&nbsp;') + '</span><br>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
       });
       $('liste').className = '';
       $('liste').innerHTML = sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>';
-      $('hinweis').textContent = 'Alle Spiele, die auf dem Kanal gestreamt wurden';
+      $('hinweis').textContent = 'Unsere Story-Games mit Kazes Bewertung';
       return true;
     }
     if (reiter === 'bingo') {
@@ -275,7 +312,7 @@
     danke: 'Die größten Unterstützer des Kanals',
     emotes: 'Welche Emotes lieben wir am meisten?',
     clips: 'Die besten Momente aus dem Stream',
-    spiele: 'Was wurde hier schon alles gespielt?'
+    spiele: 'Welche Story-Games haben wir schon gespielt?'
   };
   function zeigen() {
     $('unter').textContent = untertitel[reiter] || '';
