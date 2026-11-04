@@ -197,6 +197,8 @@
   .sym.ev { border-color: var(--gold); }
   .sym:not(.ev) i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--rosa); color: #fff; border-radius: 5px; padding: 0 3px; }
   .evb { vertical-align: middle; image-rendering: auto; }
+  .kk.riv { margin-top: 3px; }
+  .selten { color: var(--gold); font-size: 11.5px; font-weight: 700; }
   .sym.mehr { font-size: 13px; font-weight: 800; color: var(--grau); }
   .sym.ev i { position: absolute; bottom: -4px; right: -4px; font-style: normal; font-size: 9px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 0 3px; }
   .trenn { width: 1px; height: 26px; background: var(--rand); margin: 0 4px; }
@@ -336,11 +338,15 @@
   var FARBEN = [['🟤', 'Bronze'], ['⚪', 'Silber'], ['🟡', 'Gold'], ['🔷', 'Platin'], ['💎', 'Diamant'], ['🟣', 'Meister'], ['🔴', 'Großmeister'], ['🌈', 'Legende'], ['🌌', 'Mythisch'], ['✨', 'Göttlich']];
   var KLEIN = [
     { k: 'z', icon: '💰', titel: 'Zeni-Rekord', text: 'Dein höchster Zeni-Stand aller Zeiten (Ausgeben senkt ihn nicht)', stufen: [25000, 100000, 250000, 500000, 1000000, 2500000, 5000000, 10000000, 25000000, 50000000], einheit: 'Zeni' },
+    { k: 'kp', icon: '🌸', titel: 'Kanalpunkte-Fan', text: 'Wie viele Kanalpunkte du insgesamt eingelöst hast (gezählt seit November 2026)', stufen: [10000, 25000, 50000, 100000, 150000, 250000, 400000, 600000, 800000, 1000000], einheit: 'Punkte' },
     { k: 'j', icon: '🎰', titel: 'Jackpot-Knacker', text: 'Wie oft du den Rubbellos-Jackpot geknackt hast', stufen: [1, 3, 5, 10, 25, 50, 100, 250, 500, 1000], einheit: 'Jackpots' },
     { k: 'p', icon: '🍀', titel: 'Pechvogel', text: 'Wie viele Rubbellose bei dir Nieten waren', stufen: [25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000], einheit: 'Nieten' },
     { k: 'b', icon: '🎯', titel: 'Bingo-Sieger', text: 'Wie viele Monate du das Stream-Bingo gewonnen hast', stufen: [1, 3, 6, 12, 24, 36, 60, 100, 150, 200], einheit: 'Monatssiege' },
+    { k: 'd', icon: '🔥', titel: 'Dauerbrenner', text: 'Deine längste Watch-Streak: Streams am Stück ohne Pause (wenn du sie im Chat teilst)', stufen: [10, 25, 50, 100, 200, 365, 500, 1000, 1500, 2000], einheit: 'Streams am Stück' },
+    { k: 'sg', icon: '🏠', titel: 'Stammgast', text: 'In wie vielen Streams du dabei warst und geschrieben hast (inkl. alter Check-ins)', stufen: [10, 25, 50, 100, 200, 300, 500, 750, 1000, 1500], einheit: 'Streams' },
+    { k: 'em', icon: '😺', titel: 'Emote-Liebhaber', text: 'Wie viele deiner Nachrichten ein Emote enthalten (zählt 1× pro Nachricht, seit November 2026)', stufen: [50, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000], einheit: 'Nachrichten' },
     { k: 'k', icon: '🎬', titel: 'Regisseur', text: 'Wie viele Clips du auf dem Kanal erstellt hast', stufen: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500], einheit: 'Clips' },
-    { k: 'd', icon: '🔥', titel: 'Dauerbrenner', text: 'Deine längste Watch-Streak: Streams am Stück ohne Pause (wenn du sie im Chat teilst)', stufen: [10, 25, 50, 100, 200, 365, 500, 1000, 1500, 2000], einheit: 'Streams am Stück' }
+    { k: 'cv', icon: '👀', titel: 'Clip-Reichweite', text: 'Wie oft deine Clips insgesamt angeschaut wurden', stufen: [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000], einheit: 'Aufrufe' }
   ];
   var ABZEICHEN = [
     { id: 'og', icon: '👑', name: 'OG', text: 'Mindestens 2 Jahre Follower und 1.000 Std. Watchtime' },
@@ -374,6 +380,30 @@
     if (a.id === 'wp' && sp.v) return ' <b>(' + sp.v + '/5)</b>';
     return '';
   }
+  // Rivale: wer liegt in der Watchtime direkt vor einem?
+  function rivale(platz, std) {
+    var l = daten.watchtime || [];
+    if (platz === 1) return '<div class="kk riv">👑 Platz 1 – niemand liegt vor dir</div>';
+    var vor = platz > 1 ? l[platz - 2] : l[l.length - 1];
+    if (!vor || vor.w === undefined) return '';
+    var noch = Math.max(0.1, Math.ceil((vor.w - std) * 10) / 10);
+    var name = prof(String(vor.n).toLowerCase()).n || vor.n;
+    return '<div class="kk riv">⚔️ Noch <b>' + zahl(noch) + ' Std.</b> bis du <b>' + esc(name) + '</b> überholst' + (platz ? '' : ' (Platz ' + l.length + ')') + '</div>';
+  }
+  // Seltenheit: Anteil aller Zuschauer (ab 1 Std. Watchtime), die etwas haben
+  var basisCache = null;
+  function basis() {
+    if (basisCache) return basisCache;
+    var sl = daten.spieler || {}, b = [];
+    for (var l in sl) if ((sl[l].w || 0) >= 1) b.push(sl[l]);
+    return (basisCache = b);
+  }
+  function anteil(fn) {
+    var b = basis(); if (!b.length) return '';
+    var n = b.filter(fn).length, p = n / b.length * 100;
+    return p < 1 ? 'unter 1 %' : (p < 10 ? zahl(Math.round(p * 10) / 10) : Math.round(p)) + ' %';
+  }
+  function abzAnteil(a) { return '📊 ' + anteil(function (x) { return hatAbzeichen(x, a.id); }) + ' haben das'; }
   function abzText(a, sp) {
     if (a.id === 'kw' && sp.kw) return a.name + ' – ' + sp.kw;
     if (a.id === 'az' && sp.a) { var m = (daten.momente || []); return a.name + ' – ' + sp.a.map(function (i) { var x = m[i] || {}; return (x.n || 'Moment') + (x.d ? ' (' + x.d.split('-').reverse().join('.') + ')' : ''); }).join(', '); }
@@ -462,7 +492,8 @@
     return '<div class="erfolg"><div class="ob">' + e.icon + ' ' + e.titel + (ki.farbe ? ' · ' + ki.farbe[0] + ' ' + ki.farbe[1] + (ki.extra ? ' ✦' + ki.extra : '') : '') + '<span>' + zahl(v) + ' ' + e.einheit + '</span></div>' +
       '<div class="un erkl">' + e.text + '</div>' +
       '<div class="balken"><i style="width:' + balken(v, ki.vorher, ki.ziel) + '%"></i></div>' +
-      '<div class="un">Nächste Stufe: ' + ki.nxFarbe[0] + ' ' + ki.nxFarbe[1] + ' – ab ' + zahl(ki.ziel) + ' ' + e.einheit + ' · <b>noch ' + zahl(ki.ziel - v) + '</b></div></div>';
+      '<div class="un">Nächste Stufe: ' + ki.nxFarbe[0] + ' ' + ki.nxFarbe[1] + ' – ab ' + zahl(ki.ziel) + ' ' + e.einheit + ' · <b>noch ' + zahl(ki.ziel - v) + '</b></div>' +
+      (ki.farbe ? '<div class="un selten">📊 ' + anteil(function (x) { var w = wertVon(x, e.k), k2 = kleinInfo(e, w); return k2.farbe && FARBEN.indexOf(k2.farbe) >= FARBEN.indexOf(ki.farbe); }) + ' haben ' + ki.farbe[1] + ' oder höher</div>' : '') + '</div>';
   }
 
   function profilZeigen(login) {
@@ -474,11 +505,12 @@
       h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b><div class="kk">Noch keine Erfolge – einfach im Stream vorbeischauen 🌸</div></div></div>';
       return karteOeffnen(h);
     }
+    try { history.replaceState(null, '', '#profil=' + encodeURIComponent(login)); } catch (x) { }
     var std = sp.w || 0, r = leiterInfo(WT, std, 0).akt, kk = Math.floor(std * 10);
     var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
     h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b>' +
       (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
-      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div></div></div>';
+      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div>' + rivale(platz, std) + '</div></div>';
 
     // Abzeichen (nur freigeschaltete, als Symbole)
     var hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
@@ -486,7 +518,7 @@
     ev.reverse();   // neueste zuerst
     if (hat.length || ev.length) {
       h += '<div class="symbole">';
-      hat.forEach(function (a) { var t = abzText(a, sp); h += '<span class="sym" data-info="' + esc(t) + '" title="' + esc(t) + '">' + a.icon + (a.id === 'az' && sp.a.length > 1 ? '<i>×' + sp.a.length + '</i>' : '') + '</span>'; });
+      hat.forEach(function (a) { var t = abzText(a, sp) + ' · ' + abzAnteil(a); h += '<span class="sym" data-info="' + esc(t) + '" title="' + esc(t) + '">' + a.icon + (a.id === 'az' && sp.a.length > 1 ? '<i>×' + sp.a.length + '</i>' : '') + '</span>'; });
       if (ev.length) {
         h += '<span class="trenn"></span>';
         ev.slice(0, 3).forEach(function (x) { var e = EVENTS[x.c], t = e[1] + ' – ' + e[2]; h += '<span class="sym ev" data-info="' + esc(t) + '" title="' + esc(t) + '">' + (EVBILD[x.c] ? evIcon(x.c, 30) : e[0] + '<i>' + x.g.jahr + '</i>') + '</span>'; });
@@ -503,18 +535,13 @@
     // Erfolge als Kacheln (gleicher Stil wie Ränge, inkl. nächstem Ziel)
     var ek = '';
     KLEIN.forEach(function (e) {
-      var v = wertVon(sp, e.k); if (v <= 0) return;
+      var v = wertVon(sp, e.k);
       var ki = kleinInfo(e, v);
       ek += '<div class="kachel' + (ki.farbe ? '' : ' offen') + '" title="' + esc(e.text) + '"><div class="kt">' + e.icon + ' ' + e.titel + '</div>' +
         '<div class="kr">' + (ki.farbe ? ki.farbe[0] + ' ' + ki.farbe[1] + (ki.extra ? ' ✦' + ki.extra : '') : 'Noch offen') + '</div>' +
         '<div class="balken"><i style="width:' + balken(v, ki.vorher, ki.ziel) + '%"></i></div>' +
         '<div class="kn">' + zahl(v) + ' ' + e.einheit + ' · noch ' + zahl(ki.ziel - v) + ' bis ' + ki.nxFarbe[0] + '</div></div>';
     });
-    if (!hatAbzeichen(sp, 'og')) {
-      var pOg = Math.min((sp.w || 0) / 1000, sp.f ? tageSeit(sp.f) / 730 : 0, 1);
-      ek += '<div class="kachel offen" title="' + esc(ABZEICHEN[0].text) + '"><div class="kt">👑 OG-Abzeichen</div><div class="kr">Noch offen</div>' +
-        '<div class="balken"><i style="width:' + Math.max(2, pOg * 100) + '%"></i></div><div class="kn">2 Jahre Follow + 1.000 Std.</div></div>';
-    }
     if (ek) h += '<h4>🎨 ERFOLGE</h4><div class="kacheln4">' + ek + '</div>';
 
     // Alle Erfolge (aufklappbar)
@@ -530,7 +557,7 @@
       h += '</div>';
     }
     h += '<h4>ABZEICHEN</h4><div class="liste-abz">';
-    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + esc(ja ? abzText(a, sp).slice(a.name.length + 3) : a.text) + fortschritt(a, sp, ja) + (ja ? ' ✓' : '') + '</div>'; });
+    ABZEICHEN.forEach(function (a) { var ja = hatAbzeichen(sp, a.id); h += '<div class="' + (ja ? '' : 'aus') + '">' + a.icon + ' <b>' + a.name + '</b> – ' + esc(ja ? abzText(a, sp).slice(a.name.length + 3) : a.text) + fortschritt(a, sp, ja) + (ja ? ' ✓' : '') + ' <span class="selten">' + abzAnteil(a) + '</span></div>'; });
     h += '</div></div>';
     karteOeffnen(h);
     $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
@@ -563,7 +590,7 @@
     karteOeffnen(h);
   }
 
-  function profilZu() { $('kartebg').className = 'karte-bg'; }
+  function profilZu() { $('kartebg').className = 'karte-bg'; try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (x) { } }
   $('kartebg').onclick = function (e) { if (e.target === this) profilZu(); };
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') profilZu(); });
   document.addEventListener('click', function (e) {
