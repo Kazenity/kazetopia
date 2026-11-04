@@ -15,7 +15,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { background: var(--bg); }
   body { font-family: Poppins, "Segoe UI", sans-serif; color: var(--hell); background: radial-gradient(1200px 500px at 50% -120px, rgba(194,57,111,.35), transparent 70%), var(--bg); min-height: 100vh; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 16px 48px; }
 
   header { text-align: center; margin-bottom: 26px; }
   header .kl { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--rosa); }
@@ -26,7 +26,7 @@
 
   .reiter { display: flex; gap: 6px; background: var(--flaeche); padding: 5px; border-radius: 14px; margin-bottom: 22px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .reiter::-webkit-scrollbar { display: none; }
-  .reiter button { flex: 1 0 auto; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 14px; cursor: pointer; white-space: nowrap; }
+  .reiter button { flex: 1 0 auto; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: transparent; border: 0; border-radius: 10px; padding: 11px 9px; cursor: pointer; white-space: nowrap; }
   .reiter button:hover { background: var(--hover); }
   .reiter button.aktiv { background: var(--rosa); color: var(--dunkel); }
 
@@ -78,9 +78,55 @@
   .danke .p:last-child { border-bottom: 0; }
   .danke .p i { font-style: normal; color: var(--grau); min-width: 24px; flex: 0 0 auto; }
   .danke-text { text-align: center; color: var(--grau); font-size: 14px; margin-bottom: 14px; }
+  .live { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #c2396f, #5a2562); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; color: var(--hell); text-decoration: none; box-shadow: 0 8px 24px rgba(194,57,111,.3); }
+  .live .punkt { width: 10px; height: 10px; border-radius: 50%; background: #ff3b5c; flex: 0 0 auto; animation: puls 1.4s infinite; }
+  @keyframes puls { 0%,100% { box-shadow: 0 0 0 0 rgba(255,59,92,.7); } 50% { box-shadow: 0 0 0 7px rgba(255,59,92,0); } }
+  .live .txt { min-width: 0; flex: 1; }
+  .live b { display: block; font-size: 14px; }
+  .live span { display: block; font-size: 12px; color: #ffd9e6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live .los { font-size: 12px; font-weight: 800; background: var(--hell); color: var(--dunkel); border-radius: 8px; padding: 6px 10px; white-space: nowrap; }
+
+  .kacheln { display: grid; gap: 10px; }
+  .emotes { grid-template-columns: repeat(5, 1fr); }
+  .emote { background: var(--flaeche); border-radius: 16px; padding: 14px 8px 12px; text-align: center; position: relative; min-width: 0; }
+  .emote.e1 { background: linear-gradient(160deg, #c2396f, #5a2562); }
+  .emote img { width: 64px; height: 64px; object-fit: contain; display: block; margin: 4px auto 8px; }
+  .emote .rg { position: absolute; top: 8px; left: 10px; font-size: 12px; font-weight: 800; color: var(--grau); }
+  .emote.e1 .rg { color: #ffd9e6; }
+  .emote .n { font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .emote .w { font-size: 12px; color: var(--rosa); font-weight: 700; }
+  .emote.e1 .w { color: #ffd9e6; }
+
+  .clips { grid-template-columns: repeat(3, 1fr); }
+  .clip { background: var(--flaeche); border-radius: 14px; overflow: hidden; text-decoration: none; color: var(--hell); display: block; min-width: 0; transition: transform .15s; }
+  .clip:hover { transform: translateY(-2px); background: var(--hover); }
+  .clip .vb { position: relative; aspect-ratio: 16 / 9; background: var(--dunkel); }
+  .clip .vb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .clip .vb i { position: absolute; left: 8px; top: 8px; font-style: normal; font-size: 11px; font-weight: 800; background: rgba(0,0,0,.65); border-radius: 6px; padding: 2px 7px; }
+  .clip .vb u { position: absolute; right: 8px; bottom: 8px; text-decoration: none; font-size: 11px; font-weight: 700; background: rgba(0,0,0,.65); border-radius: 6px; padding: 2px 7px; }
+  .clip .t { padding: 9px 11px 11px; }
+  .clip .t b { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .clip .t span { font-size: 11.5px; color: var(--grau); }
+
+  .spiele { grid-template-columns: repeat(4, 1fr); }
+  .spiel { background: var(--flaeche); border-radius: 14px; overflow: hidden; min-width: 0; position: relative; }
+  .spiel .cv { aspect-ratio: 3 / 4; background: var(--dunkel); display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .spiel .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .spiel .t { padding: 8px 10px 10px; }
+  .spiel .t b { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spiel .t span { font-size: 11.5px; color: var(--grau); }
+  .spiel .yt { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 800; color: var(--dunkel); background: var(--rosa); border-radius: 7px; padding: 3px 8px; text-decoration: none; }
+  .spiel .lv { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 800; background: #ff3b5c; color: #fff; border-radius: 6px; padding: 2px 7px; }
   footer { text-align: center; color: var(--grau); font-size: 12px; margin-top: 22px; line-height: 1.7; }
   @media (max-width: 560px) {
     .danke { grid-template-columns: 1fr; }
+    .emotes { grid-template-columns: repeat(3, 1fr); }
+    .clips { grid-template-columns: 1fr 1fr; }
+    .spiele { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 380px) {
+    .clips { grid-template-columns: 1fr; }
+    .spiele { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 480px) {
     .podest { gap: 6px; }
@@ -100,12 +146,17 @@
     <p><span id="unter">Wer hat die meisten Zeni?</span><br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
   </header>
 
+  <a class="live" id="live" href="https://twitch.tv/kazenity" target="_blank" rel="noopener" style="display:none"></a>
+
   <div class="reiter" id="reiter">
     <button data-r="zeni" class="aktiv">💰 Zeni</button>
     <button data-r="watchtime">⏱️ Watchtime</button>
+    <button data-r="danke">💖 Danke</button>
     <button data-r="bingo">🎯 Bingo</button>
     <button data-r="chat">💬 Chat</button>
-    <button data-r="danke">💖 Danke</button>
+    <button data-r="emotes">😄 Emotes</button>
+    <button data-r="clips">🎬 Clips</button>
+    <button data-r="spiele">🎮 Spiele</button>
   </div>
 
   <div class="podest" id="podest"></div>
@@ -142,10 +193,49 @@
   }
 
   function sonder() {
-    var spezial = reiter === 'bingo' || reiter === 'danke';
+    var spezial = reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'spiele';
     $('podest').style.display = spezial ? 'none' : '';
     $('suche').style.display = spezial ? 'none' : '';
     if (!spezial) { $('liste').className = 'liste'; return false; }
+    if (reiter === 'emotes') {
+      var em = daten.emotes || [];
+      var he = '';
+      em.forEach(function (x, i) {
+        he += '<div class="emote' + (i === 0 ? ' e1' : '') + '"><div class="rg">#' + (i + 1) + '</div><img loading="lazy" alt="' + esc(x.n) + '" src="' + esc(x.b) + '"><div class="n">' + esc(x.n) + '</div><div class="w">' + Number(x.w).toLocaleString('de-DE') + '×</div></div>';
+      });
+      $('liste').className = '';
+      $('liste').innerHTML = em.length ? '<div class="kacheln emotes">' + he + '</div>' : '<div class="liste"><div class="leer">Noch keine Emote-Daten.</div></div>';
+      $('hinweis').textContent = 'Die beliebtesten Kanal-Emotes im Chat';
+      return true;
+    }
+    if (reiter === 'clips') {
+      var c = daten.clips || {};
+      var hc = '';
+      if (c.woche) hc += '<div class="serie"><b>🎬 Clipper der Woche: ' + esc(prof(c.woche.name).n) + '</b><span>' + c.woche.anzahl + (c.woche.anzahl == 1 ? ' Clip' : ' Clips') + ' seit Sonntag, ' + esc(c.woche.seit) + ' · Clippt mit !clip mit!</span></div>';
+      var tc = c.top || [];
+      if (tc.length) {
+        hc += '<div class="kacheln clips">';
+        tc.forEach(function (x, i) {
+          hc += '<a class="clip" href="' + esc(x.url) + '" target="_blank" rel="noopener"><div class="vb"><img loading="lazy" alt="" src="' + esc(x.bild) + '"><i>#' + (i + 1) + '</i><u>▶ ' + Number(x.aufrufe).toLocaleString('de-DE') + '</u></div><div class="t"><b>' + esc(x.titel) + '</b><span>von ' + esc(prof(x.von).n) + (x.datum ? ' · ' + esc(x.datum) : '') + '</span></div></a>';
+        });
+        hc += '</div>';
+      } else hc += '<div class="liste"><div class="leer">Noch keine Clips.</div></div>';
+      $('liste').className = '';
+      $('liste').innerHTML = hc;
+      $('hinweis').textContent = 'Die meistgesehenen Clips aller Zeiten';
+      return true;
+    }
+    if (reiter === 'spiele') {
+      var sp = daten.spiele || [];
+      var hs = '';
+      sp.forEach(function (x) {
+        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (x.b ? '<img loading="lazy" alt="" src="' + esc(x.b) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b><span>' + (x.s ? x.s + (x.s == 1 ? ' Stream' : ' Streams') : '&nbsp;') + '</span>' + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ Auf YouTube</a>' : '') + '</div></div>';
+      });
+      $('liste').className = '';
+      $('liste').innerHTML = sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>';
+      $('hinweis').textContent = 'Alle Spiele, die auf dem Kanal gestreamt wurden';
+      return true;
+    }
     if (reiter === 'bingo') {
       var b = daten.bingo || [];
       var h = '';
@@ -182,7 +272,10 @@
     watchtime: 'Wer schaut am längsten zu?',
     bingo: 'Wer hat das Stream-Bingo gewonnen?',
     chat: 'Wer schreibt am meisten im Chat?',
-    danke: 'Die größten Unterstützer des Kanals'
+    danke: 'Die größten Unterstützer des Kanals',
+    emotes: 'Welche Emotes lieben wir am meisten?',
+    clips: 'Die besten Momente aus dem Stream',
+    spiele: 'Was wurde hier schon alles gespielt?'
   };
   function zeigen() {
     $('unter').textContent = untertitel[reiter] || '';
@@ -226,6 +319,10 @@
   fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
     daten = d;
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
+    if (d.live && d.live.an) {
+      $('live').innerHTML = '<div class="punkt"></div><div class="txt"><b>Kaze ist gerade live' + (d.live.spiel ? ' · ' + esc(d.live.spiel) : '') + '</b><span>' + esc(d.live.titel || '') + '</span></div><div class="los">Zuschauen</div>';
+      $('live').style.display = 'flex';
+    }
     zeigen();
   }).catch(function () { $('liste').innerHTML = '<div class="leer">Rangliste konnte nicht geladen werden.</div>'; });
 })();
