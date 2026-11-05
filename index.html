@@ -325,7 +325,7 @@
   .edslot .ph { width: 56px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--grau); font-size: 18px; }
   .edknoepfe { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
   .startgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .startgrid .voting-box { grid-column: 1 / -1; }
+  .startgrid .voting-box { grid-column: auto; }
   @media (min-width: 1100px) { .nur-schmal { display: none; } }
   @media (max-width: 700px) { .startgrid { grid-template-columns: 1fr; } }
   .sbox.klick { cursor: pointer; } .sbox.klick:hover { border-color: var(--rosa); }
@@ -342,16 +342,31 @@
   .unterreiter button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
   .unterreiter button:hover { background: var(--hover); }
   .unterreiter button.aktiv { color: var(--hell); border-color: var(--rosa); background: var(--hover); }
-  .plankarte { margin-bottom: 14px; }
-  .plankarte .cd { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 12px; }
-  .plankarte .cdzeit { font-size: 24px; color: var(--rosa); } .plankarte .cdspiel { font-weight: 700; font-size: 14px; }
-  .plankarte .cdlive { font-size: 18px; font-weight: 800; color: #ff5c7a; }
-  .planwoche { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-  .ptag { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 1px; font-size: 12px; color: var(--grau); }
-  .ptag b { color: var(--hell); font-size: 14px; } .ptag i { font-style: normal; color: var(--hell); font-weight: 700; }
-  .ptag.next { border-color: var(--rosa); box-shadow: 0 0 0 1px var(--rosa); } .ptag.vorbei { opacity: .45; }
+  .plankarte { margin-bottom: 14px; position: relative; overflow: hidden; padding: 14px; }
+  .plankarte .pbg { position: absolute; inset: -20px; background-size: cover; background-position: center; filter: blur(22px) saturate(1.2); opacity: .35; }
+  .plankarte::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(24,10,28,.35), rgba(24,10,28,.85)); pointer-events: none; }
+  .plankarte > * { position: relative; z-index: 1; }
+  .pinhalt { display: flex; align-items: center; gap: 14px; }
+  .pcover { width: 66px; height: 88px; object-fit: cover; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.45); flex: 0 0 auto; }
+  .pcover.ph { display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 28px; }
+  .ptext h3 { margin-bottom: 4px; }
+  .plankarte .cd { display: flex; flex-direction: column; gap: 2px; }
+  .plankarte .cdzeit { font-size: 24px; color: var(--rosa); line-height: 1.15; } .plankarte .cdspiel { font-weight: 700; font-size: 13.5px; }
+  .plivebtn { display: inline-block; margin-top: 8px; background: #ff4d6d; color: #fff; font-weight: 800; font-size: 13px; padding: 7px 14px; border-radius: 10px; text-decoration: none; }
+  .plankarte.istlive { border-color: #ff4d6d; animation: livepuls 2s ease-in-out infinite; }
+  .plankarte.istlive .cdzeit { color: #ff6b85; }
+  @keyframes livepuls { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,109,.0); } 50% { box-shadow: 0 0 0 3px rgba(255,77,109,.45); } }
+  .planwoche { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
+  .ptag { background: rgba(24,10,28,.7); border: 1px solid var(--rand); border-radius: 10px; padding: 6px; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--grau); }
+  .ptag img, .ptag .pmini { width: 26px; height: 35px; object-fit: cover; border-radius: 5px; flex: 0 0 auto; }
+  .ptag .pmini { display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 14px; }
+  .ptag div { display: flex; flex-direction: column; } .ptag b { color: var(--hell); font-size: 12.5px; }
+  .ptag.next { border-color: var(--rosa); box-shadow: 0 0 0 1px var(--rosa); } .ptag.vorbei { opacity: .4; }
   .pcomm { margin-top: 10px; font-size: 12.5px; color: var(--grau); }
-  @media (max-width: 560px) { .planwoche { grid-template-columns: repeat(2, 1fr); } }
+  .top3reihe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .topclip { margin-top: 12px; }
+  @media (max-width: 700px) { .top3reihe { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .planwoche { grid-template-columns: repeat(4, 1fr); gap: 5px; } .ptag { flex-direction: column; gap: 4px; padding: 6px 2px; text-align: center; } .ptag div { align-items: center; } .ptag img, .ptag .pmini { width: 30px; height: 40px; } .plankarte .cdzeit { font-size: 22px; } }
   .meinbox { margin-bottom: 14px; cursor: pointer; }
   .meinbox .mkopf { display: flex; align-items: center; gap: 12px; }
   .meinbox .mkopf b { font-size: 17px; }
@@ -982,16 +997,17 @@
     h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += '<div class="startgrid">';
-    var vt = daten.voting || [];
-    h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
     var ev = neuFreigeschaltet();
     h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.map(function (e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }).join('') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
+    var vt = daten.voting || [];
+    h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
+    h += '</div><div class="top3reihe">';
     h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
     h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
     h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
-    if (cw) h += '<div class="sbox nur-schmal"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + '</div></div>';
     h += '</div>';
+    if (cw) h += '<div class="sbox nur-schmal topclip"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + '</div></div>';
     return h;
   }
   // ⏳ Countdown & Streamplan
@@ -1002,7 +1018,7 @@
   }
   function countdownText() {
     var live = daten && daten.live && daten.live.an, jetzt = Date.now();
-    if (live) return '<span class="cdlive">🔴 Kaze ist jetzt live' + (daten.live.spiel ? ' · ' + esc(daten.live.spiel) : '') + '</span>';
+    if (live) return '<b class="cdzeit">Kaze ist jetzt live</b><span class="cdspiel">' + esc(daten.live.spiel || '') + '</span>';
     var n = planTermine().filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
     if (!n) return '<span class="leise">Der nächste Streamplan kommt bald auf Discord.</span>';
     var min = Math.round((n.d.getTime() - jetzt) / 60000), txt;
@@ -1012,17 +1028,31 @@
     else { var tg = Math.floor(min / 1440); txt = 'in ' + tg + (tg === 1 ? ' Tag ' : ' Tagen ') + Math.floor((min % 1440) / 60) + ' Std.'; }
     return '<b class="cdzeit">' + txt + '</b><span class="cdspiel">' + WTAG[n.d.getDay()] + ' ' + esc(n.t.zeit) + ' · ' + esc(n.t.spiel) + (n.t.info ? ' · ' + esc(n.t.info) : '') + '</span>';
   }
+  function coverFuer(name) {
+    var n = String(name || '').toLowerCase().trim(), c = '';
+    (daten.spiele || []).forEach(function (x) { if (!c && String(x.n || '').toLowerCase().trim() === n) c = sicher(x.b); });
+    return c;
+  }
   function planKarte() {
-    var sp = daten.streamplan, tt = planTermine();
-    if (!sp || !tt.length) return '';
+    var sp = daten.streamplan, tt = planTermine(), live = daten.live && daten.live.an;
+    if (!live && (!sp || !tt.length)) return '';
     var jetzt = Date.now(), naechster = tt.filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
-    var h = '<div class="sbox plankarte"><h3>⏳ NÄCHSTER STREAM</h3><div class="cd" id="countdown">' + countdownText() + '</div><div class="planwoche">';
-    tt.forEach(function (x) {
-      var vorbei = x.d.getTime() < jetzt - 4 * 3600000;
-      h += '<div class="ptag' + (vorbei ? ' vorbei' : '') + (x === naechster ? ' next' : '') + '"><b>' + WTAG[x.d.getDay()] + '</b><span>' + ('0' + x.d.getDate()).slice(-2) + '.' + ('0' + (x.d.getMonth() + 1)).slice(-2) + '. · ' + esc(x.t.zeit) + '</span><i>' + esc(x.t.spiel) + '</i></div>';
-    });
-    h += '</div>' + (sp.community ? '<div class="leise pcomm">🎮 Danach ab ca. ' + esc(sp.community) + ' Community Games – jeder kann mitmachen!</div>' : '') + '</div>';
-    return h;
+    var spiel = live ? daten.live.spiel : (naechster ? naechster.t.spiel : ''), cov = coverFuer(spiel);
+    var h = '<div class="sbox plankarte' + (live ? ' istlive' : '') + '">' + (cov ? '<div class="pbg" style="background-image:url(' + esc(cov) + ')"></div>' : '') +
+      '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" src="' + esc(cov) + '">' : '<span class="pcover ph">🎮</span>') +
+      '<div class="ptext"><h3>' + (live ? '🔴 LIVE' : '⏳ NÄCHSTER STREAM') + '</h3><div class="cd" id="countdown">' + countdownText() + '</div>' +
+      (live ? '<a class="plivebtn" href="https://www.twitch.tv/kazenity" target="_blank" rel="noopener">Zuschauen ›</a>' : '') + '</div></div>';
+    if (tt.length) {
+      h += '<div class="planwoche">';
+      tt.forEach(function (x) {
+        var vorbei = x.d.getTime() < jetzt - 4 * 3600000, c = coverFuer(x.t.spiel);
+        h += '<div class="ptag' + (vorbei ? ' vorbei' : '') + (x === naechster && !live ? ' next' : '') + '" title="' + esc(x.t.spiel) + '">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="pmini">🎮</span>') +
+          '<div><b>' + WTAG[x.d.getDay()] + ' ' + ('0' + x.d.getDate()).slice(-2) + '.' + ('0' + (x.d.getMonth() + 1)).slice(-2) + '.</b><span>' + esc(x.t.zeit) + '</span></div></div>';
+      });
+      h += '</div>';
+    }
+    if (sp && sp.community) h += '<div class="pcomm">🎮 Danach ab ca. ' + esc(sp.community) + ' Community Games – jeder kann mitmachen!</div>';
+    return h + '</div>';
   }
   setInterval(function () { var c = $('countdown'); if (c && daten) c.innerHTML = countdownText(); }, 30000);
 
