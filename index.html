@@ -515,7 +515,7 @@
     if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
     e.forEach(function (x, i) {
       var meins = vote.meine === x.id;
-      h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + (sicher(x.cover) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.cover)) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
+      h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + ((sicher(x.cover) || sicher((daten && daten.spielcover || {})[x.spiel_id])) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.cover) || sicher(daten.spielcover[x.spiel_id])) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
         '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
     });
     h += '</div>';
