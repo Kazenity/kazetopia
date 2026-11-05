@@ -317,6 +317,7 @@
   .sbtn { font-family: inherit; font-size: 12.5px; font-weight: 800; width: 100%; border: 1px solid var(--rand); border-radius: 10px; padding: 8px 6px; background: var(--bg); color: var(--hell); cursor: pointer; margin-top: auto; }
   .sbtn.los { background: var(--rosa); color: var(--dunkel); border-color: var(--rosa); } .sbtn.hat { color: #7bd88f; border-color: #3fae6a; }
   .sbtn:disabled { opacity: .6; cursor: default; }
+  .sabbr { font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--grau); background: none; border: 0; margin-top: 4px; cursor: pointer; text-decoration: underline; }
   .sbtn small { display: block; font-size: 10.5px; font-weight: 600; color: var(--grau); margin-top: 2px; }
   .shopinfo { margin-top: 18px; font-size: 12.5px; color: var(--grau); }
   .edslot { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -772,8 +773,8 @@
         var knopf = {
           login: '<button class="sbtn" data-login>Kaufen</button>',
           hat: '<button class="sbtn hat" data-anlegen>✓ Im Besitz · Anlegen</button>',
-          wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …</button>',
-          zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni · nochmal</button>',
+          wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>dauert meist 1–2 Min.</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
+          zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
           kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
           fehlt: '<button class="sbtn" data-kauf="' + a.id + '">Kaufen<small>laut letztem Stand fehlen ' + zahl(preisVon(a) - stand) + '</small></button>'
         }[z];
@@ -790,8 +791,20 @@
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-login]'), function (b) { b.onclick = einloggenFragen; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-anlegen]'), function (b) { b.onclick = function () { designEditor(sitzung.name); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-kauf]'), function (b) { b.onclick = function () { kaufFragen(b.getAttribute('data-kauf')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('.sabbr[data-abbr]'), function (b) { b.onclick = function () {
+      var id = b.getAttribute('data-abbr'), nr = meineBest && meineBest[id]; if (!nr) return;
+      b.disabled = true;
+      sFrisch().then(function () { return sbFetch('/rest/v1/bestellung?id=eq.' + nr, { method: 'DELETE' }); })
+        .then(function () { delete meineBest[id]; zeigen(); }).catch(function () { b.disabled = false; });
+    }; });
     if (sitzung && meineBest === null) bestellungenLaden().then(function () { if (reiter === 'shop') zeigen(); });
+    // Solange etwas gebucht wird: alle 40 Sek. neue Daten holen, damit das Ergebnis von selbst erscheint
+    if (document.querySelector('.sbtn.wartet') && !shopPoll) shopPoll = setTimeout(function () {
+      shopPoll = null;
+      datenLaden().then(function (d) { daten = d; if (reiter === 'shop') zeigen(); }).catch(function () { });
+    }, 40000);
   }
+  var shopPoll = null;
   function kaufFragen(id) {
     var a = kosArtikel(id); if (!a || !sitzung) return;
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
