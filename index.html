@@ -342,6 +342,16 @@
   .unterreiter button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
   .unterreiter button:hover { background: var(--hover); }
   .unterreiter button.aktiv { color: var(--hell); border-color: var(--rosa); background: var(--hover); }
+  .plankarte { margin-bottom: 14px; }
+  .plankarte .cd { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 12px; }
+  .plankarte .cdzeit { font-size: 24px; color: var(--rosa); } .plankarte .cdspiel { font-weight: 700; font-size: 14px; }
+  .plankarte .cdlive { font-size: 18px; font-weight: 800; color: #ff5c7a; }
+  .planwoche { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .ptag { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 1px; font-size: 12px; color: var(--grau); }
+  .ptag b { color: var(--hell); font-size: 14px; } .ptag i { font-style: normal; color: var(--hell); font-weight: 700; }
+  .ptag.next { border-color: var(--rosa); box-shadow: 0 0 0 1px var(--rosa); } .ptag.vorbei { opacity: .45; }
+  .pcomm { margin-top: 10px; font-size: 12.5px; color: var(--grau); }
+  @media (max-width: 560px) { .planwoche { grid-template-columns: repeat(2, 1fr); } }
   .meinbox { margin-bottom: 14px; cursor: pointer; }
   .meinbox .mkopf { display: flex; align-items: center; gap: 12px; }
   .meinbox .mkopf b { font-size: 17px; }
@@ -969,6 +979,7 @@
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Such deinen Namen</b> in einer Rangliste und klick drauf</li><li>Tipp auf <b>⭐ Das bin ich</b> – dann siehst du immer deine Plätze</li><li>Unter <b>🎮 Spiele</b> mit Twitch anmelden und mitbestimmen, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += '<div class="startgrid">';
     var vt = daten.voting || [];
@@ -983,6 +994,38 @@
     h += '</div>';
     return h;
   }
+  // ⏳ Countdown & Streamplan
+  var WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  function planTermine() {
+    var sp = daten && daten.streamplan; if (!sp || !sp.termine) return [];
+    return sp.termine.map(function (t) { var d = new Date(t.datum + 'T' + t.zeit + ':00'); return { t: t, d: d }; }).filter(function (x) { return !isNaN(x.d); }).sort(function (a, b) { return a.d - b.d; });
+  }
+  function countdownText() {
+    var live = daten && daten.live && daten.live.an, jetzt = Date.now();
+    if (live) return '<span class="cdlive">🔴 Kaze ist jetzt live' + (daten.live.spiel ? ' · ' + esc(daten.live.spiel) : '') + '</span>';
+    var n = planTermine().filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
+    if (!n) return '<span class="leise">Der nächste Streamplan kommt bald auf Discord.</span>';
+    var min = Math.round((n.d.getTime() - jetzt) / 60000), txt;
+    if (min <= 0) txt = 'gleich geht\'s los';
+    else if (min < 60) txt = 'in ' + min + ' Min.';
+    else if (min < 1440) txt = 'in ' + Math.floor(min / 60) + ' Std. ' + (min % 60) + ' Min.';
+    else { var tg = Math.floor(min / 1440); txt = 'in ' + tg + (tg === 1 ? ' Tag ' : ' Tagen ') + Math.floor((min % 1440) / 60) + ' Std.'; }
+    return '<b class="cdzeit">' + txt + '</b><span class="cdspiel">' + WTAG[n.d.getDay()] + ' ' + esc(n.t.zeit) + ' · ' + esc(n.t.spiel) + (n.t.info ? ' · ' + esc(n.t.info) : '') + '</span>';
+  }
+  function planKarte() {
+    var sp = daten.streamplan, tt = planTermine();
+    if (!sp || !tt.length) return '';
+    var jetzt = Date.now(), naechster = tt.filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
+    var h = '<div class="sbox plankarte"><h3>⏳ NÄCHSTER STREAM</h3><div class="cd" id="countdown">' + countdownText() + '</div><div class="planwoche">';
+    tt.forEach(function (x) {
+      var vorbei = x.d.getTime() < jetzt - 4 * 3600000;
+      h += '<div class="ptag' + (vorbei ? ' vorbei' : '') + (x === naechster ? ' next' : '') + '"><b>' + WTAG[x.d.getDay()] + '</b><span>' + ('0' + x.d.getDate()).slice(-2) + '.' + ('0' + (x.d.getMonth() + 1)).slice(-2) + '. · ' + esc(x.t.zeit) + '</span><i>' + esc(x.t.spiel) + '</i></div>';
+    });
+    h += '</div>' + (sp.community ? '<div class="leise pcomm">🎮 Danach ab ca. ' + esc(sp.community) + ' Community Games – jeder kann mitmachen!</div>' : '') + '</div>';
+    return h;
+  }
+  setInterval(function () { var c = $('countdown'); if (c && daten) c.innerHTML = countdownText(); }, 30000);
+
   // „Dein Bereich“ ganz oben auf Start
   function meineKarte() {
     var l = ich || (sitzung && sitzung.name) || '';
