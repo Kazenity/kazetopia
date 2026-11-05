@@ -106,6 +106,10 @@
   .danke .p i { font-style: normal; color: var(--grau); min-width: 24px; flex: 0 0 auto; }
   .danke-text { text-align: center; color: var(--grau); font-size: 14px; margin-bottom: 14px; }
   .live { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #c2396f, #5a2562); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; color: var(--hell); text-decoration: none; box-shadow: 0 8px 24px rgba(194,57,111,.3); }
+  .eventband { display: block; background: linear-gradient(135deg, #6a2c8c, #c2396f); border: 1px solid rgba(255,158,191,.45); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; color: var(--hell); box-shadow: 0 8px 24px rgba(106,44,140,.3); }
+  .eventband b { display: block; font-size: 15px; }
+  .eventband span { display: block; font-size: 13px; color: #ffd9e6; margin-top: 3px; white-space: pre-line; }
+  .eventband small { display: block; font-size: 11px; color: #ffd9e6; opacity: .8; margin-top: 6px; }
   .live .punkt { width: 10px; height: 10px; border-radius: 50%; background: #ff3b5c; flex: 0 0 auto; animation: puls 1.4s infinite; }
   @keyframes puls { 0%,100% { box-shadow: 0 0 0 0 rgba(255,59,92,.7); } 50% { box-shadow: 0 0 0 7px rgba(255,59,92,0); } }
   .live .txt { min-width: 0; flex: 1; }
@@ -461,6 +465,7 @@
     <button class="infoknopf" id="infoknopf">ℹ️ Wie bekomme ich Erfolge?</button>
   </header>
 
+  <div class="eventband" id="eventband" style="display:none"></div>
   <a class="live" id="live" href="https://twitch.tv/kazenity" target="_blank" rel="noopener" style="display:none"></a>
 
   <div class="layout"><main class="haupt">
@@ -687,7 +692,7 @@
   function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
   // ================= Kosmetik & Zeni-Shop =================
   var KOS_BASIS = 'https://raw.githubusercontent.com/Kazenity/kazetopia/main/bilder/kos/';
-  function kosBild(id) { return /^[a-z0-9_]+$/.test(id) ? KOS_BASIS + id + '.webp' : ''; }
+  function kosBild(id) { if (!/^[a-z0-9_]+$/.test(id)) return ''; var a = kosArtikel(id), e = a && /^(png|jpg|webp)$/.test(a.bild || '') ? a.bild : 'webp'; return KOS_BASIS + id + '.' + e + (a && a.v ? '?v=' + a.v : ''); }
   function shopArtikel() { return (daten && daten.shop && daten.shop.artikel) || []; }
   function kosArtikel(id) { return shopArtikel().filter(function (a) { return a.id === id; })[0]; }
   function kosName(id) { var a = kosArtikel(id); return a ? a.name : id; }
@@ -1578,8 +1583,9 @@
   function datenschutz() {
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Datenschutzerklärung</b><div class="kk">Kazetopia · kazenity.github.io/kazetopia · Stand: November 2026</div></div></div>' +
       '<h4>1. VERANTWORTLICHER</h4><p>Giuseppe Auner (Kazenity). Kontaktdaten und Anschrift stehen im <a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a>.</p>' +
-      '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Pflicht-Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools.</p>' +
+      '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Pflicht-Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools. Wir zählen lediglich anonym, wie oft die Seite aufgerufen wird (siehe Punkt 3a).</p>' +
       '<h4>3. HOSTING (GITHUB PAGES)</h4><p>Die Seite und ihre Daten werden über GitHub Pages bzw. raw.githubusercontent.com der GitHub, Inc. (88 Colin P Kelly Jr St, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Browser-Informationen, um die Seite auszuliefern und vor Missbrauch zu schützen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer sicheren, funktionierenden Website). Eine Übermittlung in die USA ist möglich; GitHub ist nach dem EU-US Data Privacy Framework zertifiziert. Mehr: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>' +
+      '<h4>3a. ANONYMER AUFRUFZÄHLER</h4><p>Beim Öffnen der Seite erhöht dein Browser einen Zähler auf unserem Supabase-Server in Frankfurt (EU) um eins. Gespeichert wird nur die Gesamtzahl der Aufrufe pro Tag – keine IP-Adresse, keine Kennung, nichts in deinem Browser. Technisch wird beim Aufruf deine IP-Adresse verarbeitet, um die Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu sehen, ob die Seite genutzt wird).</p>' +
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
@@ -1807,6 +1813,8 @@
       .then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .catch(function () { return fetch('daten.json?t=' + Date.now()).then(function (r) { return r.json(); }); });
   }
+  // Anonymer Aufrufzähler: nur eine Zahl pro Tag, nichts wird im Browser gespeichert
+  try { fetch(SB_URL + '/rest/v1/rpc/aufruf', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}', keepalive: true }).catch(function () { }); } catch (x) { }
   datenLaden().then(function (d) {
     daten = d;
     plaetzeMerken(d);
@@ -1817,6 +1825,11 @@
     if (d.live && d.live.an) {
       $('live').innerHTML = '<div class="punkt"></div><div class="txt"><b>Kaze ist gerade live' + (d.live.spiel ? ' · ' + esc(d.live.spiel) : '') + '</b><span>' + esc(d.live.titel || '') + '</span></div><div class="los">Zuschauen</div>';
       $('live').style.display = 'flex';
+    }
+    var eb = d.banner;
+    if (eb && eb.titel && (!eb.bis || new Date(eb.bis + 'T23:59:59') >= new Date())) {
+      $('eventband').innerHTML = '<b>' + esc(eb.titel) + '</b>' + (eb.text ? '<span>' + esc(eb.text) + '</span>' : '') + (eb.bis ? '<small>bis ' + esc(eb.bis.split('-').reverse().join('.')) + '</small>' : '');
+      $('eventband').style.display = 'block';
     }
     zeigen();
     if (location.hash === '#datenschutz') datenschutz();
