@@ -368,6 +368,16 @@
   .topclip { margin-top: 12px; }
   @media (max-width: 700px) { .top3reihe { grid-template-columns: 1fr; } }
   @media (max-width: 560px) { .planwoche { grid-template-columns: repeat(4, 1fr); gap: 5px; } .ptag { flex-direction: column; gap: 4px; padding: 6px 2px; text-align: center; } .ptag div { align-items: center; } .ptag img, .ptag .pmini { width: 30px; height: 40px; } .plankarte .cdzeit { font-size: 22px; } }
+  .sammlung { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .sam { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 11px; color: var(--grau); font-weight: 700; }
+  .sam img { width: 54px; height: 54px; } .sam.bn { grid-column: span 2; } .sam.bn img { width: 100%; height: 54px; object-fit: cover; border-radius: 8px; }
+  .sam.ti b { color: var(--gold); font-size: 12.5px; padding: 14px 0 6px; }
+  .zuletzt { display: flex; flex-direction: column; gap: 6px; }
+  .zk { display: flex; align-items: center; gap: 10px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .zk .av { width: 28px; height: 28px; flex: 0 0 28px; font-size: 13px; } .zk small { color: var(--grau); }
+  .zk span { flex: 1; } .zk i { font-style: normal; color: var(--grau); font-size: 11.5px; white-space: nowrap; }
+  .pkal { margin-top: 10px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--hell); background: rgba(24,10,28,.7); border: 1px solid var(--rand); border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+  .pkal:hover { border-color: var(--rosa); }
   .questkarte { margin-bottom: 14px; }
   .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
   .qe { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
@@ -726,6 +736,15 @@
     var me = sitzung && sitzung.name, stand = me ? ((sh.zeni || {})[me] || 0) : 0;
     var h = '<div class="shopkopf"><div><b>🛍️ ZENI-SHOP</b><div class="leise">Gib deine Zeni aus dem Stream für Rahmen, Banner und Titel auf deiner Profilkarte aus. Feste Preise, kein Zufall.</div></div>' +
       (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni · Stand ' + esc(daten.stand || '') + '</small></div>' : '<button class="vtw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
+    var zl = (sh.letzte || []).filter(function (x) { return kosArtikel(x.a); }).slice(0, 6);
+    if (zl.length) {
+      h += '<h3 class="shoph">🕒 ZULETZT GEKAUFT</h3><div class="zuletzt">';
+      zl.forEach(function (x) {
+        var min = Math.max(1, Math.round((Date.now() - new Date(x.t).getTime()) / 60000)), wann = min < 60 ? 'vor ' + min + ' Min.' : min < 1440 ? 'vor ' + Math.round(min / 60) + ' Std.' : 'vor ' + Math.round(min / 1440) + ' Tg.';
+        h += '<div class="zk"' + dl(x.l) + '>' + bild(x.l) + '<span><b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b> · ' + esc(kosName(x.a)) + ' <small>(' + (x.a.indexOf('rahmen_') === 0 ? 'Rahmen' : x.a.indexOf('banner_') === 0 ? 'Banner' : 'Titel') + ')</small>' + '</span><i>' + wann + '</i></div>';
+      });
+      h += '</div>';
+    }
     [['rahmen', '💠 RAHMEN'], ['banner', '🌄 BANNER'], ['titel', '🏷️ TITEL']].forEach(function (t) {
       var liste = sh.artikel.filter(function (a) { return a.kaufbar !== false && a.id.indexOf(t[0] + '_') === 0; }).sort(function (x, y) { return x.preis - y.preis; });
       if (!liste.length) return;
@@ -944,6 +963,8 @@
     { k: 'kp', icon: '🌸', titel: 'Kanalpunkte-Fan', text: 'Wie viele Kanalpunkte du insgesamt eingelöst hast (gezählt seit November 2026)', stufen: [10000, 25000, 50000, 100000, 150000, 250000, 400000, 600000, 800000, 1000000], einheit: 'Punkte' },
     { k: 'j', icon: '🎰', titel: 'Jackpot-Knacker', text: 'Wie oft du den Rubbellos-Jackpot geknackt hast', stufen: [1, 3, 5, 10, 25, 50, 100, 250, 500, 1000], einheit: 'Jackpots' },
     { k: 'p', icon: '🍀', titel: 'Pechvogel', text: 'Wie viele Rubbellose bei dir Nieten waren', stufen: [25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000], einheit: 'Nieten' },
+    { k: 'qj', icon: '🗺️', titel: 'Questjäger', text: 'Wie viele Wochen-Quests du insgesamt geschafft hast (Gemeinschafts-Quests zählen mit)', stufen: [1, 5, 10, 25, 50, 75, 100, 150, 250, 400], einheit: 'Quests' },
+    { k: 'sa', icon: '🎒', titel: 'Sammler', text: 'Wie viele Rahmen, Banner und Titel aus Shop und Quests du besitzt', stufen: [1, 2, 3, 5, 7, 10, 13, 16, 20, 25], einheit: 'Artikel' },
     { k: 'b', icon: '🎯', titel: 'Bingo-Sieger', text: 'Wie viele Monate du das Stream-Bingo gewonnen hast', stufen: [1, 3, 6, 12, 24, 36, 60, 100, 150, 200], einheit: 'Monatssiege' },
     { k: 'd', icon: '🔥', titel: 'Dauerbrenner', text: 'Deine längste Watch-Streak: Streams am Stück ohne Pause (wenn du sie im Chat teilst)', stufen: [10, 25, 50, 100, 200, 365, 500, 1000, 1500, 2000], einheit: 'Streams am Stück' },
     { k: 'sg', icon: '🏠', titel: 'Stammgast', text: 'In wie vielen Streams du dabei warst und geschrieben hast (inkl. alter Check-ins)', stufen: [10, 25, 50, 100, 200, 300, 500, 750, 1000, 1500], einheit: 'Streams' },
@@ -1067,6 +1088,7 @@
       h += '</div>';
     }
     if (sp && sp.community) h += '<div class="pcomm">🎮 Danach ab ca. ' + esc(sp.community) + ' Community Games – jeder kann mitmachen!</div>';
+    if (tt.some(function (x) { return x.d.getTime() > jetzt; })) h += '<button class="pkal" id="kalender">📅 Streams in meinen Kalender</button>';
     return h + '</div>';
   }
   setInterval(function () { var c = $('countdown'); if (c && daten) c.innerHTML = countdownText(); }, 30000);
@@ -1091,6 +1113,35 @@
     if (!l) h += '<div class="leise qinfo">Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um deinen Fortschritt zu sehen.</div>';
     return h + '<div class="leise qinfo">Wird während der Streams alle 10 Minuten aktualisiert, Clips einmal am Tag.</div></div>';
   }
+  // 🎒 Sammlung auf der Profilkarte (gekaufte und erspielte Artikel)
+  function sammlungHtml(l) {
+    l = String(l || '').toLowerCase();
+    if (rolle(l) === 'streamer') return '';
+    var inv = kosInventar(l), n = inv.rahmen.length + inv.banner.length + inv.titel.length;
+    if (!n) return '';
+    var h = '<h4>🎒 SAMMLUNG <span class="leise">(' + n + ')</span></h4><div class="sammlung">';
+    inv.rahmen.forEach(function (x) { h += '<div class="sam" title="' + esc(kosName('rahmen_' + x)) + '"><img alt="" loading="lazy" src="' + kosBild('rahmen_' + x) + '"><span>' + esc(kosName('rahmen_' + x)) + '</span></div>'; });
+    inv.banner.forEach(function (x) { h += '<div class="sam bn" title="' + esc(kosName('banner_' + x)) + '"><img alt="" loading="lazy" src="' + kosBild('banner_' + x) + '"><span>' + esc(kosName('banner_' + x)) + '</span></div>'; });
+    inv.titel.forEach(function (x) { var a = kosArtikel('titel_' + x); h += '<div class="sam ti"><b>„' + esc(kosName('titel_' + x)) + '“</b><span>' + (a && a.quest ? '🎯 Quest' : '🏷️ Titel') + '</span></div>'; });
+    return h + '</div>';
+  }
+  // 📅 Streams als Kalenderdatei (.ics) – alles im Browser, keine Daten gehen raus
+  function kalenderLaden() {
+    var tt = planTermine().filter(function (x) { return x.d.getTime() > Date.now() - 3600000; });
+    if (!tt.length) return;
+    function z(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+    var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Kazetopia//Streamplan//DE', 'CALSCALE:GREGORIAN'];
+    tt.forEach(function (x, i) {
+      var ende = new Date(x.d.getTime() + 4 * 3600000);
+      ics.push('BEGIN:VEVENT', 'UID:kazenity-' + x.t.datum + '-' + i + '@kazetopia', 'DTSTAMP:' + z(new Date()), 'DTSTART:' + z(x.d), 'DTEND:' + z(ende),
+        'SUMMARY:🔴 Kaze live · ' + String(x.t.spiel).replace(/[,;\n]/g, ' '), 'DESCRIPTION:' + (x.t.info ? String(x.t.info).replace(/[,;\n]/g, ' ') + ' – ' : '') + 'twitch.tv/kazenity', 'URL:https://www.twitch.tv/kazenity',
+        'BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:Kaze ist gleich live', 'END:VALARM', 'END:VEVENT');
+    });
+    ics.push('END:VCALENDAR');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([ics.join('\r\n')], { type: 'text/calendar' }));
+    a.download = 'kazenity-streams.ics'; document.body.appendChild(a); a.click(); a.remove();
+  }
   // „Dein Bereich“ ganz oben auf Start
   function meineKarte() {
     var l = ich || (sitzung && sitzung.name) || '';
@@ -1113,6 +1164,7 @@
     return h + '</div>';
   }
   function startEvents() {
+    if ($('kalender')) $('kalender').onclick = function (e) { e.stopPropagation(); kalenderLaden(); };
     if ($('onbzu')) $('onbzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_onboarding', '1'); } catch (x) { } $('onboard').remove(); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
   }
@@ -1323,6 +1375,7 @@
       var dz0 = designGueltig(login) || {}, ro0 = ROLLE[rolle(login)], eig0 = sitzung && sitzung.name === login;
       h += '<div class="kopf' + (dz0.h || bannerStil(login) ? ' design' : '') + (dz0.h ? ' bg-' + dz0.h : '') + (bannerStil(login) ? ' mitbanner' : '') + '"' + bannerStil(login) + '>' + avatarMitRahmen(login) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz0.t ? '<div class="titel">« ' + esc(dz0.t) + ' »</div>' : '') +
         '<div class="rang">' + ro0[0] + ' ' + ro0[1] + '</div>' + (eig0 ? '<button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + '</div></div>';
+      h += sammlungHtml(login);
       karteOeffnen(h);
       if ($('gestalten')) $('gestalten').onclick = function () { designEditor(login); };
       return;
@@ -1373,6 +1426,7 @@
         '<div class="kn">' + zahl(v) + ' ' + e.einheit + ' · noch ' + zahl(ki.ziel - v) + ' bis ' + ki.nxFarbe[0] + '</div></div>';
     });
     if (ek) h += '<h4>🎨 ERFOLGE</h4><div class="kacheln4">' + ek + '</div>';
+    h += sammlungHtml(login);
 
     // Alle Erfolge (aufklappbar)
     h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
