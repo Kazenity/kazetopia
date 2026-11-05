@@ -730,6 +730,8 @@
       meineBest = {}; (r || []).forEach(function (b) { meineBest[b.artikel] = b.id; });
     }).catch(function () { meineBest = meineBest || {}; });
   }
+  // Wartet eine Bestellung schon länger als 3 Min.? (Zeitpunkt nur im Browser gemerkt)
+  function kaufAlt(id) { var t = 0; try { t = Number(localStorage.getItem('kz_kauf_' + id) || 0); } catch (x) { } return !t || Date.now() - t > 180000; }
   function preisVon(a) { var an = daten.shop && daten.shop.angebot; return an && an.id === a.id ? an.preis : a.preis; }
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
@@ -773,7 +775,7 @@
         var knopf = {
           login: '<button class="sbtn" data-login>Kaufen</button>',
           hat: '<button class="sbtn hat" data-anlegen>✓ Im Besitz · Anlegen</button>',
-          wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>dauert meist 1–2 Min.</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
+          wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>' + (kaufAlt(a.id) ? '☕ Der Shopbetreiber ist gerade einen Kaffee trinken. Komm später wieder! :)' : 'dauert meist 1–2 Min.') + '</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
           zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
           kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
           fehlt: '<button class="sbtn" data-kauf="' + a.id + '">Kaufen<small>laut letztem Stand fehlen ' + zahl(preisVon(a) - stand) + '</small></button>'
@@ -783,7 +785,7 @@
       });
       h += '</div>';
     });
-    h += '<p class="leise shopinfo">Nach dem Kauf werden die Zeni beim nächsten Kazetopia-Update abgezogen (meist innerhalb von 10 Minuten). Reichen deine Zeni dann nicht, passiert nichts. Gekaufte Artikel legst du unter <b>✏️ Profil gestalten</b> an.</p>';
+    h += '<p class="leise shopinfo">Nach dem Kauf bucht Kazes Stream-Bot die Zeni ab – meist innerhalb von 1–2 Minuten. Ist sein PC gerade aus, wird beim nächsten Start gebucht; bis dahin kannst du jederzeit abbrechen. Reichen deine Zeni dann nicht, passiert nichts. Gekaufte Artikel legst du unter <b>✏️ Profil gestalten</b> an.</p>';
     return h;
   }
   function shopEvents() {
@@ -819,7 +821,7 @@
       var alt = meineBest && meineBest[id];
       sFrisch().then(function () { return alt ? sbFetch('/rest/v1/bestellung?id=eq.' + alt, { method: 'DELETE' }) : null; })
         .then(function () { return sbFetch('/rest/v1/bestellung', { method: 'POST', headers: { Prefer: 'return=representation' }, body: { artikel: id } }); })
-        .then(function (r) { meineBest = meineBest || {}; if (r && r[0]) meineBest[id] = r[0].id; profilZu(); zeigen(); })
+        .then(function (r) { meineBest = meineBest || {}; if (r && r[0]) meineBest[id] = r[0].id; try { localStorage.setItem('kz_kauf_' + id, String(Date.now())); } catch (x) { } profilZu(); zeigen(); })
         .catch(function (x) { $('kaufinfo').textContent = 'Fehler: ' + x.message; $('kaufok').disabled = false; });
     };
   }
