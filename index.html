@@ -378,6 +378,15 @@
   .zk span { flex: 1; } .zk i { font-style: normal; color: var(--grau); font-size: 11.5px; white-space: nowrap; }
   .pkal { margin-top: 10px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--hell); background: rgba(24,10,28,.7); border: 1px solid var(--rand); border-radius: 10px; padding: 7px 12px; cursor: pointer; }
   .pkal:hover { border-color: var(--rosa); }
+  .besuch { margin-bottom: 14px; position: relative; border-color: var(--rosa); background: linear-gradient(135deg, rgba(255,120,170,.12), var(--flaeche)); }
+  .besuch ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+  .besuch b { color: var(--rosa); }
+  .angebot { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(255,140,60,.18), var(--flaeche)); border: 1px solid #ff9a4d; border-radius: 16px; padding: 12px 16px; margin: 14px 0 4px; }
+  .angebot .svor { width: 110px; height: 70px; margin: 0; flex: 0 0 auto; } .angebot .svor.bnr { border-radius: 8px; }
+  .angebot .svor .av { width: 40px; height: 40px; font-size: 16px; }
+  .angebot b { font-size: 15px; } .angebot .leise { font-size: 12px; color: var(--grau); }
+  .sbadge { position: absolute; top: 8px; right: 8px; background: #ff7a3d; color: #fff; font-size: 11px; font-weight: 800; border-radius: 8px; padding: 2px 7px; }
+  .sitem { position: relative; } .spreis s { color: var(--grau); font-weight: 600; font-size: 12px; margin-right: 4px; }
   .questkarte { margin-bottom: 14px; }
   .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
   .qe { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
@@ -720,6 +729,7 @@
       meineBest = {}; (r || []).forEach(function (b) { meineBest[b.artikel] = b.id; });
     }).catch(function () { meineBest = meineBest || {}; });
   }
+  function preisVon(a) { var an = daten.shop && daten.shop.angebot; return an && an.id === a.id ? an.preis : a.preis; }
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
     if (!me) return 'login';
@@ -728,7 +738,7 @@
     if (nr && !st) return 'wartet';
     if (st === 'zu_wenig') return 'zuwenig';
     var stand = (daten.shop.zeni || {})[me] || 0;
-    return stand >= a.preis ? 'kaufen' : 'fehlt';
+    return stand >= preisVon(a) ? 'kaufen' : 'fehlt';
   }
   function shopHtml() {
     var sh = daten.shop;
@@ -736,6 +746,11 @@
     var me = sitzung && sitzung.name, stand = me ? ((sh.zeni || {})[me] || 0) : 0;
     var h = '<div class="shopkopf"><div><b>🛍️ ZENI-SHOP</b><div class="leise">Gib deine Zeni aus dem Stream für Rahmen, Banner und Titel auf deiner Profilkarte aus. Feste Preise, kein Zufall.</div></div>' +
       (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni · Stand ' + esc(daten.stand || '') + '</small></div>' : '<button class="vtw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
+    var an = sh.angebot && kosArtikel(sh.angebot.id);
+    if (an && an.kaufbar !== false) {
+      var av = an.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(an.id) + ')"></div>' : an.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" src="' + kosBild(an.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(an.name) + '</span></div>';
+      h += '<div class="angebot">' + av + '<div><div class="leise">🔥 ANGEBOT DER WOCHE · bis Sonntag</div><b>' + esc(an.name) + '</b><div class="spreis"><s>' + zahl(an.preis) + '</s>' + zahl(sh.angebot.preis) + ' Zeni</div></div></div>';
+    }
     var zl = (sh.letzte || []).filter(function (x) { return kosArtikel(x.a); }).slice(0, 6);
     if (zl.length) {
       h += '<h3 class="shoph">🕒 ZULETZT GEKAUFT</h3><div class="zuletzt">';
@@ -760,9 +775,10 @@
           wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …</button>',
           zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni · nochmal</button>',
           kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
-          fehlt: '<button class="sbtn" data-kauf="' + a.id + '">Kaufen<small>laut letztem Stand fehlen ' + zahl(a.preis - stand) + '</small></button>'
+          fehlt: '<button class="sbtn" data-kauf="' + a.id + '">Kaufen<small>laut letztem Stand fehlen ' + zahl(preisVon(a) - stand) + '</small></button>'
         }[z];
-        h += '<div class="sitem st-' + esc(a.stufe) + '">' + vor + '<div class="sname">' + esc(t[0] === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + zahl(a.preis) + ' Zeni</div>' + knopf + '</div>';
+        var rab = preisVon(a) !== a.preis;
+        h += '<div class="sitem st-' + esc(a.stufe) + '">' + (rab ? '<span class="sbadge">🔥 −20 %</span>' : '') + vor + '<div class="sname">' + esc(t[0] === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(preisVon(a)) + ' Zeni</div>' + knopf + '</div>';
       });
       h += '</div>';
     });
@@ -780,7 +796,7 @@
     var a = kosArtikel(id); if (!a || !sitzung) return;
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛍️ ' + typ + ' kaufen</b><div class="kk">' + stf[0] + ' ' + stf[1] + '</div></div></div>' +
-      '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(a.preis) + ' Zeni</b>?</p>' +
+      '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(preisVon(a)) + ' Zeni</b>' + (preisVon(a) !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>' +
       '<p class="leise">Die Zeni werden beim nächsten Kazetopia-Update abgezogen. Reichen sie dann nicht, passiert nichts. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>' +
       '<div class="edknoepfe"><button class="vtw" id="kaufok">Ja, kaufen</button><button class="vlink" id="kaufab">Abbrechen</button></div><p class="leise" id="kaufinfo"></p></div>';
     karteOeffnen(h);
@@ -1029,6 +1045,7 @@
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    h += besuchKarte();
     h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += questKarte();
@@ -1142,6 +1159,39 @@
     a.href = URL.createObjectURL(new Blob([ics.join('\r\n')], { type: 'text/calendar' }));
     a.download = 'kazenity-streams.ics'; document.body.appendChild(a); a.click(); a.remove();
   }
+  // 👋 Seit deinem letzten Besuch (nur im Browser gespeichert)
+  var besuchInfo = null, besuchGeprueft = false;
+  function besuchStand(l) {
+    var sp = (daten.spieler || {})[l] || {}, r = { p: {}, g: {}, k: {} };
+    ['zeni', 'watchtime', 'chat'].forEach(function (k) { (daten[k] || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === l) r.p[k] = i + 1; }); });
+    GROSS.forEach(function (g) { var a = leiterInfo(g.leiter, wertVon(sp, g.k), g.weiter).akt; if (a) r.g[g.k] = a[2]; });
+    KLEIN.forEach(function (e) { var f = kleinInfo(e, wertVon(sp, e.k)).farbe; if (f) r.k[e.k] = FARBEN.indexOf(f); });
+    r.z = daten.shop && daten.shop.zeni ? (daten.shop.zeni[l] || 0) : null;
+    r.qj = sp.qj || 0; r.sa = sp.sa || 0; r.stand = daten.stand;
+    return r;
+  }
+  function besuchPruefen() {
+    if (besuchGeprueft || !daten) return; 
+    var l = ich || (sitzung && sitzung.name) || ''; if (!l) return;
+    besuchGeprueft = true;
+    var jetzt = besuchStand(l), alt = null, key = 'kz_besuch_' + l;
+    try { alt = JSON.parse(localStorage.getItem(key) || 'null'); } catch (x) { }
+    try { localStorage.setItem(key, JSON.stringify(jetzt)); } catch (x) { }
+    if (!alt || alt.stand === jetzt.stand) return;
+    var m = [], NAME = { zeni: 'Zeni', watchtime: 'Watchtime', chat: 'Chat' };
+    Object.keys(NAME).forEach(function (k) { var a = alt.p[k], b = jetzt.p[k]; if (b && (!a || b < a)) m.push(a ? '▲ ' + (a - b) + (a - b === 1 ? ' Platz' : ' Plätze') + ' bei ' + NAME[k] + ' (jetzt #' + b + ')' : '🆕 Platz #' + b + ' bei ' + NAME[k]); });
+    GROSS.forEach(function (g) { if (jetzt.g[g.k] && jetzt.g[g.k] !== alt.g[g.k]) m.push(g.icon + ' Neuer Rang: <b>' + esc(jetzt.g[g.k]) + '</b>'); });
+    KLEIN.forEach(function (e) { var b = jetzt.k[e.k], a = alt.k[e.k]; if (b !== undefined && (a === undefined || b > a)) m.push(e.icon + ' ' + e.titel + ' jetzt ' + FARBEN[b][0] + ' <b>' + FARBEN[b][1] + '</b>'); });
+    if (jetzt.qj > (alt.qj || 0)) m.push('🎯 ' + (jetzt.qj - (alt.qj || 0)) + (jetzt.qj - (alt.qj || 0) === 1 ? ' Quest' : ' Quests') + ' geschafft');
+    if (jetzt.sa > (alt.sa || 0)) m.push('🎒 ' + (jetzt.sa - (alt.sa || 0)) + ' neue' + (jetzt.sa - (alt.sa || 0) === 1 ? 'r Artikel' : ' Artikel') + ' in deiner Sammlung');
+    if (jetzt.z !== null && alt.z !== null && alt.z !== undefined && jetzt.z > alt.z) m.push('💰 +' + zahl(jetzt.z - alt.z) + ' Zeni');
+    if (m.length) besuchInfo = m;
+  }
+  function besuchKarte() {
+    besuchPruefen();
+    if (!besuchInfo) return '';
+    return '<div class="sbox besuch" id="besuch"><button class="zu-klein" id="besuchzu" aria-label="Schließen">×</button><h3>👋 SEIT DEINEM LETZTEN BESUCH</h3><ul>' + besuchInfo.slice(0, 6).map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
+  }
   // „Dein Bereich“ ganz oben auf Start
   function meineKarte() {
     var l = ich || (sitzung && sitzung.name) || '';
@@ -1164,6 +1214,7 @@
     return h + '</div>';
   }
   function startEvents() {
+    if ($('besuchzu')) $('besuchzu').onclick = function (e) { e.stopPropagation(); besuchInfo = null; $('besuch').remove(); };
     if ($('kalender')) $('kalender').onclick = function (e) { e.stopPropagation(); kalenderLaden(); };
     if ($('onbzu')) $('onbzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_onboarding', '1'); } catch (x) { } $('onboard').remove(); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
