@@ -272,6 +272,21 @@
   .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
   .platz.p1 .n { color: #fff !important; }
   img[src=""] { visibility: hidden; }
+  .kopf.design { border-radius: 16px; padding: 14px; margin: -4px -4px 8px; }
+  .bg-w { background: linear-gradient(135deg, rgba(255,140,0,.55), rgba(255,204,51,.25) 55%, rgba(0,0,0,0)); }
+  .bg-c { background: linear-gradient(135deg, rgba(255,106,0,.5), rgba(40,30,80,.6) 60%, rgba(0,0,0,0)); }
+  .bg-f { background: linear-gradient(135deg, rgba(11,79,156,.6), rgba(230,57,70,.35) 60%, rgba(0,0,0,0)); }
+  .bg-s { background: linear-gradient(135deg, rgba(240,240,240,.28), rgba(20,20,20,.7) 50%, rgba(200,30,40,.35)); }
+  .rang.rolle { background: rgba(255,255,255,.12); margin-left: 4px; }
+  .titel { font-size: 12.5px; font-weight: 800; color: var(--gold); margin-top: 2px; letter-spacing: .02em; }
+  .edfarben { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .edf { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--rand); cursor: pointer; }
+  .edf.an { border-color: #fff; box-shadow: 0 0 0 2px var(--rosa); } .edf.keine { width: auto; border-radius: 999px; padding: 0 10px; background: var(--bg); color: var(--hell); font-family: inherit; font-size: 12px; font-weight: 700; }
+  #edeigen { width: 34px; height: 30px; border: 0; background: none; cursor: pointer; }
+  .edsel { width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 10px; }
+  .edvit { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .edvit label { font-size: 13px; font-weight: 700; display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .edbg { display: flex; flex-wrap: wrap; gap: 6px; } .edbg button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+  .edbg button.an { border-color: var(--rosa); box-shadow: 0 0 0 1px var(--rosa); }
+  .edknoepfe { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -543,6 +558,68 @@
     return { n: p && p.n ? p.n : (sp && sp.n ? sp.n : n), b: p && p.b ? p.b : '' };
   }
   function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
+  // ================= Profil gestalten =================
+  var eigenesDesign = null;   // gerade gespeichert, für dich sofort sichtbar (für alle ab dem nächsten Update)
+  var HG = { w: ['🐉', 'Dragon Ball', 'Watchtime'], c: ['🍥', 'Naruto', 'Chat'], f: ['🏴‍☠️', 'One Piece', 'Treue'], s: ['⚔️', 'Bleach', 'Sub-Treue'] };
+  var ROLLE = { streamer: ['👑', 'Streamer'], mod: ['🛡️', 'Moderator'], vip: ['💎', 'VIP'] };
+  function rolle(l) { var r = daten && daten.rollen && daten.rollen[String(l || '').toLowerCase()]; return ROLLE[r] ? r : ''; }
+  function erlaubteTitel(sp, l) {
+    var t = [];
+    if (rolle(l)) t.push(ROLLE[rolle(l)][1]);
+    GROSS.forEach(function (g) { var v = wertVon(sp, g.k); g.leiter.forEach(function (x) { if ((rolle(l) || v >= x[0]) && t.indexOf(x[2]) < 0) t.push(x[2]); }); });
+    return t;
+  }
+  function designGueltig(l) {
+    var sp = daten && daten.spieler && daten.spieler[l], ro = rolle(l);
+    var d = (eigenesDesign && sitzung && sitzung.name === l) ? eigenesDesign : (daten && daten.designs && daten.designs[l]);
+    if ((!sp && !ro) || !d) return null;
+    sp = sp || {};
+    var r = {};
+    if (d.f && /^#[0-9a-fA-F]{6}$/.test(d.f) && (ro || (sp.w || 0) >= 100)) r.f = d.f;
+    if (d.t && erlaubteTitel(sp, l).indexOf(d.t) >= 0) r.t = d.t;
+    if (d.v && d.v.length) r.v = d.v.filter(function (id) { return ABZEICHEN.some(function (a) { return a.id === id; }) && hatAbzeichen(sp, id); }).slice(0, 3);
+    if (d.h && HG[d.h]) { var g = GROSS.filter(function (x) { return x.k === d.h; })[0]; if (ro || (g && leiterInfo(g.leiter, wertVon(sp, g.k), g.weiter).akt)) r.h = d.h; }
+    return r;
+  }
+  function designEditor(login) {
+    var sp = daten.spieler[login] || {}, ro = rolle(login);
+    var titel = erlaubteTitel(sp, login), hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
+    var bgs = Object.keys(HG).filter(function (k) { var g = GROSS.filter(function (x) { return x.k === k; })[0]; return ro || (g && leiterInfo(g.leiter, wertVon(sp, k), g.weiter).akt); });
+    var farbeFrei = ro || (sp.w || 0) >= 100;
+    var FARBEN_W = ['#ff9ebf', '#ff5c8a', '#ff4d4d', '#ff9f43', '#ffd166', '#7bd88f', '#2ec4b6', '#4dabf7', '#748ffc', '#b197fc', '#e599f7', '#ffffff'];
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>✏️ Profil gestalten</b><div class="kk">' + (ro ? ROLLE[ro][0] + ' Als ' + ROLLE[ro][1] + ' ist alles für dich freigeschaltet' : 'Nur Auswahl – freigeschaltet durch deine Ränge') + '</div></div></div><div id="ededaten" class="leise">Lade …</div></div>';
+    karteOeffnen(h);
+    sFrisch().then(function () { return sbFetch('/rest/v1/profil?select=*'); }).then(function (r) {
+      var d = (r && r[0]) || {}, wahl = { farbe: d.farbe || '', titel: d.titel || '', vitrine: d.vitrine || [], hintergrund: d.hintergrund || '' };
+      var e = '';
+      e += '<h4>🎨 NAMENSFARBE</h4>' + (farbeFrei ? '<div class="edfarben">' + '<button data-f="" class="edf keine' + (!wahl.farbe ? ' an' : '') + '">Twitch</button>' + FARBEN_W.map(function (f) { return '<button data-f="' + f + '" class="edf' + (wahl.farbe.toLowerCase() === f ? ' an' : '') + '" style="background:' + f + '"></button>'; }).join('') + '<input type="color" id="edeigen" value="' + (wahl.farbe || '#ff9ebf') + '" title="Eigene Farbe"></div>'
+        : '<p class="leise">🔒 Ab 100 Std. Watchtime – du hast ' + zahl(sp.w || 0) + ' Std.</p>');
+      e += '<h4>🏷️ TITEL</h4><select id="edtitel" class="edsel"><option value="">Kein Titel</option>' + titel.map(function (t) { return '<option' + (wahl.titel === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select>';
+      e += '<h4>🏅 VITRINE <span class="leise">(bis zu 3 Abzeichen zuerst zeigen)</span></h4>' + (hat.length ? '<div class="edvit">' + hat.map(function (a) { return '<label><input type="checkbox" value="' + a.id + '"' + (wahl.vitrine.indexOf(a.id) >= 0 ? ' checked' : '') + '> ' + a.icon + ' ' + esc(a.name) + '</label>'; }).join('') + '</div>' : '<p class="leise">Noch keine Abzeichen.</p>');
+      e += '<h4>🖼️ PROFIL-HINTERGRUND</h4><div class="edbg"><button data-h="" class="' + (!wahl.hintergrund ? 'an' : '') + '">Standard</button>' + bgs.map(function (k) { return '<button data-h="' + k + '" class="bg-' + k + (wahl.hintergrund === k ? ' an' : '') + '">' + HG[k][0] + ' ' + HG[k][1] + '</button>'; }).join('') + '</div>' + (bgs.length < 4 ? '<p class="leise">Weitere Hintergründe schaltest du mit dem ersten Rang in Watchtime, Chat, Treue oder Sub-Treue frei.</p>' : '');
+      e += '<div class="edknoepfe"><button class="vtw" id="edsave">Speichern</button><button class="vlink" id="edreset">Alles zurücksetzen</button></div><p class="leise" id="edinfo">Für dich sofort sichtbar, für alle anderen ab dem nächsten Kazetopia-Update (während der Streams alle 10 Minuten).</p>';
+      $('ededaten').outerHTML = e;
+      Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (b) { b.onclick = function () { wahl.farbe = b.getAttribute('data-f'); Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.toggle('an', x === b); }); }; });
+      if ($('edeigen')) $('edeigen').oninput = function () { wahl.farbe = this.value; Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.remove('an'); }); };
+      Array.prototype.forEach.call(document.querySelectorAll('.edbg button'), function (b) { b.onclick = function () { wahl.hintergrund = b.getAttribute('data-h'); Array.prototype.forEach.call(document.querySelectorAll('.edbg button'), function (x) { x.classList.toggle('an', x === b); }); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('.edvit input'), function (c) { c.onchange = function () { var an = document.querySelectorAll('.edvit input:checked'); if (an.length > 3) this.checked = false; }; });
+      $('edsave').onclick = function () {
+        wahl.titel = $('edtitel').value;
+        wahl.vitrine = Array.prototype.map.call(document.querySelectorAll('.edvit input:checked'), function (c) { return c.value; });
+        var body = { nutzer: sitzung.id, farbe: wahl.farbe || null, titel: wahl.titel || null, vitrine: wahl.vitrine.length ? wahl.vitrine : null, hintergrund: wahl.hintergrund || null };
+        this.disabled = true;
+        sFrisch().then(function () { return sbFetch('/rest/v1/profil?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: body }); })
+          .then(function () { eigenesDesign = { f: body.farbe, t: body.titel, v: body.vitrine, h: body.hintergrund }; farbCache = {}; profilZeigen(login); zeigen(); })
+          .catch(function (x) { $('edinfo').textContent = 'Fehler: ' + x.message; $('edsave').disabled = false; });
+      };
+      $('edreset').onclick = function () {
+        sFrisch().then(function () { return sbFetch('/rest/v1/profil?nutzer=eq.' + sitzung.id, { method: 'DELETE' }); })
+          .then(function () { eigenesDesign = {}; farbCache = {}; profilZeigen(login); zeigen(); })
+          .catch(function (x) { $('edinfo').textContent = 'Fehler: ' + x.message; });
+      };
+    }).catch(function (x) { if ($('ededaten')) $('ededaten').textContent = 'Konnte nicht laden: ' + x.message; });
+  }
+
   // Datenschutz: nur Bilder von GitHub (eigene Kopien) oder eingebettete Bilddaten anzeigen – nie direkt von Twitch
   function sicher(u) { u = String(u || ''); return (u.indexOf('data:image/') === 0 || u.indexOf('https://raw.githubusercontent.com/Kazenity/') === 0 || u.indexOf('bilder/') === 0) ? u : ''; }
   function bild(n, gross) {
@@ -554,7 +631,7 @@
   // Twitch-Chatfarbe, bei zu dunklen Farben aufgehellt (lesbar auf dunklem Hintergrund)
   var farbCache = {};
   function farbe(n) {
-    var l = String(n || '').toLowerCase(), f = daten && daten.farben && daten.farben[l];
+    var l = String(n || '').toLowerCase(), dz = designGueltig(l), f = (dz && dz.f) || (daten && daten.farben && daten.farben[l]);
     if (!f) return '';
     if (farbCache[f]) return farbCache[f];
     var r = parseInt(f.substr(1, 2), 16), g = parseInt(f.substr(3, 2), 16), b = parseInt(f.substr(5, 2), 16);
@@ -836,6 +913,14 @@
     var sp = (daten.spieler || {})[login];
     var p = prof(login), name = p.n || login;
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button>';
+    if (!sp && rolle(login)) {
+      var dz0 = designGueltig(login) || {}, ro0 = ROLLE[rolle(login)], eig0 = sitzung && sitzung.name === login;
+      h += '<div class="kopf' + (dz0.h ? ' design bg-' + dz0.h : '') + '">' + bild(login, true) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz0.t ? '<div class="titel">« ' + esc(dz0.t) + ' »</div>' : '') +
+        '<div class="rang">' + ro0[0] + ' ' + ro0[1] + '</div>' + (eig0 ? '<button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + '</div></div>';
+      karteOeffnen(h);
+      if ($('gestalten')) $('gestalten').onclick = function () { designEditor(login); };
+      return;
+    }
     if (!sp) {
       h += '<div class="kopf">' + bild(login, true) + '<div><b>' + esc(name) + '</b><div class="kk">Noch keine Erfolge – einfach im Stream vorbeischauen 🌸</div></div></div>';
       return karteOeffnen(h);
@@ -843,13 +928,16 @@
     try { history.replaceState(null, '', '#profil=' + encodeURIComponent(login)); } catch (x) { }
     var std = sp.w || 0, r = leiterInfo(WT, std, 0).akt, kk = Math.floor(std * 10);
     var platz = 0; (daten.watchtime || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === login) platz = i + 1; });
-    h += '<div class="kopf">' + bild(login, true) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' +
-      (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') +
+    var dz = designGueltig(login) || {};
+    var eigen = sitzung && sitzung.name === login;
+    h += '<div class="kopf' + (dz.h ? ' design bg-' + dz.h : '') + '">' + bild(login, true) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz.t ? '<div class="titel">« ' + esc(dz.t) + ' »</div>' : '') +
+      (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') + (rolle(login) ? ' <div class="rang rolle">' + ROLLE[rolle(login)][0] + ' ' + ROLLE[rolle(login)][1] + '</div>' : '') +
       '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + '</div>' + rivale(platz, std) +
-      '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button></div></div>';
+      '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button>' + (eigen ? ' <button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + '</div></div>';
 
     // Abzeichen (nur freigeschaltete, als Symbole)
     var hat = ABZEICHEN.filter(function (a) { return hatAbzeichen(sp, a.id); });
+    if (dz.v && dz.v.length) hat.sort(function (a, b) { var ia = dz.v.indexOf(a.id), ib = dz.v.indexOf(b.id); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
     var ev = []; EVENT_GRUPPEN.forEach(function (g) { var c = eventStufe(sp, g); if (c) ev.push({ g: g, c: c }); });
     ev.reverse();   // neueste zuerst
     if (hat.length || ev.length) {
@@ -901,6 +989,7 @@
     h += '</div></div>';
     karteOeffnen(h);
     $('aufklapp').onclick = function () { var a = $('alle'); var zu = a.style.display === 'none'; a.style.display = zu ? '' : 'none'; this.textContent = zu ? 'Weniger anzeigen ▴' : 'Alle Erfolge anzeigen ▾'; };
+    if ($('gestalten')) $('gestalten').onclick = function () { designEditor(login); };
     $('ichknopf').onclick = function () {
       var l2 = this.getAttribute('data-ich');
       ich = ich === l2 ? '' : l2;
@@ -949,7 +1038,7 @@
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
