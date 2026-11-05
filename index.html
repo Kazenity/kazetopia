@@ -1107,7 +1107,7 @@
     var jetzt = Date.now(), naechster = tt.filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
     var spiel = live ? daten.live.spiel : (naechster ? naechster.t.spiel : ''), cov = coverFuer(spiel);
     var h = '<div class="sbox plankarte' + (live ? ' istlive' : '') + '">' + (cov ? '<div class="pbg" style="background-image:url(' + esc(cov) + ')"></div>' : '') +
-      '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" src="' + esc(cov) + '">' : '<span class="pcover ph">🎮</span>') +
+      '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" src="' + esc(cov) + '" onerror="this.style.visibility=\'hidden\'">' : '<span class="pcover ph">🎮</span>') +
       '<div class="ptext"><h3>' + (live ? '🔴 LIVE' : '⏳ NÄCHSTER STREAM') + '</h3><div class="cd" id="countdown">' + countdownText() + '</div>' +
       (live ? '<a class="plivebtn" href="https://www.twitch.tv/kazenity" target="_blank" rel="noopener">Zuschauen ›</a>' : '') + '</div></div>';
     if (tt.length) {
@@ -1129,7 +1129,7 @@
   function questKarte() {
     var q = daten.quests; if (!q) return '';
     function tag(d) { var x = new Date(d + 'T00:00:00'); return WTAG[x.getDay()] + ', ' + x.getDate() + '.' + (x.getMonth() + 1) + '.'; }
-    if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b>. Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
+    if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
     var l = ich || (sitzung && sitzung.name) || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
     var h = '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS<span class="qrest"> · neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + '</span></h3>';
