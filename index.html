@@ -368,6 +368,19 @@
   .topclip { margin-top: 12px; }
   @media (max-width: 700px) { .top3reihe { grid-template-columns: 1fr; } }
   @media (max-width: 560px) { .planwoche { grid-template-columns: repeat(4, 1fr); gap: 5px; } .ptag { flex-direction: column; gap: 4px; padding: 6px 2px; text-align: center; } .ptag div { align-items: center; } .ptag img, .ptag .pmini { width: 30px; height: 40px; } .plankarte .cdzeit { font-size: 22px; } }
+  .questkarte { margin-bottom: 14px; }
+  .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
+  .qe { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
+  .qe.qg { border-color: #4d8fe0; }
+  .qe.fertig { border-color: #3fae6a; }
+  .qkopf { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
+  .qkopf span { font-size: 12px; color: var(--grau); font-weight: 700; white-space: nowrap; }
+  .qbar { height: 7px; border-radius: 99px; background: var(--rand); margin: 7px 0 5px; overflow: hidden; }
+  .qbar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  .qe.qg .qbar i { background: linear-gradient(90deg, #3a6fd0, #6fb0ff); }
+  .qe.fertig .qbar i { background: linear-gradient(90deg, #2f9a5a, #7bd88f); }
+  .qlohn { font-size: 12px; color: var(--gold); font-weight: 700; }
+  .qinfo { margin-top: 8px; font-size: 11.5px; color: var(--grau); }
   .meinbox { margin-bottom: 14px; cursor: pointer; }
   .meinbox .mkopf { display: flex; align-items: center; gap: 12px; }
   .meinbox .mkopf b { font-size: 17px; }
@@ -997,6 +1010,7 @@
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
     h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
+    h += questKarte();
     h += '<div class="startgrid">';
     var ev = neuFreigeschaltet();
     h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.map(function (e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }).join('') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
@@ -1057,6 +1071,26 @@
   }
   setInterval(function () { var c = $('countdown'); if (c && daten) c.innerHTML = countdownText(); }, 30000);
 
+  // 🎯 Wochen-Quests
+  function questKarte() {
+    var q = daten.quests; if (!q) return '';
+    function tag(d) { var x = new Date(d + 'T00:00:00'); return WTAG[x.getDay()] + ', ' + x.getDate() + '.' + (x.getMonth() + 1) + '.'; }
+    if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b>. Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
+    var l = ich || (sitzung && sitzung.name) || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
+    var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
+    var h = '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS<span class="qrest"> · neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + '</span></h3>';
+    if (q.gemeinsam) {
+      var g = q.gemeinsam, gp = Math.min(100, g.stand / Math.max(1, g.ziel) * 100), gf = g.stand >= g.ziel;
+      h += '<div class="qe qg' + (gf ? ' fertig' : '') + '"><div class="qkopf"><b>' + (gf ? '✅ ' : '👥 ') + esc(g.text) + '</b><span>' + zahl(Math.min(g.stand, g.ziel)) + ' / ' + zahl(g.ziel) + (g.einheit ? ' ' + esc(g.einheit) : '') + '</span></div><div class="qbar"><i style="width:' + gp + '%"></i></div><div class="qlohn">🎁 ' + esc(g.lohn) + ' für alle, die diese Woche dabei waren' + (gf ? ' · wird am Sonntag ausgezahlt' : '') + '</div></div>';
+    }
+    (q.liste || []).forEach(function (x, i) {
+      var v = f ? (f[i] || 0) : null, fertig = v !== null && v >= x.ziel, pr = v !== null ? Math.min(100, v / Math.max(1, x.ziel) * 100) : 0;
+      h += '<div class="qe' + (fertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fertig ? '✅ ' : '') + esc(x.text) + '</b>' + (v !== null ? '<span>' + zahl(Math.min(v, x.ziel)) + ' / ' + zahl(x.ziel) + (x.einheit ? ' ' + esc(x.einheit) : '') + '</span>' : '') + '</div>' +
+        (v !== null ? '<div class="qbar"><i style="width:' + pr + '%"></i></div>' : '') + '<div class="qlohn">🎁 ' + esc(x.lohn) + (fertig ? ' · erhalten' : '') + '</div></div>';
+    });
+    if (!l) h += '<div class="leise qinfo">Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um deinen Fortschritt zu sehen.</div>';
+    return h + '<div class="leise qinfo">Wird während der Streams alle 10 Minuten aktualisiert, Clips einmal am Tag.</div></div>';
+  }
   // „Dein Bereich“ ganz oben auf Start
   function meineKarte() {
     var l = ich || (sitzung && sitzung.name) || '';
