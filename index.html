@@ -287,6 +287,20 @@
   .edbg { display: flex; flex-wrap: wrap; gap: 6px; } .edbg button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
   .edbg button.an { border-color: var(--rosa); box-shadow: 0 0 0 1px var(--rosa); }
   .edknoepfe { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+  .startgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .startgrid .voting-box { grid-column: 1 / -1; }
+  @media (min-width: 1100px) { .nur-schmal { display: none; } }
+  @media (max-width: 700px) { .startgrid { grid-template-columns: 1fr; } }
+  .sbox.klick { cursor: pointer; } .sbox.klick:hover { border-color: var(--rosa); }
+  .mehr-link, .vt-btn { font-size: 12px; font-weight: 800; color: var(--rosa); margin-top: 8px; }
+  .vt-btn { display: inline-block; background: var(--rosa); color: var(--dunkel); border-radius: 999px; padding: 7px 14px; margin-top: 10px; }
+  .vz { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13.5px; font-weight: 700; border-bottom: 1px solid var(--rand); }
+  .vz:last-of-type { border-bottom: 0; } .vz img, .vz-ph { width: 30px; height: 40px; border-radius: 5px; object-fit: cover; background: var(--bg); display: inline-flex; align-items: center; justify-content: center; }
+  .vz b { margin-left: auto; color: var(--rosa); font-size: 12.5px; white-space: nowrap; } .vz .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .z.nf .nm { white-space: normal; font-weight: 600; font-size: 12.5px; line-height: 1.35; } .z.nf .nm i { font-style: normal; font-weight: 800; } .z.nf .nm span { color: var(--grau); }
+  .onboard { position: relative; background: linear-gradient(135deg, rgba(255,158,191,.18), rgba(145,70,255,.15)); border: 1px solid var(--rosa); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; font-size: 13.5px; }
+  .onboard ol { margin: 8px 0 0 18px; padding: 0; line-height: 1.6; } .zu-klein { position: absolute; right: 8px; top: 6px; background: none; border: 0; color: var(--grau); font-size: 20px; cursor: pointer; }
+  .neu-mark { font-style: normal; font-size: 8.5px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 1px 4px; margin-left: 5px; vertical-align: 2px; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
   .mehr-btn { display: block; width: 100%; margin-top: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--rosa); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px; cursor: pointer; }
@@ -300,7 +314,7 @@
   .ichknopf { margin-top: 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .ichknopf.ja { color: var(--dunkel); background: var(--rosa); border-color: var(--rosa); }
   @media (max-width: 560px) {
-    .reiter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .reiter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
     .reiter button { padding: 9px 2px; font-size: 12px; }
     .danke { grid-template-columns: 1fr; }
     .emotes.rest { grid-template-columns: repeat(4, 1fr); }
@@ -336,14 +350,15 @@
 
   <div class="layout"><main class="haupt">
   <div class="reiter" id="reiter">
-    <button data-r="zeni" class="aktiv">💰 Zeni</button>
+    <button data-r="start" class="aktiv">🏠 Start</button>
+    <button data-r="zeni">💰 Zeni</button>
     <button data-r="watchtime">⏱️ Watchtime</button>
     <button data-r="danke">💖 Danke</button>
     <button data-r="bingo">🎯 Bingo</button>
     <button data-r="chat">💬 Chat</button>
     <button data-r="emotes">😄 Emotes</button>
     <button data-r="clips">🎬 Clips</button>
-    <button data-r="spiele">🎮 Spiele</button>
+    <button data-r="spiele">🎮 Spiele<i class="neu-mark">NEU</i></button>
   </div>
 
   <div class="schalter" id="zeitwahl" style="display:none"></div>
@@ -375,7 +390,7 @@
 
 <script>
 (function () {
-  var daten = null, reiter = 'zeni', clipZeit = 'monat', monatsModus = false, alleZeigen = false, vorher = {}, ich = '';
+  var daten = null, reiter = 'start', clipZeit = 'monat', monatsModus = false, alleZeigen = false, vorher = {}, ich = '';
   try { ich = localStorage.getItem('kz_ich') || ''; } catch (x) { }
   var spieleAnsicht = 'voting';
 
@@ -730,6 +745,55 @@
     if (a.id === 'wp' && sp.v) return ' <b>(' + sp.v + '/5)</b>';
     return '';
   }
+  // ================= Start-Reiter =================
+  function neuFreigeschaltet() {
+    var v = daten.vorher || {}, ev = [], sl = daten.spieler || {};
+    Object.keys(v).forEach(function (l) {
+      if (l === '_datum' || !sl[l]) return;
+      var jetzt = sl[l], alt = {}; for (var k in jetzt) alt[k] = jetzt[k]; for (var k2 in v[l]) alt[k2] = v[l][k2];
+      GROSS.forEach(function (g) {
+        if (g.k === 'f') return;
+        var a = leiterInfo(g.leiter, wertVon(alt, g.k), g.weiter).akt, n = leiterInfo(g.leiter, wertVon(jetzt, g.k), g.weiter).akt;
+        if (n && (!a || n[0] > a[0])) ev.push({ l: l, p: 3, t: n[1] + ' <b>' + esc(n[2]) + '</b> <span>' + g.titel + '</span>' });
+      });
+      KLEIN.forEach(function (e) {
+        var a = kleinInfo(e, wertVon(alt, e.k)).farbe, n = kleinInfo(e, wertVon(jetzt, e.k)).farbe;
+        if (n && FARBEN.indexOf(n) > FARBEN.indexOf(a)) ev.push({ l: l, p: 1 + FARBEN.indexOf(n) / 10, t: e.icon + ' ' + e.titel + ' <b>' + n[0] + ' ' + n[1] + '</b>' });
+      });
+      ABZEICHEN.forEach(function (b) { if (b.id !== 'eg' && hatAbzeichen(jetzt, b.id) && !hatAbzeichen(alt, b.id)) ev.push({ l: l, p: 2, t: b.icon + ' Abzeichen <b>' + b.name + '</b>' }); });
+    });
+    ev.sort(function (a, b) { return b.p - a.p; });
+    return ev.slice(0, 8);
+  }
+  function startHtml() {
+    var h = '';
+    var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
+    if (neu && !ich) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Such deinen Namen</b> in einer Rangliste und klick drauf</li><li>Tipp auf <b>⭐ Das bin ich</b> – dann siehst du immer deine Plätze</li><li>Unter <b>🎮 Spiele</b> mit Twitch anmelden und mitbestimmen, was Kaze als Nächstes spielt</li></ol></div>';
+    function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    h += '<div class="startgrid">';
+    var vt = daten.voting || [];
+    h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
+    var ev = neuFreigeschaltet();
+    h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.map(function (e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }).join('') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
+    h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
+    h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
+    h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
+    var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
+    if (cw) h += '<div class="sbox nur-schmal"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + '</div></div>';
+    h += '</div>';
+    return h;
+  }
+  function startEvents() {
+    if ($('onbzu')) $('onbzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_onboarding', '1'); } catch (x) { } $('onboard').remove(); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
+  }
+  function geheZu(r) {
+    reiter = r; alleZeigen = false;
+    Array.prototype.forEach.call($('reiter').children, function (x) { x.className = x.getAttribute('data-r') === r ? 'aktiv' : ''; });
+    if (r === 'spiele') spieleAnsicht = 'voting';
+    zeigen(); try { window.scrollTo({ top: $('reiter').offsetTop - 10, behavior: 'smooth' }); } catch (x) { }
+  }
+
   // Seitenleiste am PC
   function seiteZeigen() {
     if (!daten) return;
@@ -1069,10 +1133,11 @@
   }
 
   function sonder() {
-    var spezial = reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'spiele';
+    var spezial = reiter === 'start' || reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'spiele';
     $('podest').style.display = spezial ? 'none' : '';
     $('suche').style.display = spezial ? 'none' : '';
     if (!spezial) { $('liste').className = 'liste'; return false; }
+    if (reiter === 'start') { $('liste').className = ''; $('liste').innerHTML = startHtml(); startEvents(); $('hinweis').textContent = ''; return true; }
     if (reiter === 'emotes') {
       var em = daten.emotes || [];
       var he = '';
@@ -1174,6 +1239,7 @@
   }
 
   var untertitel = {
+    start: 'Die Community von Kaze auf einen Blick',
     zeni: 'Wer hat die meisten Zeni?',
     watchtime: 'Wer schaut am längsten zu?',
     bingo: 'Wer hat das Stream-Bingo gewonnen?',
