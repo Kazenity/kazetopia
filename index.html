@@ -337,6 +337,21 @@
   .z.nf .nm { white-space: normal; font-weight: 600; font-size: 12.5px; line-height: 1.35; } .z.nf .nm i { font-style: normal; font-weight: 800; } .z.nf .nm span { color: var(--grau); }
   .onboard { position: relative; background: linear-gradient(135deg, rgba(255,158,191,.18), rgba(145,70,255,.15)); border: 1px solid var(--rosa); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; font-size: 13.5px; }
   .onboard ol { margin: 8px 0 0 18px; padding: 0; line-height: 1.6; } .zu-klein { position: absolute; right: 8px; top: 6px; background: none; border: 0; color: var(--grau); font-size: 20px; cursor: pointer; }
+  .reiter button .ri { margin-right: 6px; }
+  .unterreiter { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: -12px 0 18px; }
+  .unterreiter button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  .unterreiter button:hover { background: var(--hover); }
+  .unterreiter button.aktiv { color: var(--hell); border-color: var(--rosa); background: var(--hover); }
+  .meinbox { margin-bottom: 14px; cursor: pointer; }
+  .meinbox .mkopf { display: flex; align-items: center; gap: 12px; }
+  .meinbox .mkopf b { font-size: 17px; }
+  .meinbox .rwrap { margin: 4px 8px 4px 4px; }
+  .meinbox .plz.vier { grid-template-columns: repeat(4, 1fr); }
+  .meinbox .mziel { margin-top: 10px; font-size: 12.5px; color: var(--grau); }
+  .meinbox .mziel b { color: var(--hell); }
+  .meinbox .balken { height: 7px; border-radius: 99px; background: var(--rand); margin: 6px 0 4px; overflow: hidden; }
+  .meinbox .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  @media (max-width: 420px) { .meinbox .plz.vier { grid-template-columns: repeat(2, 1fr); } }
   .neu-mark { font-style: normal; font-size: 8.5px; font-weight: 800; background: var(--gold); color: var(--dunkel); border-radius: 5px; padding: 1px 4px; margin-left: 5px; vertical-align: 2px; }
   .recht { margin-top: 10px; } .recht a { color: var(--grau); text-decoration: underline; }
   .ds h4 { margin-top: 16px; } .ds p { font-size: 12.5px; line-height: 1.55; color: var(--hell); margin: 6px 0; } .ds a { color: var(--rosa); }
@@ -351,9 +366,11 @@
   .ichknopf { margin-top: 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .ichknopf.ja { color: var(--dunkel); background: var(--rosa); border-color: var(--rosa); }
   @media (max-width: 560px) {
-    .reiter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .reiter button { padding: 9px 2px; font-size: 12px; }
-    .reiter button[data-r="shop"] { grid-column: 1 / -1; }
+    .reiter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .reiter button { padding: 7px 0 8px; font-size: 10.5px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+    .reiter button .ri { font-size: 19px; margin: 0; }
+    .reiter .neu-mark { position: absolute; top: 2px; right: 2px; margin: 0; }
+    .unterreiter button { padding: 7px 11px; }
     .danke { grid-template-columns: 1fr; }
     .emotes.rest { grid-template-columns: repeat(4, 1fr); }
     .emotes.top3 .emote img { width: 60px; height: 60px; } .emotes.top3 .emote.e1 img { width: 76px; height: 76px; }
@@ -389,17 +406,13 @@
 
   <div class="layout"><main class="haupt">
   <div class="reiter" id="reiter">
-    <button data-r="start" class="aktiv">🏠 Start</button>
-    <button data-r="zeni">💰 Zeni</button>
-    <button data-r="watchtime">⏱️ Watchtime</button>
-    <button data-r="danke">💖 Danke</button>
-    <button data-r="bingo">🎯 Bingo</button>
-    <button data-r="chat">💬 Chat</button>
-    <button data-r="emotes">😄 Emotes</button>
-    <button data-r="clips">🎬 Clips</button>
-    <button data-r="spiele">🎮 Spiele</button>
-    <button data-r="shop">🛍️ Shop<i class="neu-mark">NEU</i></button>
+    <button data-g="start" class="aktiv"><span class="ri">🏠</span>Start</button>
+    <button data-g="rang"><span class="ri">🏆</span>Ranglisten</button>
+    <button data-g="community"><span class="ri">💖</span>Community</button>
+    <button data-g="spiele"><span class="ri">🎮</span>Spiele</button>
+    <button data-g="shop"><span class="ri">🛍️</span>Shop<i class="neu-mark">NEU</i></button>
   </div>
+  <div class="unterreiter" id="unterreiter" style="display:none"></div>
 
   <div class="schalter" id="zeitwahl" style="display:none"></div>
   <div class="podest" id="podest"></div>
@@ -954,8 +967,9 @@
   function startHtml() {
     var h = '';
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
-    if (neu && !ich) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Such deinen Namen</b> in einer Rangliste und klick drauf</li><li>Tipp auf <b>⭐ Das bin ich</b> – dann siehst du immer deine Plätze</li><li>Unter <b>🎮 Spiele</b> mit Twitch anmelden und mitbestimmen, was Kaze als Nächstes spielt</li></ol></div>';
+    if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Such deinen Namen</b> in einer Rangliste und klick drauf</li><li>Tipp auf <b>⭐ Das bin ich</b> – dann siehst du immer deine Plätze</li><li>Unter <b>🎮 Spiele</b> mit Twitch anmelden und mitbestimmen, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += '<div class="startgrid">';
     var vt = daten.voting || [];
     h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
@@ -969,13 +983,46 @@
     h += '</div>';
     return h;
   }
+  // „Dein Bereich“ ganz oben auf Start
+  function meineKarte() {
+    var l = ich || (sitzung && sitzung.name) || '';
+    if (!l) return '<div class="sbox meinbox" id="meinleer"><h3>👤 DEIN BEREICH</h3><div class="leise">Melde dich oben rechts mit Twitch an oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b> – dann siehst du hier deine Plätze, deine Zeni und deinen nächsten Rang.</div></div>';
+    var sp = (daten.spieler || {})[l] || {};
+    function platz(liste) { var p = 0; (liste || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === l) p = i + 1; }); return p ? '#' + p : '–'; }
+    var zeni = daten.shop && daten.shop.zeni ? daten.shop.zeni[l] : null;
+    if (zeni == null) (daten.zeni || []).forEach(function (x) { if (String(x.n).toLowerCase() === l) zeni = x.w; });
+    var best = null;
+    GROSS.slice(0, 2).forEach(function (g) {
+      var v = wertVon(sp, g.k), info = leiterInfo(g.leiter, v, g.weiter);
+      if (!info.nx) return;
+      var pr = balken(v, info.akt ? info.akt[0] : 0, info.nx[0]);
+      if (!best || pr > best.pr) best = { g: g, v: v, nx: info.nx, pr: pr };
+    });
+    var h = '<div class="sbox meinbox"' + dl(l) + '><h3>👤 DEIN BEREICH</h3><div class="mkopf">' + avatarMitRahmen(l) + '<div><b' + fs(l) + '>' + esc(prof(l).n || l) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
+      '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div>';
+    if (best) h += '<div class="mziel">Nächster Rang: ' + best.nx[1] + ' <b>' + esc(best.nx[2]) + '</b> · noch <b>' + best.g.fmt(Math.ceil((best.nx[0] - best.v) * 10) / 10) + '</b><div class="balken"><i style="width:' + best.pr + '%"></i></div></div>';
+    if (sp.d) h += '<div class="mziel">🔥 Beste Watch-Streak: <b>' + zahl(sp.d) + ' Streams</b> am Stück</div>';
+    return h + '</div>';
+  }
   function startEvents() {
     if ($('onbzu')) $('onbzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_onboarding', '1'); } catch (x) { } $('onboard').remove(); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
   }
+  // Haupt-Reiter (Gruppen) und Unter-Reiter
+  var GRUPPEN = { start: ['start'], rang: ['zeni', 'watchtime', 'chat', 'bingo'], community: ['danke', 'emotes', 'clips'], spiele: ['spiele'], shop: ['shop'] };
+  var UNTER_NAME = { zeni: '💰 Zeni', watchtime: '⏱️ Watchtime', chat: '💬 Chat', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips' };
+  var letzteUnter = { rang: 'zeni', community: 'danke' };
+  function gruppeVon(r) { for (var g in GRUPPEN) if (GRUPPEN[g].indexOf(r) >= 0) return g; return 'start'; }
+  function reiterMarkieren() {
+    var g = gruppeVon(reiter), u = $('unterreiter');
+    if (GRUPPEN[g].length > 1) letzteUnter[g] = reiter;
+    Array.prototype.forEach.call($('reiter').children, function (x) { x.classList.toggle('aktiv', x.getAttribute('data-g') === g); });
+    if (GRUPPEN[g].length > 1) { u.innerHTML = GRUPPEN[g].map(function (r) { return '<button data-r="' + r + '"' + (r === reiter ? ' class="aktiv"' : '') + '>' + UNTER_NAME[r] + '</button>'; }).join(''); u.style.display = ''; }
+    else u.style.display = 'none';
+  }
   function geheZu(r) {
     reiter = r; alleZeigen = false;
-    Array.prototype.forEach.call($('reiter').children, function (x) { x.className = x.getAttribute('data-r') === r ? 'aktiv' : ''; });
+    reiterMarkieren();
     if (r === 'spiele') spieleAnsicht = 'voting';
     zeigen(); try { window.scrollTo({ top: $('reiter').offsetTop - 10, behavior: 'smooth' }); } catch (x) { }
   }
@@ -986,7 +1033,8 @@
     function platzIn(l) { var p = 0; (l || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) p = i + 1; }); return p ? '#' + p : '–'; }
     function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
     var h = '';
-    if (ich) {
+    if (reiter === 'start') { }
+    else if (ich) {
       var nm = prof(ich).n || ich;
       h += '<div class="sbox"><h3>👤 DU</h3><div class="ich"' + dl(ich) + '>' + bild(ich, true) + '<div><b>' + esc(nm) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
         '<div class="plz"><div><b>' + platzIn(daten.zeni) + '</b>Zeni</div><div><b>' + platzIn(daten.watchtime) + '</b>Watchtime</div><div><b>' + platzIn(daten.chat) + '</b>Chat</div></div></div>';
@@ -1491,10 +1539,15 @@
   $('reiter').onclick = function (e) {
     var b = e.target.closest('button');
     if (!b) return;
+    var g = b.getAttribute('data-g');
+    reiter = GRUPPEN[g].length > 1 ? letzteUnter[g] : g; alleZeigen = false;
+    reiterMarkieren(); zeigen();
+  };
+  $('unterreiter').onclick = function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
     reiter = b.getAttribute('data-r'); alleZeigen = false;
-    Array.prototype.forEach.call(this.children, function (x) { x.className = x === b ? 'aktiv' : ''; });
-    try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (x) { }
-    zeigen();
+    reiterMarkieren(); zeigen();
   };
   $('suche').oninput = zeigen;
   $('ichbar').onclick = function () { if (ich) profilZeigen(ich); };
@@ -1511,7 +1564,7 @@
     plaetzeMerken(d);
     kopfleiste();
     if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); });
-    Array.prototype.forEach.call($('reiter').children, function (x) { x.className = x.getAttribute('data-r') === reiter ? 'aktiv' : ''; });
+    reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d.live && d.live.an) {
       $('live').innerHTML = '<div class="punkt"></div><div class="txt"><b>Kaze ist gerade live' + (d.live.spiel ? ' · ' + esc(d.live.spiel) : '') + '</b><span>' + esc(d.live.titel || '') + '</span></div><div class="los">Zuschauen</div>';
