@@ -41,7 +41,7 @@
   .wrap { max-width: 820px; margin: 0 auto; padding: 32px 16px 48px; position: relative; z-index: 1; }
 
   header { text-align: center; margin-bottom: 26px; position: relative; }
-  .kopfleiste { position: absolute; right: 0; top: -8px; z-index: 30; }
+  .kopfleiste { position: absolute; right: 0; top: -8px; z-index: 30; display: flex; align-items: center; gap: 8px; }
   .wrap { padding-top: calc(32px + env(safe-area-inset-top)) !important; }
   .klogin { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: #fff; background: #9146ff; border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
   .klogin svg { width: 15px; height: 15px; fill: #fff; }
@@ -562,7 +562,9 @@
   .mmehr summary { cursor: pointer; font-size: 12.5px; font-weight: 800; color: var(--rosa); list-style: none; padding: 6px 0; }
   .mmehr summary::-webkit-details-marker { display: none; }
   .mmehr summary::after { content: ' ▾'; } .mmehr[open] summary::after { content: ' ▴'; }
-  .glocke { position: relative; font-size: 17px; line-height: 1; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; width: 38px; height: 38px; cursor: pointer; margin-right: 6px; vertical-align: middle; }
+  .glocke { position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-size: 16px; line-height: 1; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; width: 36px; height: 36px; box-sizing: border-box; cursor: pointer; margin: 0; flex: 0 0 auto; }
+  .kchip { box-sizing: border-box; height: 36px; }
+  @media (max-width: 560px) { .glocke, .kchip { height: 34px; } .glocke { width: 34px; } }
   .glocke i { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ff4d6d; color: #fff; font-size: 11px; font-weight: 800; font-style: normal; line-height: 18px; display: none; }
   .reiter button { position: relative; }
   .reiter button.punkt::after { content: ''; position: absolute; top: 6px; right: calc(50% - 18px); width: 9px; height: 9px; border-radius: 50%; background: #ff4d6d; box-shadow: 0 0 0 2px var(--flaeche); }
@@ -800,7 +802,7 @@
     });
     h += '</div>';
     if (sitzung) {
-      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen und vorschlagen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
+      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
       if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
     }
     h += '<div class="vhinweis">Jeder hat <b>eine</b> Stimme und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
@@ -1535,7 +1537,7 @@
   function glueckKarte() {
     var chancen = '<details class="gl-chancen"><summary>Chancen ansehen</summary><div class="tab">' + GLUECK_TAB.map(function (x) { return '<div><span>' + x[1] + '</span><span>' + x[0] + '</span></div>'; }).join('') + '</div><p class="leise">Kostenlos, ohne Einsatz, einmal pro Tag (neuer Tag ab 0 Uhr). Nur für Konten, die schon Zeni aus dem Stream haben. Wer den Titel schon hat, bekommt 3.000 Zeni, VIPs und Mods statt VIP 5.000 Zeni. Zeni haben keinen Geldwert.</p></details>';
     var h = '<div class="sbox glueck" id="glueck"><h3>🍀 TÄGLICHER GLÜCKS-KNOPF</h3>';
-    if (!sitzung) return '';   // Nicht angemeldet: Hinweis steht in „Dein Bereich“
+    if (!sitzung || sitzung.name === 'kazenity') return '';   // Nicht angemeldet: Hinweis steht in „Dein Bereich“ · Kaze selbst bekommt keine Zeni
     if (glueck.stand === null) { var gm = glueckGemerkt(); if (gm) glueck.stand = gm; }
     if (glueck.stand && glueck.stand.heute && !glueck.stand.neu) return '';   // heute schon gedrückt: kleine Zeile in „Dein Bereich“
     if (glueck.stand === null && !glueck.laedt) {
@@ -2425,7 +2427,7 @@
     erfolgeFuer(l).forEach(function (t) { e.push({ id: 'er:' + t.replace(/<[^>]+>/g, ''), t: null, text: t }); });
     var zeni = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[l] : null);
     if (zeni != null) wuensche().forEach(function (id) { var a = kosArtikel(id); if (a && a.kaufbar !== false && !besitzt(l, id) && preisVon(a) <= zeni) e.push({ id: 'wu:' + id + ':' + preisVon(a), t: null, art: 'shop', text: '♥ Du kannst dir deinen Wunsch <b>' + esc(a.name) + '</b> jetzt leisten' }); });
-    if (glueck.stand && !glueck.stand.heute) e.push({ id: 'gl:' + heuteTag(), t: null, art: 'glueck', text: '🍀 Dein täglicher Glücks-Knopf ist bereit' });
+    if (sitzung && sitzung.name !== 'kazenity' && glueck.stand && !glueck.stand.heute) e.push({ id: 'gl:' + heuteTag(), t: null, art: 'glueck', text: '🍀 Dein täglicher Glücks-Knopf ist bereit' });
     e.sort(function (a, b) { return (b.t ? new Date(b.t).getTime() : jetzt) - (a.t ? new Date(a.t).getTime() : jetzt); });
     return e;
   }
@@ -2463,7 +2465,7 @@
     var p = { start: false, shop: false, ich: false };
     if (sitzung) {
       var e = postEintraege(), g = postGelesen();
-      p.start = !!(glueck.stand && !glueck.stand.heute);
+      p.start = sitzung.name !== 'kazenity' && !!(glueck.stand && !glueck.stand.heute);
       p.shop = e.some(function (x) { return x.art === 'shop' && !g[x.id]; });
       p.ich = e.some(function (x) { return !g[x.id] && x.art !== 'glueck' && x.art !== 'shop'; });
     }
@@ -2527,7 +2529,7 @@
       return true;
     }
     if (reiter === 'spiele') {
-      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>✨ Voting</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Bewertungen</button></div>';
+      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>✨ Abstimmen</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Kazes Bewertungen</button></div>';
       if (spieleAnsicht === 'voting') {
         $('liste').className = '';
         $('liste').innerHTML = sw + votingHtml();
