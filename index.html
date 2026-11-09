@@ -466,8 +466,8 @@
   .kopf.mitbanner b, .kopf.mitbanner .titel, .kopf.mitbanner .rang, .kopf.mitbanner .kk, .kopf.mitbanner .leise { text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 10px rgba(0,0,0,.7); }
   /* Banner oben als Kopfbild, Avatar ragt hinein, Text darunter auf ruhigem Grund – immer lesbar, Banner bleibt ganz sichtbar */
   .karte .kopf.mitbanner { display: block; background-color: var(--bg) !important; background-size: 100% 150px !important; background-repeat: no-repeat !important; background-position: top center !important; padding: 92px 16px 16px !important; min-height: 0; border: 1px solid var(--rand); }
-  .karte .kopf.mitbanner > .rwrap, .karte .kopf.mitbanner > .av { display: inline-block; margin: 0 0 8px 0 !important; }
-  .karte .kopf.mitbanner > .rwrap { margin: 0 0 26px 14px !important; }
+  .karte .kopf.mitbanner > .av { display: inline-block; margin: 0 0 8px 0 !important; }
+  .karte .kopf.mitbanner > .rwrap { display: inline-flex; margin: 0 0 26px 14px !important; }
   .karte .kopf.mitbanner > .av { border-color: var(--bg); border-width: 4px; }
   .karte .kopf.mitbanner > div:last-child { text-shadow: none; }
   .karte .kopf.mitbanner b, .karte .kopf.mitbanner .titel, .karte .kopf.mitbanner .rang, .karte .kopf.mitbanner .kk { text-shadow: none; }
@@ -517,10 +517,14 @@
   @keyframes saisonfall { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(var(--dx), 112vh) rotate(var(--rot)); } }
   .saison.hoch span { top: auto; bottom: -30px; animation-name: saisonhoch; }
   @keyframes saisonhoch { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: var(--op); } 85% { opacity: var(--op); } 100% { transform: translate(var(--dx), -70vh); opacity: 0; } }
-  .appkarte { position: relative; display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-  .appkarte img { border-radius: 12px; flex: none; }
-  .appkarte > div { flex: 1 1 200px; }
+  .appkarte { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 8px 10px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; }
+  .appkarte img { border-radius: 10px; flex: none; }
+  .appkarte > div { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.3; }
+  .appkarte > div span { display: block; font-size: 11.5px; color: var(--grau); }
+  .appkarte .vtw { padding: 8px 14px; font-size: 13px; }
+  .appzu { background: none; border: 0; color: var(--grau); font-size: 20px; cursor: pointer; padding: 0 4px; }
   .appschritte { line-height: 1.9; padding-left: 20px; }
+  .mziel a.glanmelden { color: var(--rosa); font-weight: 800; text-decoration: none; }
   .mwoche { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); }
   .mwoche .mw-t { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--rosa); }
   .mwoche .leise { margin-top: 6px; font-size: 12.5px; }
@@ -1268,10 +1272,10 @@
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
-    h += appKarte();
     h += besuchKarte();
     h += glueckKarte();
     h += planKarte();
+    h += appKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += questKarte();
     h += '<div class="startgrid">';
@@ -1446,6 +1450,8 @@
       if (naechst) h += '<div class="mziel">🛍️ Noch <b>' + zahl(preisVon(naechst) - zeni) + ' Zeni</b> bis ' + esc(naechst.name) + '<div class="balken"><i style="width:' + Math.min(100, Math.round(zeni / preisVon(naechst) * 100)) + '%"></i></div></div>';
       if (leistbar.length) h += '<div class="mziel">🎁 Du kannst dir schon <b>' + leistbar.length + (leistbar.length === 1 ? ' Artikel' : ' Artikel') + '</b> leisten · <a href="#shop" class="zumshop">Zum Shop ›</a></div>';
     }
+    if (sitzung && sitzung.name === l && glueck.stand && glueck.stand.heute && !glueck.stand.neu) h += '<div class="mziel">🍀 Glücks-Knopf heute: <b>' + glueckText(glueck.stand.gewinn, glueck.stand.zeni) + '</b> · morgen wieder</div>';
+    else if (!sitzung) h += '<div class="mziel">🍀 <a href="#" class="glanmelden">Mit Twitch anmelden</a> und jeden Tag den Glücks-Knopf drücken (100 bis 10.000 Zeni)</div>';
     if (sp.wo || sp.lw) {
       var wo = sp.wo || { w: 0, c: 0, s: 0 }, lw = sp.lw, alleWo = [];
       Object.keys(daten.spieler || {}).forEach(function (k) { var x = daten.spieler[k]; if (x && x.wo && x.wo.w > 0) alleWo.push([k, x.wo.w]); });
@@ -1467,13 +1473,15 @@
   function glueckKarte() {
     var chancen = '<details class="gl-chancen"><summary>Chancen ansehen</summary><div class="tab">' + GLUECK_TAB.map(function (x) { return '<div><span>' + x[1] + '</span><span>' + x[0] + '</span></div>'; }).join('') + '</div><p class="leise">Kostenlos, ohne Einsatz, einmal pro Tag (neuer Tag ab 0 Uhr). Nur für Konten, die schon Zeni aus dem Stream haben. Wer den Titel schon hat, bekommt 3.000 Zeni, VIPs und Mods statt VIP 5.000 Zeni. Zeni haben keinen Geldwert.</p></details>';
     var h = '<div class="sbox glueck" id="glueck"><h3>🍀 TÄGLICHER GLÜCKS-KNOPF</h3>';
-    if (!sitzung) return h + '<div class="gl-zeile"><span class="leise">Einmal am Tag drücken und Zeni, einen seltenen Titel oder sogar VIP gewinnen – kostenlos.</span><button class="vtw" id="glogin">Anmelden &amp; drücken</button></div>' + chancen + '</div>';
+    if (!sitzung) return '';   // Nicht angemeldet: Hinweis steht in „Dein Bereich“
+    if (glueck.stand === null) { var gm = glueckGemerkt(); if (gm) glueck.stand = gm; }
+    if (glueck.stand && glueck.stand.heute && !glueck.stand.neu) return '';   // heute schon gedrückt: kleine Zeile in „Dein Bereich“
     if (glueck.stand === null && !glueck.laedt) {
       glueck.laedt = true;
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/gluecksknopf_stand', { method: 'POST', body: {} }); })
-        .then(function (r) { glueck.stand = r || { heute: false }; })
+        .then(function (r) { glueck.stand = r || { heute: false }; glueckMerken(); })
         .catch(function () { glueck.stand = { heute: false }; })
-        .then(function () { glueck.laedt = false; var el = $('glueck'); if (el) { el.outerHTML = glueckKarte(); glueckEvents(); } });
+        .then(function () { glueck.laedt = false; if (reiter === 'start') zeigen(); });
     }
     var st = glueck.stand || {};
     if (st.heute) {
@@ -1489,6 +1497,9 @@
     }
     return h + chancen + '</div>';
   }
+  function heuteTag() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function glueckMerken() { try { if (sitzung && glueck.stand && glueck.stand.heute) localStorage.setItem('kz_glueck_' + sitzung.name, JSON.stringify({ t: heuteTag(), g: glueck.stand.gewinn, z: glueck.stand.zeni })); } catch (x) { } }
+  function glueckGemerkt() { try { var m = JSON.parse(localStorage.getItem('kz_glueck_' + sitzung.name) || 'null'); if (m && m.t === heuteTag()) return { heute: true, gewinn: m.g, zeni: m.z }; } catch (x) { } return null; }
   function glueckDrehen() {
     var b = $('gknopf'); if (!b || glueck.dreht) return;
     glueck.dreht = true; b.disabled = true;
@@ -1498,11 +1509,11 @@
       setTimeout(function () {
         clearInterval(tick); glueck.dreht = false; r = r || {};
         if (r.ok || r.grund === 'heute') {
-          glueck.stand = { heute: true, gewinn: r.gewinn, zeni: r.zeni, neu: !!r.ok };
+          glueck.stand = { heute: true, gewinn: r.gewinn, zeni: r.zeni, neu: !!r.ok }; glueckMerken();
           if (typeof r.rest === 'number') liveZeni = r.rest;
           if (r.ok && r.gewinn === 'titel') sofortBesitz['titel_glueckspilz'] = true;
         } else if (r.grund === 'neu') glueck.stand = { heute: false, neuKonto: true };
-        var el = $('glueck'); if (el) { el.outerHTML = glueckKarte(); glueckEvents(); }
+        var el = $('glueck'); if (el) { el.outerHTML = glueckKarte() || '<div id="glueck"></div>'; glueckEvents(); }
       }, Math.max(0, 1700 - (Date.now() - start)));
     }).catch(function (x) {
       clearInterval(tick); glueck.dreht = false; b.disabled = false; b.textContent = '🍀 Drücken';
@@ -1524,11 +1535,11 @@
     if (istApp()) return false;
     var w = ''; try { w = localStorage.getItem('kz_app') || ''; } catch (x) { }
     if (w === 'drin' || (w && Date.now() - Number(w) < 14 * 86400000)) return false;
-    return !!appPrompt || (istIos() && window.innerWidth < 900);
+    return window.innerWidth < 700 && (!!appPrompt || istIos());
   }
   function appKarte() {
     if (!appZeigen()) return '';
-    return '<div class="sbox appkarte" id="appkarte"><button class="zu-klein" id="appzu" aria-label="Schließen">×</button><img src="icon-192.png" alt="" width="52" height="52"><div><b>📱 Kazetopia als App</b><div class="leise">Leg dir Kazetopia mit einem Tipp auf den Homescreen – wie eine echte App, ohne App-Store.</div></div><button class="vtw" id="appjetzt">Installieren</button></div>';
+    return '<div class="appkarte" id="appkarte"><img src="icon-192.png" alt="" width="38" height="38"><div><b>Kazetopia als App</b><span>ohne App-Store, 1 Tipp</span></div><button class="vtw" id="appjetzt">Holen</button><button class="appzu" id="appzu" aria-label="Schließen">×</button></div>';
   }
   function appInstallieren() {
     if (istApp()) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📱 Schon installiert</b><div class="kk">Du nutzt Kazetopia gerade als App. 🌸</div></div></div></div>'); return; }
@@ -1542,6 +1553,7 @@
   }
   function startEvents() {
     glueckEvents();
+    Array.prototype.forEach.call(document.querySelectorAll('.glanmelden'), function (a) { a.onclick = function (e) { e.preventDefault(); e.stopPropagation(); einloggenFragen(); }; });
     if ($('appjetzt')) $('appjetzt').onclick = function (e) { e.stopPropagation(); appInstallieren(); };
     if ($('appzu')) $('appzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_app', String(Date.now())); } catch (x) { } $('appkarte').remove(); };
     if ($('besuchzu')) $('besuchzu').onclick = function (e) { e.stopPropagation(); besuchInfo = null; $('besuch').remove(); };
