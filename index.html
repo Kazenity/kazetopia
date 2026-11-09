@@ -26,13 +26,13 @@
 
   :root {
     --bg: #180a1c; --flaeche: #26142c; --hover: #321c3a; --rand: #462c50;
-    --rosa: #ff9ebf; --rosa2: #c2396f; --lila: #6a2c8c; --hell: #f6ecf6; --grau: #a892af; --dunkel: #280c22;
+    --rosa: #ff9ebf; --rosa2: #c2396f; --lila: #6a2c8c; --hell: #f6ecf6; --grau: #c9b6ce; --dunkel: #280c22;
     --gold: #ffd27a; --silber: #dfe3ef; --bronze: #f0a774;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { background: var(--bg); }
   body { font-family: Poppins, "Segoe UI", sans-serif; color: var(--hell); background: radial-gradient(1200px 500px at 50% -120px, rgba(194,57,111,.35), transparent 70%), var(--bg); min-height: 100vh; }
-  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 16px 48px; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 16px 48px; position: relative; z-index: 1; }
 
   header { text-align: center; margin-bottom: 26px; position: relative; }
   .kopfleiste { position: absolute; right: 0; top: -8px; z-index: 30; }
@@ -179,7 +179,7 @@
   .karte .kopf .av { width: 72px; height: 72px; font-size: 28px; border: 3px solid var(--rosa); }
   .karte .kopf b { display: block; font-size: 20px; font-weight: 800; }
   .karte .rang { display: inline-block; margin-top: 4px; font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg, #c2396f, #5a2562); }
-  .karte .kk { margin-top: 5px; font-size: 13px; color: var(--grau); font-weight: 600; }
+  .karte .kk { margin-top: 5px; font-size: 13px; color: #e6d8e9; font-weight: 600; }
   .karte .kk b { display: inline; font-size: 13px; color: var(--gold); }
   .karte h4 { font-size: 12px; letter-spacing: 1.5px; color: var(--rosa); margin: 16px 0 8px; }
   .erfolg { background: var(--bg); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
@@ -475,6 +475,9 @@
   .sfilter label input { width: 17px; height: 17px; accent-color: var(--rosa); }
   .sfleer { text-align: center; padding: 26px 10px; color: var(--grau); }
   .sfleer button { margin-top: 10px; }
+  .sunten { display: flex; align-items: center; gap: 4px; }
+  .swunsch { background: none; border: 0; color: var(--grau); font-size: 19px; line-height: 1; cursor: pointer; padding: 6px 4px 0; font-family: inherit; }
+  .swunsch.an, .swunsch:hover { color: #ff5c8a; }
   .sprobe { display: block; width: 100%; background: none; border: 0; color: var(--grau); font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; padding: 7px 0 0; }
   .sprobe:hover { color: var(--rosa); }
   .probe { margin: 4px 0 14px; }
@@ -503,6 +506,11 @@
   .gl-chancen summary { cursor: pointer; color: var(--grau); font-size: 12.5px; font-weight: 700; }
   .gl-chancen .tab div { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--rand); }
   @media (max-width: 560px) { .gl-knopf { width: 100%; } }
+  .saison { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .saison span { position: absolute; top: -40px; animation: saisonfall linear infinite; will-change: transform; }
+  @keyframes saisonfall { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(var(--dx), 112vh) rotate(var(--rot)); } }
+  .saison.hoch span { top: auto; bottom: -30px; animation-name: saisonhoch; }
+  @keyframes saisonhoch { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: var(--op); } 85% { opacity: var(--op); } 100% { transform: translate(var(--dx), -70vh); opacity: 0; } }
   .mziel a.zumshop { color: var(--rosa); font-weight: 800; text-decoration: none; white-space: nowrap; }
   .probe .kopf { margin: 0; }
   /* --- v2: Handy – Navigation unten, große Tipp-Flächen --- */
@@ -562,7 +570,7 @@
     <div id="stand"></div>
     <div id="hinweis"></div>
     <div>Klick auf einen Namen für Rang &amp; Erfolge · Wird während der Streams alle 10 Minuten aktualisiert.</div>
-    <div class="recht"><a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a> · <a href="#datenschutz" id="dslink">Datenschutz</a></div>
+    <div class="recht"><a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a> · <a href="#datenschutz" id="dslink">Datenschutz</a> · <a href="#" id="saisonknopf">Effekt aus</a></div>
   </footer>
 </div>
 
@@ -796,6 +804,8 @@
   var STUFEN_REIHE = ['g', 's', 'e', 'l', 'm'];
   var shopF = { typ: '', stufe: '', sort: 'preis', leisten: false };
   try { var sfGemerkt = JSON.parse(localStorage.getItem('kz_shopfilter') || 'null'); if (sfGemerkt) for (var sfk in shopF) if (sfGemerkt[sfk] !== undefined) shopF[sfk] = sfGemerkt[sfk]; } catch (x) { }
+  function wuensche() { try { return JSON.parse(localStorage.getItem('kz_wunsch') || '[]').filter(function (id) { return /^(rahmen|banner|titel)_[a-z0-9_]+$/.test(id); }); } catch (x) { return []; } }
+  function wunschUmschalten(id) { var w = wuensche(), i = w.indexOf(id); if (i >= 0) w.splice(i, 1); else w.push(id); try { localStorage.setItem('kz_wunsch', JSON.stringify(w.slice(-12))); } catch (x) { } zeigen(); }
   function shopFilterSetzen(k, v) { shopF[k] = v; try { localStorage.setItem('kz_shopfilter', JSON.stringify(shopF)); } catch (x) { } zeigen(); }
 
   // 👀 Anprobieren: Artikel auf der eigenen Profilkarte ansehen, bevor man kauft
@@ -867,13 +877,14 @@
     }
     var TYPEN = [['rahmen', '💠 RAHMEN'], ['banner', '🌄 BANNER'], ['titel', '🏷️ TITEL']];
     // Filter-Leiste
-    h += '<div class="sfilter"><div class="sfchips">' + [['', 'Alle'], ['rahmen', '💠 Rahmen'], ['banner', '🌄 Banner'], ['titel', '🏷️ Titel']].map(function (x) { return '<button data-sft="' + x[0] + '"' + (shopF.typ === x[0] ? ' class="an"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
+    h += '<div class="sfilter"><div class="sfchips">' + [['', 'Alle'], ['rahmen', '💠 Rahmen'], ['banner', '🌄 Banner'], ['titel', '🏷️ Titel'], ['wunsch', '♥ Wunschliste']].map(function (x) { return '<button data-sft="' + x[0] + '"' + (shopF.typ === x[0] ? ' class="an"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
       '<select id="sfstufe" aria-label="Seltenheit"><option value="">Alle Seltenheiten</option>' + STUFEN_REIHE.map(function (k) { return '<option value="' + k + '"' + (shopF.stufe === k ? ' selected' : '') + '>' + STUFE[k][0] + ' ' + STUFE[k][1] + '</option>'; }).join('') + '</select>' +
       '<select id="sfsort" aria-label="Sortierung">' + [['preis', 'Preis ↑'], ['preisab', 'Preis ↓'], ['stufe', 'Seltenheit']].map(function (x) { return '<option value="' + x[0] + '"' + (shopF.sort === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
       (me ? '<label><input type="checkbox" id="sfleisten"' + (shopF.leisten ? ' checked' : '') + '>💰 Kann ich mir leisten</label>' : '') + '</div>';
     var gezeigt = 0;
     function passt(a, vorschau) {
-      if (shopF.typ && a.id.indexOf(shopF.typ + '_') !== 0) return false;
+      if (shopF.typ === 'wunsch') { if (wuensche().indexOf(a.id) < 0) return false; }
+      else if (shopF.typ && a.id.indexOf(shopF.typ + '_') !== 0) return false;
       if (shopF.stufe && a.stufe !== shopF.stufe) return false;
       if (shopF.leisten && me && !vorschau && (besitzt(me, a.id) || preisVon(a) > stand)) return false;
       if (shopF.leisten && vorschau) return false;
@@ -900,7 +911,7 @@
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
       var rab = !vorschau && preisVon(a) !== a.preis;
       var badge = rab ? '<span class="sbadge">🔥 −20 %</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
-      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button></div>';
+      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
       liste = liste.filter(function (a) { return passt(a, vorschau); });
@@ -926,7 +937,7 @@
     TYPEN.forEach(function (t) {
       h += bereich(t[1], '', sh.artikel.filter(function (a) { return a.kaufbar !== false && !a.auslage && !a.saisonBis && a.id.indexOf(t[0] + '_') === 0; }), false);
     });
-    if (!gezeigt) h += '<div class="sfleer">Nichts gefunden – ' + (shopF.leisten ? 'für deine Zeni gibt es gerade nichts Neues.' : 'probier einen anderen Filter.') + '<br><button class="vlink" id="sfreset">Filter zurücksetzen</button></div>';
+    if (!gezeigt) h += '<div class="sfleer">' + (shopF.typ === 'wunsch' ? 'Deine Wunschliste ist leer – tipp bei einem Artikel auf ♡.' : 'Nichts gefunden – ' + (shopF.leisten ? 'für deine Zeni gibt es gerade nichts Neues.' : 'probier einen anderen Filter.')) + '<br><button class="vlink" id="sfreset">Filter zurücksetzen</button></div>';
     var bald = (aus.naechste || []).map(function (id) { return kosArtikel(id); }).filter(function (a) { return a; });
     h += bereich('👀 NÄCHSTE WOCHE IN DER AUSLAGE', 'ab Sonntag', bald, true);
     h += '<p class="leise shopinfo">Käufe werden sofort gebucht – rund um die Uhr. Dein Zeni-Stand wird aktualisiert, solange Kazes Stream-Bot läuft. Reichen deine Zeni dann nicht, passiert nichts. Gekaufte Artikel legst du unter <b>✏️ Profil gestalten</b> an.</p>';
@@ -941,6 +952,7 @@
     if ($('sfleisten')) $('sfleisten').onchange = function () { shopFilterSetzen('leisten', this.checked); };
     if ($('sfreset')) $('sfreset').onclick = function () { shopF = { typ: '', stufe: '', sort: shopF.sort, leisten: false }; shopFilterSetzen('typ', ''); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-probe]'), function (b) { b.onclick = function () { anprobieren(b.getAttribute('data-probe')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-wunsch]'), function (b) { b.onclick = function () { wunschUmschalten(b.getAttribute('data-wunsch')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-login]'), function (b) { b.onclick = einloggenFragen; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-anlegen]'), function (b) { b.onclick = function () { designEditor(sitzung.name); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-kauf]'), function (b) { b.onclick = function () { kaufFragen(b.getAttribute('data-kauf')); }; });
@@ -1410,7 +1422,12 @@
     if (best) h += '<div class="mziel">Nächster Rang: ' + best.nx[1] + ' <b>' + esc(best.nx[2]) + '</b> · noch <b>' + best.g.fmt(Math.ceil((best.nx[0] - best.v) * 10) / 10) + '</b><div class="balken"><i style="width:' + best.pr + '%"></i></div></div>';
     if (zeni != null && daten.shop && daten.shop.artikel) {
       var offen = daten.shop.artikel.filter(function (a) { return a.kaufbar !== false && !besitzt(l, a.id); }).sort(function (x, y) { return preisVon(x) - preisVon(y); });
-      var leistbar = offen.filter(function (a) { return preisVon(a) <= zeni; }), naechst = offen.filter(function (a) { return preisVon(a) > zeni; })[0];
+      var wl = wuensche().map(function (id) { return offen.filter(function (a) { return a.id === id; })[0]; }).filter(function (a) { return a; });
+      wl.slice(0, 2).forEach(function (a) {
+        var fehlt = preisVon(a) - zeni;
+        h += '<div class="mziel">♥ Wunsch: <b>' + esc(a.name) + '</b> · ' + (fehlt > 0 ? 'noch <b>' + zahl(fehlt) + ' Zeni</b>' : '<b>du kannst ihn dir leisten!</b> <a href="#shop" class="zumshop">Zum Shop ›</a>') + '<div class="balken"><i style="width:' + Math.min(100, Math.round(zeni / preisVon(a) * 100)) + '%"></i></div></div>';
+      });
+      var leistbar = offen.filter(function (a) { return preisVon(a) <= zeni; }), naechst = wl.length ? null : offen.filter(function (a) { return preisVon(a) > zeni; })[0];
       if (naechst) h += '<div class="mziel">🛍️ Noch <b>' + zahl(preisVon(naechst) - zeni) + ' Zeni</b> bis ' + esc(naechst.name) + '<div class="balken"><i style="width:' + Math.min(100, Math.round(zeni / preisVon(naechst) * 100)) + '%"></i></div></div>';
       if (leistbar.length) h += '<div class="mziel">🎁 Du kannst dir schon <b>' + leistbar.length + (leistbar.length === 1 ? ' Artikel' : ' Artikel') + '</b> leisten · <a href="#shop" class="zumshop">Zum Shop ›</a></div>';
     }
@@ -1845,6 +1862,27 @@
   }
   var SEITE = 'https://kazenity.github.io/kazetopia';
 
+  // ❄️🌸✨🍂 Saisonaler Look: Winter Schnee, Frühling Kirschblüten, Sommer Glühwürmchen, Herbst Laub
+  function saisonArt() { var m = new Date().getMonth() + 1; return m === 12 || m <= 2 ? ['❄', '❅', '❆'] : m <= 5 ? ['🌸', '💮'] : m <= 8 ? ['✦'] : ['🍂', '🍁']; }
+  function saisonAn() { var aus = false; try { aus = localStorage.getItem('kz_saison') === 'aus'; } catch (x) { } return !aus && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function saisonStarten() {
+    var alt = document.querySelector('.saison'); if (alt) alt.remove();
+    var sk = $('saisonknopf');
+    if (sk) sk.textContent = saisonAn() ? 'Effekt aus' : 'Effekt an';
+    if (!saisonAn()) return;
+    var art = saisonArt(), m = new Date().getMonth() + 1, sommer = m >= 6 && m <= 8, winter = m === 12 || m <= 2;
+    var box = document.createElement('div'); box.className = 'saison' + (sommer ? ' hoch' : ''); box.setAttribute('aria-hidden', 'true');
+    var n = window.innerWidth < 600 ? 9 : 16, h = '';
+    for (var i = 0; i < n; i++) {
+      var gr = 11 + Math.random() * 12, dauer = 14 + Math.random() * 14, op = (0.25 + Math.random() * 0.35).toFixed(2);
+      h += '<span style="left:' + (Math.random() * 100).toFixed(1) + '%;font-size:' + gr.toFixed(0) + 'px;opacity:' + op + ';--op:' + op + ';--dx:' + ((Math.random() - 0.5) * 160).toFixed(0) + 'px;--rot:' + (winter || sommer ? 0 : Math.round((Math.random() - 0.5) * 720)) + 'deg;animation-duration:' + dauer.toFixed(1) + 's;animation-delay:-' + (Math.random() * dauer).toFixed(1) + 's' + (sommer ? ';color:#ffe9a8;text-shadow:0 0 8px #ffd166' : winter ? ';color:#fff' : '') + '">' + art[i % art.length] + '</span>';
+    }
+    box.innerHTML = h;
+    document.body.insertBefore(box, document.body.firstChild);
+  }
+  saisonStarten();
+  if ($('saisonknopf')) $('saisonknopf').onclick = function (e) { e.preventDefault(); try { localStorage.setItem('kz_saison', saisonAn() ? 'aus' : 'an'); } catch (x) { } saisonStarten(); };
+
   // 🎟️ Code einlösen (Codes legt Kaze in der Kommandozentrale an; Prüfung komplett in Supabase)
   function codeDialog(vorgabe) {
     vorgabe = String(vorgabe || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 30);
@@ -1960,7 +1998,7 @@
       '<h4>3a. ANONYMER AUFRUFZÄHLER</h4><p>Beim Öffnen der Seite erhöht dein Browser einen Zähler auf unserem Supabase-Server in Frankfurt (EU) um eins. Gespeichert wird nur die Gesamtzahl der Aufrufe pro Tag – keine IP-Adresse, keine Kennung, nichts in deinem Browser. Technisch wird beim Aufruf deine IP-Adresse verarbeitet, um die Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu sehen, ob die Seite genutzt wird).</p>' +
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
-      '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
+      '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
       '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
