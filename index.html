@@ -445,8 +445,8 @@
   .ichknopf { margin-top: 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .ichknopf.ja { color: var(--dunkel); background: var(--rosa); border-color: var(--rosa); }
   @media (max-width: 560px) {
-    .reiter { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
-    .reiter button { padding: 7px 0 8px; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+    .reiter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .reiter button { padding: 7px 0 8px; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
     .reiter button .ri { font-size: 19px; margin: 0; }
     .reiter .neu-mark { position: absolute; top: 2px; right: 2px; margin: 0; }
     .unterreiter button { padding: 7px 11px; }
@@ -562,6 +562,14 @@
   .mmehr summary { cursor: pointer; font-size: 12.5px; font-weight: 800; color: var(--rosa); list-style: none; padding: 6px 0; }
   .mmehr summary::-webkit-details-marker { display: none; }
   .mmehr summary::after { content: ' ▾'; } .mmehr[open] summary::after { content: ' ▴'; }
+  .glocke { position: relative; font-size: 17px; line-height: 1; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; width: 38px; height: 38px; cursor: pointer; margin-right: 6px; vertical-align: middle; }
+  .glocke i { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ff4d6d; color: #fff; font-size: 11px; font-weight: 800; font-style: normal; line-height: 18px; display: none; }
+  .reiter button { position: relative; }
+  .reiter button.punkt::after { content: ''; position: absolute; top: 6px; right: calc(50% - 18px); width: 9px; height: 9px; border-radius: 50%; background: #ff4d6d; box-shadow: 0 0 0 2px var(--flaeche); }
+  .posteintrag { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px; margin-top: 8px; background: var(--hover); border: 1px solid var(--rosa); border-radius: 12px; font-size: 13.5px; flex-wrap: wrap; }
+  .posteintrag.gelesen { background: var(--bg); border-color: var(--rand); }
+  .posteintrag .pt { flex: 1 1 200px; } .posteintrag .pt .leise { display: block; font-size: 11.5px; margin-top: 2px; }
+  .posteintrag .pk { display: flex; gap: 6px; }
   .mwoche { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); }
   .mwoche .mw-t { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--rosa); }
   .mwoche .leise { margin-top: 6px; font-size: 12.5px; }
@@ -596,9 +604,8 @@
   <div class="layout"><main class="haupt">
   <div class="reiter" id="reiter">
     <button data-g="start" class="aktiv"><span class="ri">🏠</span>Start</button>
-    <button data-g="rang"><span class="ri">🏆</span>Ranglisten</button>
+    <button data-g="rang"><span class="ri">🏆</span>Ränge</button>
     <button data-g="community"><span class="ri">💖</span>Community</button>
-    <button data-g="spiele"><span class="ri">🎮</span>Spiele</button>
     <button data-g="shop"><span class="ri">🛍️</span>Shop</button>
     <button data-g="ich"><span class="ri">👤</span>Ich</button>
   </div>
@@ -780,7 +787,7 @@
   function votingHtml() {
     var h = '';
     if (vote.ergebnis === null) { votingLaden().then(zeigen); return '<div class="liste"><div class="leer">Lade Voting …</div></div>'; }
-    h += '<div class="vkopf">' + (sitzung && sitzung.name ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><span class="vknoepfe"><button class="vlink" id="vdel">Meine Daten löschen</button><button class="vlink" id="vlogout">Abmelden</button></span>'
+    if (!(sitzung && sitzung.name)) h += '<div class="vkopf">' + (false ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><span class="vknoepfe"><button class="vlink" id="vdel">Meine Daten löschen</button><button class="vlink" id="vlogout">Abmelden</button></span>'
       : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw tw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
     if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
     var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
@@ -1056,9 +1063,12 @@
   function kopfleiste() {
     var el = $('kopfleiste'); if (!el) return;
     if (sitzung && sitzung.name) {
-      el.innerHTML = '<button class="kchip" id="kchip">' + bild(sitzung.name) + '<span class="knm">' + esc(prof(sitzung.name).n || sitzung.name) + '</span> ▾</button><div class="kmenue" id="kmenue">' +
+      el.innerHTML = '<button class="kchip" id="kchip">' + bild(sitzung.name) + '<span class="knm">' + esc(prof(sitzung.name).n || sitzung.name) + '</span></button><div class="kmenue" id="kmenue">' +
         '<button data-k="profil">👤 Mein Profil</button><button data-k="gestalten">✏️ Profil gestalten</button><button data-k="shop">🛍️ Zeni-Shop</button><button data-k="code">🎟️ Code einlösen</button><button data-k="einladen">🤝 Freunde einladen</button><button data-k="app">📱 Als App installieren</button>' + (sitzung.name === 'kazenity' ? '<button data-k="admin">🛠️ Admin</button>' : '') + '<button data-k="voting">🎮 Spiele-Voting</button><button data-k="loeschen" class="weg">🗑️ Meine Daten löschen</button><button data-k="ab">↩️ Abmelden</button></div>';
-      $('kchip').onclick = function (e) { e.stopPropagation(); $('kmenue').classList.toggle('offen'); };
+      $('kchip').onclick = function (e) { e.stopPropagation(); geheZu('ich'); };
+      el.insertAdjacentHTML('afterbegin', '<button class="glocke" id="glocke" aria-label="Posteingang">🔔<i id="glzahl"></i></button>');
+      $('glocke').onclick = function (e) { e.stopPropagation(); posteingangOeffnen(); };
+      posteingangAktualisieren();
       Array.prototype.forEach.call(el.querySelectorAll('[data-k]'), function (b) { b.onclick = function (e) {
         e.stopPropagation(); $('kmenue').classList.remove('offen'); var k = b.getAttribute('data-k');
         if (k === 'profil') profilZeigen(sitzung.name);
@@ -1619,9 +1629,9 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
   }
   // Haupt-Reiter (Gruppen) und Unter-Reiter
-  var GRUPPEN = { start: ['start'], rang: ['zeni', 'watchtime', 'chat', 'bingo'], community: ['danke', 'emotes', 'clips', 'ruhm'], spiele: ['spiele'], shop: ['shop'], ich: ['ich'] };
-  var UNTER_NAME = { zeni: '💰 Zeni', watchtime: '⏱️ Watchtime', chat: '💬 Chat', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle' };
-  var letzteUnter = { rang: 'zeni', community: 'danke' };
+  var GRUPPEN = { start: ['start'], rang: ['zeni', 'watchtime', 'chat', 'bingo'], community: ['spiele', 'ruhm', 'clips', 'emotes', 'danke'], shop: ['shop'], ich: ['ich'] };
+  var UNTER_NAME = { zeni: '💰 Zeni', watchtime: '⏱️ Watchtime', chat: '💬 Chat', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Voting' };
+  var letzteUnter = { rang: 'zeni', community: 'spiele' };
   function gruppeVon(r) { for (var g in GRUPPEN) if (GRUPPEN[g].indexOf(r) >= 0) return g; return 'start'; }
   function reiterMarkieren() {
     var g = gruppeVon(reiter), u = $('unterreiter');
@@ -2351,6 +2361,8 @@
   function ichKacheln(an) {
     var k = [];
     if (an) {
+      var pu = postUngelesen();
+      k.push(['post', '📬', 'Posteingang' + (pu ? ' (' + pu + ')' : ''), pu ? pu + ' neue Nachrichten' : 'Anfragen & Neuigkeiten']);
       k.push(['profil', '👤', 'Mein Profil', 'Ränge, Erfolge, Abzeichen']);
       k.push(['gestalten', '✏️', 'Profil gestalten', 'Farbe, Titel, Rahmen, Banner']);
       k.push(['code', '🎟️', 'Code einlösen', 'aus Stream oder Discord']);
@@ -2370,6 +2382,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-ich-k]'), function (b) { b.onclick = function (e) {
       e.preventDefault(); var k = b.getAttribute('data-ich-k');
       if (k === 'profil') profilZeigen(sitzung.name);
+      else if (k === 'post') posteingangOeffnen();
       else if (k === 'gestalten') designEditor(sitzung.name);
       else if (k === 'code') codeDialog('');
       else if (k === 'einladen') einladenDialog();
@@ -2381,6 +2394,80 @@
       else if (k === 'loeschen') datenLoeschenFragen();
       else if (k === 'ds') datenschutz();
     }; });
+  }
+  // 📬 Posteingang: Freundschaftsanfragen, angenommene Anfragen, neue Erfolge, Einladungen, Wunsch leistbar, Glücks-Knopf
+  var post = { werbung: null, zeit: 0 };
+  function postGelesen() { try { return JSON.parse(localStorage.getItem('kz_post_' + sitzung.name) || '{}'); } catch (x) { return {}; } }
+  function postMerken(g) { try { var k = Object.keys(g); if (k.length > 300) k.slice(0, k.length - 300).forEach(function (x) { delete g[x]; }); localStorage.setItem('kz_post_' + sitzung.name, JSON.stringify(g)); } catch (x) { } }
+  function erfolgeFuer(l) {
+    var v = (daten.vorher || {})[l], jetzt = (daten.spieler || {})[l], ev = [];
+    if (!v || !jetzt) return ev;
+    var alt = {}; for (var k in jetzt) alt[k] = jetzt[k]; for (var k2 in v) alt[k2] = v[k2];
+    GROSS.forEach(function (g) { if (g.k === 'f') return; var a = leiterInfo(g.leiter, wertVon(alt, g.k), g.weiter).akt, n = leiterInfo(g.leiter, wertVon(jetzt, g.k), g.weiter).akt; if (n && (!a || n[0] > a[0])) ev.push(n[1] + ' Neuer Rang: <b>' + esc(n[2]) + '</b> (' + g.titel + ')'); });
+    KLEIN.forEach(function (e) { var a = kleinInfo(e, wertVon(alt, e.k)).farbe, n = kleinInfo(e, wertVon(jetzt, e.k)).farbe; if (n && FARBEN.indexOf(n) > FARBEN.indexOf(a)) ev.push(e.icon + ' Erfolg ' + e.titel + ': <b>' + n[0] + ' ' + n[1] + '</b>'); });
+    ABZEICHEN.forEach(function (b) { if (b.id !== 'eg' && hatAbzeichen(jetzt, b.id) && !hatAbzeichen(alt, b.id)) ev.push(b.icon + ' Neues Abzeichen: <b>' + b.name + '</b>'); });
+    return ev;
+  }
+  function postEintraege() {
+    if (!sitzung || !sitzung.name || !daten) return [];
+    var l = sitzung.name, e = [], m = freunde.meine, jetzt = Date.now();
+    if (m) {
+      var mt = m.mich_t || {}, it = m.ich_t || {};
+      m.mich.forEach(function (x) {
+        if (m.ich.indexOf(x) < 0) e.push({ id: 'fa:' + x, t: mt[x], an: x, art: 'anfrage', text: '🤝 <b>' + esc(prof(x).n || x) + '</b> möchte mit dir befreundet sein' });
+        else if (mt[x] && it[x] && new Date(mt[x]) > new Date(it[x])) e.push({ id: 'fo:' + x, t: mt[x], an: x, text: '✅ <b>' + esc(prof(x).n || x) + '</b> hat deine Freundschaftsanfrage angenommen' });
+      });
+    }
+    (post.werbung || []).forEach(function (w) {
+      e.push({ id: 'wk:' + w.l, t: w.t, an: w.l, text: '🌱 <b>' + esc(prof(w.l).n || w.l) + '</b> ist über deinen Einladungslink gekommen' + (w.s === 'wartet' ? ' – nach 5 Std. und 20 Nachrichten bekommst du 10.000 Zeni' : '') });
+      if (w.s === 'belohnt') e.push({ id: 'wb:' + w.l, t: w.b || w.t, an: w.l, text: '🎉 <b>' + esc(prof(w.l).n || w.l) + '</b> hat das Ziel erreicht – du bekommst <b>10.000 Zeni</b>' });
+    });
+    erfolgeFuer(l).forEach(function (t) { e.push({ id: 'er:' + t.replace(/<[^>]+>/g, ''), t: null, text: t }); });
+    var zeni = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[l] : null);
+    if (zeni != null) wuensche().forEach(function (id) { var a = kosArtikel(id); if (a && a.kaufbar !== false && !besitzt(l, id) && preisVon(a) <= zeni) e.push({ id: 'wu:' + id + ':' + preisVon(a), t: null, art: 'shop', text: '♥ Du kannst dir deinen Wunsch <b>' + esc(a.name) + '</b> jetzt leisten' }); });
+    if (glueck.stand && !glueck.stand.heute) e.push({ id: 'gl:' + heuteTag(), t: null, art: 'glueck', text: '🍀 Dein täglicher Glücks-Knopf ist bereit' });
+    e.sort(function (a, b) { return (b.t ? new Date(b.t).getTime() : jetzt) - (a.t ? new Date(a.t).getTime() : jetzt); });
+    return e;
+  }
+  function postUngelesen() { if (!sitzung) return 0; var g = postGelesen(); return postEintraege().filter(function (x) { return !g[x.id]; }).length; }
+  function posteingangAktualisieren() {
+    if (!sitzung) { punkteSetzen(); return; }
+    var fertig = function () { var n = postUngelesen(), z = $('glzahl'); if (z) { z.textContent = n ? (n > 9 ? '9+' : n) : ''; z.style.display = n ? 'block' : 'none'; } punkteSetzen(); };
+    fertig();
+    if (Date.now() - post.zeit < 60000) return;
+    post.zeit = Date.now();
+    var a = freunde.meine ? Promise.resolve() : meineFreundeLaden();
+    var b = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_werbung', { method: 'POST', body: {} }); }).then(function (r) { post.werbung = r || []; }).catch(function () { });
+    Promise.all([a, b]).then(fertig);
+  }
+  function posteingangOeffnen() {
+    if (!sitzung) { einloggenFragen(); return; }
+    zaehlen('post');
+    var e = postEintraege(), g = postGelesen();
+    function wann(t) { if (!t) return ''; var d = new Date(t), m = Math.round((Date.now() - d) / 60000); return m < 60 ? 'vor ' + Math.max(1, m) + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }); }
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📬 Posteingang</b><div class="kk">Was es Neues für dich gibt</div></div></div>' +
+      (e.length ? e.map(function (x) { return '<div class="posteintrag' + (g[x.id] ? ' gelesen' : '') + '"><div class="pt">' + x.text + '<span class="leise">' + wann(x.t) + '</span></div>' +
+        (x.art === 'anfrage' ? '<div class="pk"><button class="vtw" data-pa="' + esc(x.an) + '">Annehmen</button><button class="vlink" data-pab="' + esc(x.an) + '">Ablehnen</button></div>' : x.art === 'shop' ? '<div class="pk"><button class="vtw" data-pgeh="shop">Zum Shop</button></div>' : x.art === 'glueck' ? '<div class="pk"><button class="vtw" data-pgeh="start">Drücken</button></div>' : x.an ? '<div class="pk"><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : '') + '</div>'; }).join('')
+        : '<p class="leise">Gerade nichts Neues. Hier landen Freundschaftsanfragen, neue Erfolge und Neuigkeiten zu deinen Einladungen.</p>') + '</div>';
+    karteOeffnen(h);
+    e.forEach(function (x) { g[x.id] = 1; }); postMerken(g); posteingangAktualisieren();
+    var neuLaden = function () { post.zeit = 0; freunde.meine = null; oeffentlichLaden(); meineFreundeLaden().then(function () { posteingangAktualisieren(); posteingangOeffnen(); }); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pa]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_setzen', { method: 'POST', body: { p_an: b.getAttribute('data-pa'), p_an_aus: true } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pab]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_ablehnen', { method: 'POST', body: { p_von: b.getAttribute('data-pab') } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pgeh]'), function (b) { b.onclick = function () { profilZu(); geheZu(b.getAttribute('data-pgeh')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pprof]'), function (b) { b.onclick = function () { profilZeigen(b.getAttribute('data-pprof')); }; });
+  }
+  // Hinweis-Punkte an den Reitern: Start (Glücks-Knopf offen), Shop (Wunsch leistbar), Ich (ungelesener Posteingang)
+  function punkteSetzen() {
+    var r = $('reiter'); if (!r) return;
+    var p = { start: false, shop: false, ich: false };
+    if (sitzung) {
+      var e = postEintraege(), g = postGelesen();
+      p.start = !!(glueck.stand && !glueck.stand.heute);
+      p.shop = e.some(function (x) { return x.art === 'shop' && !g[x.id]; });
+      p.ich = e.some(function (x) { return !g[x.id] && x.art !== 'glueck' && x.art !== 'shop'; });
+    }
+    Array.prototype.forEach.call(r.children, function (b) { b.classList.toggle('punkt', !!p[b.getAttribute('data-g')]); });
   }
   function sonder() {
     var spezial = reiter === 'start' || reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'ruhm' || reiter === 'spiele' || reiter === 'shop' || reiter === 'ich';
@@ -2507,6 +2594,7 @@
   };
   function zeigen() {
     try { zaehlen(reiter); } catch (x) { }
+    setTimeout(function () { try { posteingangAktualisieren(); } catch (x) { } }, 0);
     $('unter').textContent = untertitel[reiter] || '';
     if (!daten) return;
     var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
