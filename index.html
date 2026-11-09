@@ -572,6 +572,34 @@
   .posteintrag.gelesen { background: var(--bg); border-color: var(--rand); }
   .posteintrag .pt { flex: 1 1 200px; } .posteintrag .pt .leise { display: block; font-size: 11.5px; margin-top: 2px; }
   .posteintrag .pk { display: flex; gap: 6px; }
+  .gebkarte { display: flex; gap: 14px; align-items: center; background: linear-gradient(120deg, rgba(255,126,176,.18), rgba(255,209,102,.12)); border-color: rgba(255,209,102,.45); }
+  .gebkarte .geb-i { font-size: 38px; line-height: 1; flex: 0 0 auto; }
+  .gebkarte b.geb-t { display: block; font-size: 16px; margin-bottom: 6px; }
+  .gebnamen { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .gebnamen .z { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13px; }
+  .gebnamen .z .av { width: 24px; height: 24px; font-size: 11px; }
+  .aufkarte h3 .leise { font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: 6px; }
+  .aufreihe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .aufp { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; cursor: pointer; min-width: 0; }
+  .aufp .av { width: 40px; height: 40px; font-size: 16px; flex: 0 0 auto; }
+  .aufp > div { min-width: 0; } .aufp b.nm { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+  .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
+  .gebkarte { margin-bottom: 12px; }
+  @media (max-width: 560px) {
+    .aufreihe { grid-template-columns: 1fr; gap: 6px; }
+    .aufp { padding: 7px 10px; } .aufp .av { width: 34px; height: 34px; }
+    .aufp > div { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; } .aufp b.nm { flex: 1 1 100%; }
+    .aufkarte h3 .leise { display: block; margin: 4px 0 0; }
+  }
+  .heft { background: var(--bg); border: 1px solid var(--rand); border-radius: 14px; padding: 12px; margin-top: 8px; }
+  .heft-k { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .heft-k img { width: 34px; height: 45px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; }
+  .heft-k b { display: block; font-size: 14px; } .heft-k .leise { font-size: 12px; }
+  .stempel { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+  .stempel i { aspect-ratio: 1; border-radius: 50%; border: 2px dashed rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 15px; }
+  .stempel i.an { border: 2px solid #ff7eb0; background: radial-gradient(circle, rgba(255,126,176,.35), rgba(255,126,176,.08)); }
+  @media (max-width: 560px) { .stempel { grid-template-columns: repeat(5, 1fr); gap: 8px; } .stempel i { max-width: 44px; justify-self: center; width: 100%; } }
+  .stpmini { letter-spacing: 1px; font-size: 11px; color: #ff7eb0; white-space: nowrap; } .stpmini s { text-decoration: none; color: rgba(255,255,255,.25); }
   .mwoche { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); }
   .mwoche .mw-t { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--rosa); }
   .mwoche .leise { margin-top: 6px; font-size: 12.5px; }
@@ -1321,11 +1349,78 @@
     ev.sort(function (a, b) { return b.p - a.p; });
     return ev.slice(0, 8);
   }
+  // 🎂 Geburtstagskinder (nur selbst über !geburtstag eingetragen, kein Alter) – nur am selben Tag zeigen
+  function heuteIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function gebKarte() {
+    var g = daten && daten.geburtstag;
+    if (!g || !g.namen || !g.namen.length || g.tag !== heuteIso()) return '';
+    var l = ich || (sitzung && sitzung.name) || '', selbst = g.namen.indexOf(l) >= 0;
+    var andere = g.namen.filter(function (n) { return n !== l; });
+    var chips = andere.map(function (n) { return '<span class="z"' + dl(n) + '>' + bild(n) + '<span' + fs(n) + '>' + esc(prof(n).n || n) + '</span></span>'; }).join('');
+    var t = selbst ? 'Alles Gute zum Geburtstag, ' + esc(prof(l).n || l) + '! 🎉' : (andere.length === 1 ? 'Heute hat Geburtstag:' : 'Heute haben Geburtstag:');
+    return '<div class="sbox gebkarte"><div class="geb-i">🎂</div><div><b class="geb-t">' + t + '</b>' +
+      (chips ? (selbst ? '<div class="leise" style="margin-bottom:6px">Heute feiern auch:</div>' : '') + '<div class="gebnamen">' + chips + '</div>' : '') +
+      '<div class="leise">' + (selbst ? 'Die ganze Kaze Family wünscht dir einen wunderschönen Tag 💜' : 'Schreib im nächsten Stream einen Glückwunsch in den Chat 💜') + '</div></div></div>';
+  }
+  // 📈 Aufsteiger der Woche: wer in der Watchtime-Rangliste (gesamt) seit Sonntag die meisten Plätze gutgemacht hat
+  function aufsteigerListe() {
+    var sp = daten.spieler || {}, a = [], irgendwas = false;
+    Object.keys(sp).forEach(function (k) {
+      var x = sp[k]; if (!x || !(x.w > 0)) return;
+      var wo = (x.wo && x.wo.w) || 0; if (wo > 0) irgendwas = true;
+      a.push({ l: k, jetzt: x.w, vor: Math.max(0, x.w - wo), wo: wo });
+    });
+    if (!irgendwas) return [];
+    a.slice().sort(function (p, q) { return q.jetzt - p.jetzt; }).forEach(function (x, i) { x.pn = i + 1; });
+    a.slice().sort(function (p, q) { return q.vor - p.vor; }).forEach(function (x, i) { x.pv = i + 1; });
+    return a.filter(function (x) { return x.vor >= 1 && x.wo > 0 && x.pv > x.pn; })
+      .sort(function (p, q) { return (q.pv - q.pn) - (p.pv - p.pn) || q.wo - p.wo; });
+  }
+  function aufsteigerKarte() {
+    var al = aufsteigerListe(); if (!al.length) return '';
+    var l = ich || (sitzung && sitzung.name) || '', ich3 = false;
+    var h = '<div class="sbox aufkarte"><h3>📈 AUFSTEIGER DER WOCHE<span class="leise">Watchtime-Rangliste seit Sonntag</span></h3><div class="aufreihe">';
+    al.slice(0, 3).forEach(function (x, i) {
+      if (x.l === l) ich3 = true;
+      h += '<div class="aufp"' + dl(x.l) + '>' + bild(x.l) + '<div><b class="nm"' + fs(x.l) + '>' + ['🥇 ', '🥈 ', '🥉 '][i] + esc(prof(x.l).n || x.l) + '</b><span class="hoch">▲ ' + (x.pv - x.pn) + (x.pv - x.pn === 1 ? ' Platz' : ' Plätze') + '</span><span class="leise">jetzt #' + x.pn + ' · +' + zahl(x.wo) + ' Std.</span></div></div>';
+    });
+    h += '</div>';
+    if (l && !ich3) al.forEach(function (x, i) { if (x.l === l) h += '<div class="leise" style="margin-top:8px">Du: <b>▲ ' + (x.pv - x.pn) + (x.pv - x.pn === 1 ? ' Platz' : ' Plätze') + '</b> diese Woche · Platz ' + (i + 1) + ' bei den Aufsteigern</div>'; });
+    return h + '</div>';
+  }
+  // 📕 Stempelheft pro Spiel: 1 Stempel pro Stream, bei dem man dabei war · 10 Stempel = Heft voll
+  var HEFT = 10;
+  function aktSpiel() {
+    if (daten.live && daten.live.an && daten.live.spiel) return daten.live.spiel;
+    var st = daten.stempel || {}, n = planTermine().filter(function (x) { return x.d.getTime() > Date.now() - 6 * 3600000; })[0];
+    if (n && n.t.spiel) return n.t.spiel;
+    var b = '', m = -1; Object.keys(st).forEach(function (k) { if (st[k] > m) { m = st[k]; b = k; } });
+    return b;
+  }
+  function heftStand(n) { var voll = Math.floor(n / HEFT), im = n % HEFT; if (n > 0 && im === 0) { voll--; im = HEFT; } return { voll: voll, im: im }; }
+  function heftAnzahl(sp, spiel) { var st = (sp && sp.st) || {}, n = 0; Object.keys(st).forEach(function (k) { if (k.toLowerCase().trim() === String(spiel || '').toLowerCase().trim()) n += st[k]; }); return n; }
+  function heftHtml(spiel, n) {
+    var s = heftStand(n), c = coverFuer(spiel), h = '';
+    for (var i = 0; i < HEFT; i++) h += '<i' + (i < s.im ? ' class="an"' : '') + '>' + (i < s.im ? '🌸' : '') + '</i>';
+    return '<div class="heft"><div class="heft-k">' + (c ? '<img loading="lazy" alt="" src="' + esc(c) + '">' : '') + '<div><b>' + esc(spiel) + '</b><span class="leise">' + (s.voll > 0 ? '📕 ' + s.voll + '× voll · ' : '') + 'Heft ' + (s.voll + 1) + ': ' + s.im + ' von ' + HEFT + (s.im === HEFT ? ' · voll! 🎉' : '') + '</span></div></div><div class="stempel">' + h + '</div></div>';
+  }
+  function stempelHtml(sp) {
+    var st = (sp && sp.st) || {}, ks = Object.keys(st).filter(function (k) { return st[k] > 0; }).sort(function (a, b) { return st[b] - st[a]; });
+    if (!ks.length) return '';
+    return '<h4>📕 STEMPELHEFTE <span class="leise" style="font-weight:600;letter-spacing:0">1 Stempel pro Stream</span></h4>' + ks.map(function (k) { return heftHtml(k, st[k]); }).join('');
+  }
+  function stempelZeile(sp) {
+    var spiel = aktSpiel(); if (!spiel) return '';
+    var s = heftStand(heftAnzahl(sp, spiel)), d = '';
+    for (var i = 0; i < HEFT; i++) d += i < s.im ? '●' : '<s>●</s>';
+    return '<div class="mziel">📕 Stempelheft <b>' + esc(spiel) + '</b>: <b>' + s.im + '/' + HEFT + '</b>' + (s.voll ? ' · ' + s.voll + '× voll' : '') + ' <span class="stpmini">' + d + '</span>' + (s.im === 0 ? '<div class="leise">Sei beim nächsten Stream dabei – das gibt deinen ersten Stempel</div>' : '') + '</div>';
+  }
   function startHtml() {
     var h = '';
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    h += gebKarte();
     h += besuchKarte();
     h += glueckKarte();
     h += planKarte();
@@ -1337,7 +1432,7 @@
     h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.map(function (e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }).join('') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
     var vt = daten.voting || [];
     h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
-    h += '</div><div class="top3reihe">';
+    h += '</div>' + aufsteigerKarte() + '<div class="top3reihe">';
     h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
     h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
     h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
@@ -1518,6 +1613,7 @@
         (lw ? '<div class="leise">Letzte Woche: ' + zahl(lw.w || 0) + ' Std. · ' + zahl(lw.c || 0) + ' Nachrichten · ' + zahl(lw.s || 0) + (lw.s === 1 ? ' Stream' : ' Streams') + ((wo.w || 0) > (lw.w || 0) ? ' · <b>▲ diese Woche schon mehr!</b>' : '') + '</div>' : '') + '</div>';
     }
     if (sp.ds) h += '<div class="mziel">🔥 Treue-Serie: <b>' + zahl(sp.ds) + (sp.ds === 1 ? ' Stream' : ' Streams') + '</b> in Folge dabei' + (sp.ds >= 10 ? ' · stark!' : ' · komm zum nächsten Stream, dann wächst sie') + '</div>';
+    h += stempelZeile(sp);
     if (sp.d) h += '<div class="mziel">🏅 Beste Watch-Streak: <b>' + zahl(sp.d) + ' Streams</b> am Stück</div>';
     // Kompakt: nur die erste Zeile sichtbar, alles weitere aufklappbar (Zustand wird gemerkt)
     var mpos = h.indexOf('<!--MZ-->');
@@ -1873,6 +1969,7 @@
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
+    h += stempelHtml(sp);
     // Ränge als 2×2-Kacheln (Details unter „Alle Erfolge anzeigen“)
     h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
     GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossKachel(g, sp); });
@@ -2281,7 +2378,7 @@
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
-      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
+      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Treue-Serie und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
       '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Löschst du dein Konto, werden Freundschaften und offene Einladungen mitgelöscht. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
@@ -2367,6 +2464,7 @@
       k.push(['post', '📬', 'Posteingang' + (pu ? ' (' + pu + ')' : ''), pu ? pu + ' neue Nachrichten' : 'Anfragen & Neuigkeiten']);
       k.push(['profil', '👤', 'Mein Profil', 'Ränge, Erfolge, Abzeichen']);
       k.push(['gestalten', '✏️', 'Profil gestalten', 'Farbe, Titel, Rahmen, Banner']);
+      k.push(['bild', '📸', 'Karte als Bild', 'zum Teilen oder Speichern']);
       k.push(['code', '🎟️', 'Code einlösen', 'aus Stream oder Discord']);
       k.push(['einladen', '🤝', 'Freunde einladen', '10.000 Zeni pro Freund']);
       k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
@@ -2386,6 +2484,7 @@
       if (k === 'profil') profilZeigen(sitzung.name);
       else if (k === 'post') posteingangOeffnen();
       else if (k === 'gestalten') designEditor(sitzung.name);
+      else if (k === 'bild') karteTeilen(sitzung.name, b.querySelector('b') || b);
       else if (k === 'code') codeDialog('');
       else if (k === 'einladen') einladenDialog();
       else if (k === 'wunsch') { shopF.typ = 'wunsch'; shopFilterSetzen('typ', 'wunsch'); geheZu('shop'); }
