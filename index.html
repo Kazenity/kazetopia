@@ -586,6 +586,8 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .wochenkopf { margin: 18px 2px -2px; font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--rosa); }
+  .wochenkopf .leise { letter-spacing: 0; font-weight: 600; margin-left: 4px; }
   .seite .aufkarte { margin-top: 0; } .seite .aufreihe { grid-template-columns: 1fr; gap: 6px; } .seite .aufp { padding: 8px 10px; }
   .seite.frei { position: static; }
   @media (min-width: 1100px) { .startgrid { grid-template-columns: 1fr; } }
@@ -1447,7 +1449,7 @@
     var h = '';
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
-    function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
+    function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
     h += gebKarte();
     h += besuchKarte();
     h += glueckKarte();
@@ -1460,10 +1462,21 @@
     function nfZeile(e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }
     h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.slice(0, 5).map(nfZeile).join('') + (ev.length > 5 ? '<details class="nfmehr"><summary>' + (ev.length - 5) + ' weitere anzeigen</summary>' + ev.slice(5).map(nfZeile).join('') + '</details>' : '') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
     h += votingBox('nur-schmal');
-    h += '</div>' + aufsteigerKarte('nur-schmal') + '<div class="top3reihe">';
-    h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
-    h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
-    h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
+    h += '</div>' + aufsteigerKarte('nur-schmal');
+    // 🔥 Diese Woche (seit Sonntag) statt der Gesamt-Ranglisten – die stehen unter „Ränge“
+    function woche(f) { var a = []; Object.keys(daten.spieler || {}).forEach(function (k) { var x = daten.spieler[k], v = x ? f(x) : 0; if (v > 0) a.push({ n: x.n || k, w: v }); }); return a.sort(function (p, q) { return q.w - p.w; }); }
+    var wW = woche(function (x) { return x.wo ? x.wo.w : 0; }), wC = woche(function (x) { return x.wo ? x.wo.c : 0; }), wT = woche(function (x) { return x.ds || 0; });
+    if (wW.length || wC.length || wT.length) {
+      h += '<div class="wochenkopf">🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></div><div class="top3reihe">';
+      h += top3('⏱️ WATCHTIME', wW, function (w) { return zahl(w) + ' Std.'; }, 'watchtime', 'Gesamt-Rangliste ›');
+      h += top3('💬 CHAT', wC, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat', 'Gesamt-Rangliste ›');
+      h += top3('🔥 TREUE-SERIE', wT, function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); }, '', '');
+    } else {
+      h += '<div class="top3reihe">';
+      h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
+      h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
+      h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
+    }
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
     h += '</div>';
     if (cw) h += '<div class="sbox nur-schmal topclip"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + '</div></div>';
