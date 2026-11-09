@@ -42,6 +42,7 @@
 
   header { text-align: center; margin-bottom: 26px; position: relative; }
   .kopfleiste { position: absolute; right: 0; top: -8px; z-index: 30; }
+  .wrap { padding-top: calc(32px + env(safe-area-inset-top)) !important; }
   .klogin { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: #fff; background: #9146ff; border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
   .klogin svg { width: 15px; height: 15px; fill: #fff; }
   .kchip { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; padding: 4px 10px 4px 4px; cursor: pointer; }
@@ -265,6 +266,8 @@
   .vtw svg { width: 17px; height: 17px; fill: #fff; }
   .vknoepfe { display: flex; gap: 6px; flex-wrap: wrap; }
   .vok { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin: 14px 0 12px; cursor: pointer; } .vok input { width: 18px; height: 18px; accent-color: #ff9ebf; }
+  .vtw { background: var(--rosa); color: var(--dunkel); }
+  .vtw.tw { background: #9146ff; color: #fff; }
   .vtw:disabled { opacity: .45; cursor: default; } .vtw.rot { background: #d6455d; margin-top: 8px; }
   .vlink { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--grau); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .vfehler { background: rgba(255,90,110,.15); color: #ff9aa8; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 10px; }
@@ -340,6 +343,10 @@
   .startgrid .voting-box { grid-column: auto; }
   @media (min-width: 1100px) { .nur-schmal { display: none; } }
   @media (max-width: 700px) { .startgrid { grid-template-columns: 1fr; } }
+  .startgrid > *, .top3reihe > *, .layout > *, .haupt > * { min-width: 0; }
+  .z .nm, .vz b, .vz span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
   .sbox.klick { cursor: pointer; } .sbox.klick:hover { border-color: var(--rosa); }
   .mehr-link, .vt-btn { font-size: 12px; font-weight: 800; color: var(--rosa); margin-top: 8px; }
   .vt-btn { display: inline-block; background: var(--rosa); color: var(--dunkel); border-radius: 999px; padding: 7px 14px; margin-top: 10px; }
@@ -438,8 +445,8 @@
   .ichknopf { margin-top: 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--rosa); background: transparent; border: 1px solid var(--rand); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
   .ichknopf.ja { color: var(--dunkel); background: var(--rosa); border-color: var(--rosa); }
   @media (max-width: 560px) {
-    .reiter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-    .reiter button { padding: 7px 0 8px; font-size: 10.5px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+    .reiter { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+    .reiter button { padding: 7px 0 8px; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
     .reiter button .ri { font-size: 19px; margin: 0; }
     .reiter .neu-mark { position: absolute; top: 2px; right: 2px; margin: 0; }
     .unterreiter button { padding: 7px 11px; }
@@ -539,6 +546,22 @@
   .admform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .admform input:not([type=checkbox]) { font-family: inherit; font-size: 13px; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 8px 10px; min-width: 0; flex: 1 1 120px; }
   .admform label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
+  .ichbox .mkopf { cursor: pointer; display: flex; align-items: center; gap: 12px; }
+  .ichbox .mkopf .rwrap { margin: 6px 10px 6px 6px; }
+  .ichbox .mkopf .av { width: 52px; height: 52px; }
+  .ichbox .mkopf b { font-size: 17px; }
+  .ichvorteile { line-height: 1.9; padding-left: 4px; list-style: none; margin: 8px 0 14px; }
+  .ichgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  @media (max-width: 700px) { .ichgrid { grid-template-columns: repeat(2, 1fr); } }
+  .ichk { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; font-family: inherit; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 14px; cursor: pointer; min-height: 96px; }
+  .ichk:hover { background: var(--hover); border-color: var(--rosa); }
+  .ichk span { font-size: 22px; } .ichk b { font-size: 14px; } .ichk small { font-size: 11.5px; color: var(--grau); line-height: 1.3; }
+  .ichunten { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  .ichunten a { text-decoration: none; }
+  .mmehr { margin-top: 8px; }
+  .mmehr summary { cursor: pointer; font-size: 12.5px; font-weight: 800; color: var(--rosa); list-style: none; padding: 6px 0; }
+  .mmehr summary::-webkit-details-marker { display: none; }
+  .mmehr summary::after { content: ' ▾'; } .mmehr[open] summary::after { content: ' ▴'; }
   .mwoche { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); }
   .mwoche .mw-t { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--rosa); }
   .mwoche .leise { margin-top: 6px; font-size: 12.5px; }
@@ -576,7 +599,8 @@
     <button data-g="rang"><span class="ri">🏆</span>Ranglisten</button>
     <button data-g="community"><span class="ri">💖</span>Community</button>
     <button data-g="spiele"><span class="ri">🎮</span>Spiele</button>
-    <button data-g="shop"><span class="ri">🛍️</span>Shop<i class="neu-mark">NEU</i></button>
+    <button data-g="shop"><span class="ri">🛍️</span>Shop</button>
+    <button data-g="ich"><span class="ri">👤</span>Ich</button>
   </div>
   <div class="unterreiter" id="unterreiter" style="display:none"></div>
 
@@ -664,7 +688,7 @@
       '<p>Die Seite bekommt <b>keine Rechte</b> auf dein Twitch-Konto. Du kannst dich jederzeit abmelden und dein Konto mit <b>„Meine Daten löschen“</b> sofort selbst komplett entfernen.</p>' +
       '<p><a href="#datenschutz" id="dslink2">Datenschutzerklärung lesen</a></p>' +
       '<label class="vok"><input type="checkbox" id="vok"> Ich habe das gelesen und bin einverstanden.</label>' +
-      '<button class="vtw" id="vweiter" disabled><svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Weiter zu Twitch</button></div>';
+      '<button class="vtw tw" id="vweiter" disabled><svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Weiter zu Twitch</button></div>';
     karteOeffnen(h);
     $('vok').onchange = function () { $('vweiter').disabled = !this.checked; };
     $('vweiter').onclick = function () { if ($('vok').checked) einloggen(); };
@@ -757,7 +781,7 @@
     var h = '';
     if (vote.ergebnis === null) { votingLaden().then(zeigen); return '<div class="liste"><div class="leer">Lade Voting …</div></div>'; }
     h += '<div class="vkopf">' + (sitzung && sitzung.name ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><span class="vknoepfe"><button class="vlink" id="vdel">Meine Daten löschen</button><button class="vlink" id="vlogout">Abmelden</button></span>'
-      : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
+      : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw tw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
     if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
     var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
     h += '<div class="liste">';
@@ -841,6 +865,7 @@
 
   // 👀 Anprobieren: Artikel auf der eigenen Profilkarte ansehen, bevor man kauft
   function anprobieren(id) {
+    zaehlen('anprobieren');
     var a = kosArtikel(id); if (!a) return;
     var l = (sitzung && sitzung.name) || ich || '';
     var k = l ? kosmetik(l) : {}, dz = l ? (designGueltig(l) || {}) : {};
@@ -853,7 +878,7 @@
     var z = shopZustand(a), knopf = '';
     if (z === 'kaufen' && a.kaufbar !== false) knopf = '<button class="vtw" id="probekauf">Kaufen · ' + zahl(preisVon(a)) + ' Zeni</button>';
     else if (z === 'hat') knopf = '<button class="vtw" id="probeanlegen">✓ Im Besitz · Anlegen</button>';
-    else if (z === 'login') knopf = '<button class="vtw" id="probelogin">Mit Twitch anmelden</button>';
+    else if (z === 'login') knopf = '<button class="vtw tw" id="probelogin">Mit Twitch anmelden</button>';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>👀 Anprobieren</b><div class="kk">So sieht „' + esc(a.name) + '“ auf ' + (l ? 'deiner' : 'einer') + ' Profilkarte aus' + (l ? '' : ' – melde dich an oder tipp bei deinem Namen auf ⭐ Das bin ich, dann siehst du es mit deinem Bild') + '.</div></div></div>' +
       '<div class="probe"><div class="kopf design' + (banner ? ' mitbanner' : '') + (dz.h && !banner ? ' bg-' + dz.h : '') + '"' + stil + '>' + av + '<div><b' + (l ? fs(l) : '') + '>' + esc(name) + '</b>' + (titel ? '<div class="titel">« ' + esc(titel) + ' »</div>' : '') + '</div></div></div>' +
       '<div class="edknoepfe">' + knopf + '<button class="vlink" id="probezu">Schließen</button></div>';
@@ -890,8 +915,8 @@
     if (!sh || !sh.artikel) return '<div class="liste"><div class="leer">Der Zeni-Shop öffnet bald. 🛍️</div></div>';
     var me = sitzung && sitzung.name, stand = me ? (liveZeni !== null ? liveZeni : ((sh.zeni || {})[me] || 0)) : 0;
     var h = '<div class="shopkopf"><div><b>🛍️ ZENI-SHOP</b><div class="leise">Gib deine Zeni aus dem Stream für Rahmen, Banner und Titel auf deiner Profilkarte aus. Feste Preise, kein Zufall.</div></div>' +
-      (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
-    h += '<div class="shopcode"><button class="vlink" id="shopcode">🎟️ Code einlösen</button></div>';
+      (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw tw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
+    h += '<div class="shopcode"><button class="vlink" id="shopcode">🎟️ Code einlösen</button></div><!--SFILTER-->';
     var an = sh.angebot && kosArtikel(sh.angebot.id);
     if (an && an.kaufbar !== false) {
       var av = an.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(an.id) + ')"></div>' : an.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(an.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(an.name) + '</span></div>';
@@ -908,10 +933,11 @@
     }
     var TYPEN = [['rahmen', '💠 RAHMEN'], ['banner', '🌄 BANNER'], ['titel', '🏷️ TITEL']];
     // Filter-Leiste
-    h += '<div class="sfilter"><div class="sfchips">' + [['', 'Alle'], ['rahmen', '💠 Rahmen'], ['banner', '🌄 Banner'], ['titel', '🏷️ Titel'], ['wunsch', '♥ Wunschliste']].map(function (x) { return '<button data-sft="' + x[0] + '"' + (shopF.typ === x[0] ? ' class="an"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
+    var filterH = '<div class="sfilter"><div class="sfchips">' + [['', 'Alle'], ['rahmen', '💠 Rahmen'], ['banner', '🌄 Banner'], ['titel', '🏷️ Titel'], ['wunsch', '♥ Wunschliste']].map(function (x) { return '<button data-sft="' + x[0] + '"' + (shopF.typ === x[0] ? ' class="an"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
       '<select id="sfstufe" aria-label="Seltenheit"><option value="">Alle Seltenheiten</option>' + STUFEN_REIHE.map(function (k) { return '<option value="' + k + '"' + (shopF.stufe === k ? ' selected' : '') + '>' + STUFE[k][0] + ' ' + STUFE[k][1] + '</option>'; }).join('') + '</select>' +
       '<select id="sfsort" aria-label="Sortierung">' + [['preis', 'Preis ↑'], ['preisab', 'Preis ↓'], ['stufe', 'Seltenheit']].map(function (x) { return '<option value="' + x[0] + '"' + (shopF.sort === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
       (me ? '<label><input type="checkbox" id="sfleisten"' + (shopF.leisten ? ' checked' : '') + '>💰 Kann ich mir leisten</label>' : '') + '</div>';
+    h = h.replace('<!--SFILTER-->', filterH);
     var gezeigt = 0;
     function passt(a, vorschau) {
       if (shopF.typ === 'wunsch') { if (wuensche().indexOf(a.id) < 0) return false; }
@@ -1453,7 +1479,7 @@
       if (!best || pr > best.pr) best = { g: g, v: v, nx: info.nx, pr: pr };
     });
     var h = '<div class="sbox meinbox"' + dl(l) + '><h3>👤 DEIN BEREICH</h3><div class="mkopf">' + avatarMitRahmen(l) + '<div><b' + fs(l) + '>' + esc(prof(l).n || l) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
-      '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div>';
+      '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div><!--MZ-->';
     if (best) h += '<div class="mziel">Nächster Rang: ' + best.nx[1] + ' <b>' + esc(best.nx[2]) + '</b> · noch <b>' + best.g.fmt(Math.ceil((best.nx[0] - best.v) * 10) / 10) + '</b><div class="balken"><i style="width:' + best.pr + '%"></i></div></div>';
     if (zeni != null && daten.shop && daten.shop.artikel) {
       var offen = daten.shop.artikel.filter(function (a) { return a.kaufbar !== false && !besitzt(l, a.id); }).sort(function (x, y) { return preisVon(x) - preisVon(y); });
@@ -1481,6 +1507,14 @@
     }
     if (sp.ds) h += '<div class="mziel">🔥 Treue-Serie: <b>' + zahl(sp.ds) + (sp.ds === 1 ? ' Stream' : ' Streams') + '</b> in Folge dabei' + (sp.ds >= 10 ? ' · stark!' : ' · komm zum nächsten Stream, dann wächst sie') + '</div>';
     if (sp.d) h += '<div class="mziel">🏅 Beste Watch-Streak: <b>' + zahl(sp.d) + ' Streams</b> am Stück</div>';
+    // Kompakt: nur die erste Zeile sichtbar, alles weitere aufklappbar (Zustand wird gemerkt)
+    var mpos = h.indexOf('<!--MZ-->');
+    if (mpos >= 0) {
+      var tmp = document.createElement('div'); tmp.innerHTML = h.substring(mpos + 9);
+      var teile = Array.prototype.map.call(tmp.children, function (c) { return c.outerHTML; });
+      var offen = false; try { offen = localStorage.getItem('kz_mehr') === '1'; } catch (x) { }
+      h = h.substring(0, mpos) + (teile[0] || '') + (teile.length > 1 ? '<details class="mmehr" id="mmehr"' + (offen ? ' open' : '') + '><summary>Mehr: Ziele, Woche, Serie (' + (teile.length - 1) + ')</summary>' + teile.slice(1).join('') + '</details>' : '');
+    }
     return h + '</div>';
   }
   // 🍀 Täglicher Glücks-Knopf – Ziehung nur in Supabase, hier nur Anzeige
@@ -1520,6 +1554,7 @@
   function glueckGemerkt() { try { var m = JSON.parse(localStorage.getItem('kz_glueck_' + sitzung.name) || 'null'); if (m && m.t === heuteTag()) return { heute: true, gewinn: m.g, zeni: m.z }; } catch (x) { } return null; }
   function glueckDrehen() {
     var b = $('gknopf'); if (!b || glueck.dreht) return;
+    zaehlen('glueck');
     glueck.dreht = true; b.disabled = true;
     var namen = ['100 Zeni', '400 Zeni', '🎉 10.000', '1.500 Zeni', '💎 VIP', '200 Zeni', '🏷️ Glückspilz', '750 Zeni', '3.000 Zeni'], i = 0;
     var tick = setInterval(function () { b.textContent = namen[i++ % namen.length]; }, 90), start = Date.now();
@@ -1560,6 +1595,7 @@
     return '<div class="appkarte" id="appkarte"><img src="icon-192.png" alt="" width="38" height="38"><div><b>Kazetopia als App</b><span>ohne App-Store, 1 Tipp</span></div><button class="vtw" id="appjetzt">Holen</button><button class="appzu" id="appzu" aria-label="Schließen">×</button></div>';
   }
   function appInstallieren() {
+    zaehlen('app');
     if (istApp()) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📱 Schon installiert</b><div class="kk">Du nutzt Kazetopia gerade als App. 🌸</div></div></div></div>'); return; }
     if (appPrompt) { appPrompt.prompt(); appPrompt.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { try { localStorage.setItem('kz_app', 'drin'); } catch (x) { } } appPrompt = null; var el = $('appkarte'); if (el) el.remove(); }).catch(function () { }); return; }
     var ios = istIos();
@@ -1569,9 +1605,12 @@
       '<div class="edknoepfe"><button class="vlink" id="appok">Alles klar</button></div></div>');
     $('appok').onclick = profilZu;
   }
+  var gezaehlt = {};
+  function zaehlen(b) { if (gezaehlt[b]) return; gezaehlt[b] = 1; try { fetch(SB_URL + '/rest/v1/rpc/bereich_aufruf', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_bereich: b }), keepalive: true }).catch(function () { }); } catch (x) { } }
   function startEvents() {
     glueckEvents();
     Array.prototype.forEach.call(document.querySelectorAll('.glanmelden'), function (a) { a.onclick = function (e) { e.preventDefault(); e.stopPropagation(); einloggenFragen(); }; });
+    if ($('mmehr')) $('mmehr').addEventListener('toggle', function () { try { localStorage.setItem('kz_mehr', this.open ? '1' : '0'); } catch (x) { } zaehlen('mehr'); });
     if ($('appjetzt')) $('appjetzt').onclick = function (e) { e.stopPropagation(); appInstallieren(); };
     if ($('appzu')) $('appzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_app', String(Date.now())); } catch (x) { } $('appkarte').remove(); };
     if ($('besuchzu')) $('besuchzu').onclick = function (e) { e.stopPropagation(); besuchInfo = null; $('besuch').remove(); };
@@ -1580,7 +1619,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
   }
   // Haupt-Reiter (Gruppen) und Unter-Reiter
-  var GRUPPEN = { start: ['start'], rang: ['zeni', 'watchtime', 'chat', 'bingo'], community: ['danke', 'emotes', 'clips', 'ruhm'], spiele: ['spiele'], shop: ['shop'] };
+  var GRUPPEN = { start: ['start'], rang: ['zeni', 'watchtime', 'chat', 'bingo'], community: ['danke', 'emotes', 'clips', 'ruhm'], spiele: ['spiele'], shop: ['shop'], ich: ['ich'] };
   var UNTER_NAME = { zeni: '💰 Zeni', watchtime: '⏱️ Watchtime', chat: '💬 Chat', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle' };
   var letzteUnter = { rang: 'zeni', community: 'danke' };
   function gruppeVon(r) { for (var g in GRUPPEN) if (GRUPPEN[g].indexOf(r) >= 0) return g; return 'start'; }
@@ -1885,6 +1924,7 @@
     });
   }
   function karteTeilen(login, knopf) {
+    zaehlen('teilen');
     var sp = (daten.spieler || {})[login] || {}, p = prof(login), name = String(p.n || login), dz = designGueltig(login) || {}, k = kosmetik(login);
     var std = sp.w || 0, rang = leiterInfo(WT, std, 0).akt, kk = Math.floor(std * 10);
     var zeni = daten.shop && daten.shop.zeni ? daten.shop.zeni[login] : null;
@@ -1969,7 +2009,7 @@
     if (!sitzung || !sitzung.name || sitzung.name === login) return '';
     var m = freunde.meine; if (!m) return ' <button class="ichknopf" id="freundknopf" disabled>🤝 …</button>';
     var ich = m.ich.indexOf(login) >= 0, er = m.mich.indexOf(login) >= 0;
-    return ' <button class="ichknopf' + (ich ? ' ja' : '') + '" id="freundknopf" data-an="' + (ich ? '0' : '1') + '">' + (ich && er ? '✓ Freunde' : ich ? '⏳ Angefragt' : er ? '🤝 Freundschaft annehmen' : '🤝 Als Freund markieren') + '</button>';
+    return ' <button class="ichknopf' + (ich ? ' ja' : '') + '" id="freundknopf" data-an="' + (ich ? '0' : '1') + '">' + (ich && er ? '✓ Freunde' : ich ? '⏳ Anfrage gesendet' : er ? '🤝 Freundschaft annehmen' : '🤝 Als Freund markieren') + '</button>';
   }
   function freundeHtml(login) {
     var h = '', liste = freunde.paare[login] || [], wb = freunde.werber[login] || 0;
@@ -1977,6 +2017,8 @@
       h += '<div class="freunde">' + (liste.length ? '<div class="fz"><b>🤝 Freunde</b>' + liste.slice(0, 12).map(function (f) { return '<span class="fp"' + dl(f) + '>' + bild(f) + '<i' + fs(f) + '>' + esc(prof(f).n || f) + '</i></span>'; }).join('') + (liste.length > 12 ? '<span class="leise">+' + (liste.length - 12) + '</span>' : '') + '</div>' : '') +
         (wb ? '<div class="leise">🌱 hat ' + wb + (wb === 1 ? ' Person' : ' Leute') + ' zu Kazetopia gebracht</div>' : '') + '</div>';
     }
+    if (sitzung && sitzung.name !== login && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) < 0)
+      h += '<div class="freunde leise">⏳ Anfrage gesendet – ihr steht als Freunde auf euren Karten, sobald ' + esc(prof(login).n || login) + ' dich auch markiert (auf der eigenen Profilkarte unter „Freundschaftsanfragen“).</div>';
     if (sitzung && sitzung.name === login && freunde.meine) {
       var offen = freunde.meine.mich.filter(function (x) { return freunde.meine.ich.indexOf(x) < 0; });
       if (offen.length) h += '<div class="freunde"><b>📨 Freundschaftsanfragen</b>' + offen.map(function (x) { return '<div class="fanfrage"><span' + dl(x) + '>' + bild(x) + ' <i' + fs(x) + '>' + esc(prof(x).n || x) + '</i></span><button class="vtw" data-fannehmen="' + esc(x) + '">Annehmen</button></div>'; }).join('') + '</div>';
@@ -2015,6 +2057,7 @@
     }).catch(function () { });
   }
   function einladenDialog() {
+    zaehlen('einladen');
     if (!sitzung) { einloggenFragen(); return; }
     var link = SEITE + '/?von=' + encodeURIComponent(sitzung.name);
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🤝 Freunde einladen</b><div class="kk">Teile deinen Link. Meldet sich jemand darüber neu auf Kazetopia an und schaut 2 Stunden im Stream zu, bekommt ihr <b>beide 2.000 Zeni</b>. Ab 3 Leuten gibt es den Titel „Botschafter“.</div></div></div>' +
@@ -2050,6 +2093,11 @@
       var gross = (u.glueck || []).filter(function (g) { return g.g !== 'vip'; });
       if (gross.length) h += '<div class="sbox"><h3>🍀 GROSSE GLÜCKS-GEWINNE</h3>' + gross.map(function (g) { return '<div class="admz"><b>' + esc(g.l) + '</b><span>' + glueckText(g.g, g.z) + '</span><span class="leise">' + esc(g.d) + '</span></div>'; }).join('') + '</div>';
       $('adm').innerHTML = h;
+      rpc('admin_bereiche').then(function (b) {
+        var el = $('adm'); if (!el || !(b || []).length) return;
+        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“' };
+        el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="admz"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
+      }).catch(function () { });
     }).catch(fehler);
     if (tab === 'voting') rpc('admin_vorschlaege').then(function (v) {
       $('adm').innerHTML = (v || []).length ? v.map(function (x) { return '<div class="admz"><b>' + esc(x.spiel) + '</b><span class="leise">' + esc(x.von || '') + (x.frei ? ' · ✅ ' + x.stimmen + ' Stimmen' : ' · ⏳ wartet') + '</span><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
@@ -2083,14 +2131,15 @@
   }
 
   // ❄️🌸✨🍂 Saisonaler Look: Winter Schnee, Frühling Kirschblüten, Sommer Glühwürmchen, Herbst Laub
-  function saisonArt() { var m = new Date().getMonth() + 1; return m === 12 || m <= 2 ? ['❄', '❅', '❆'] : m <= 5 ? ['🌸', '💮'] : m <= 8 ? ['✦'] : ['🍂', '🍁']; }
+  function istWinter() { var d = new Date(), m = d.getMonth() + 1; return m === 12 || m <= 2 || (m === 11 && d.getDate() >= 29); }   // Schnee ab dem 1. Advent
+  function saisonArt() { var m = new Date().getMonth() + 1; return istWinter() ? ['❄', '❅', '❆'] : m <= 5 ? ['🌸', '💮'] : m <= 8 ? ['✦'] : ['🍂', '🍁']; }
   function saisonAn() { var aus = false; try { aus = localStorage.getItem('kz_saison') === 'aus'; } catch (x) { } return !aus && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function saisonStarten() {
     var alt = document.querySelector('.saison'); if (alt) alt.remove();
     var sk = $('saisonknopf');
     if (sk) sk.textContent = saisonAn() ? 'Effekt aus' : 'Effekt an';
     if (!saisonAn()) return;
-    var art = saisonArt(), m = new Date().getMonth() + 1, sommer = m >= 6 && m <= 8, winter = m === 12 || m <= 2;
+    var art = saisonArt(), m = new Date().getMonth() + 1, sommer = m >= 6 && m <= 8, winter = istWinter();
     var box = document.createElement('div'); box.className = 'saison' + (sommer ? ' hoch' : ''); box.setAttribute('aria-hidden', 'true');
     var n = window.innerWidth < 600 ? 9 : 16, h = '';
     for (var i = 0; i < n; i++) {
@@ -2105,6 +2154,7 @@
 
   // 🎟️ Code einlösen (Codes legt Kaze in der Kommandozentrale an; Prüfung komplett in Supabase)
   function codeDialog(vorgabe) {
+    zaehlen('code');
     vorgabe = String(vorgabe || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 30);
     if (!sitzung) { try { if (vorgabe) localStorage.setItem('kz_code_offen', vorgabe); } catch (x) { } einloggenFragen(); return; }
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🎟️ Code einlösen</b><div class="kk">Codes gibt es im Stream, auf Discord oder zu besonderen Anlässen. Jeder Code geht pro Person nur einmal.</div></div></div>' +
@@ -2215,7 +2265,7 @@
       '<h4>1. VERANTWORTLICHER</h4><p>Giuseppe Auner (Kazenity). Kontaktdaten und Anschrift stehen im <a href="https://mein.online-impressum.de/kazenity/" target="_blank" rel="noopener">Impressum</a>.</p>' +
       '<h4>2. WAS DIESE SEITE IST</h4><p>Kazetopia ist eine Fan- und Community-Seite zum Twitch-Kanal twitch.tv/kazenity. Es gibt keine Pflicht-Anmeldung, keine Cookies, kein Tracking, keine Werbung und keine Analyse-Tools. Wir zählen lediglich anonym, wie oft die Seite aufgerufen wird (siehe Punkt 3a).</p>' +
       '<h4>3. HOSTING (GITHUB PAGES)</h4><p>Die Seite und ihre Daten werden über GitHub Pages bzw. raw.githubusercontent.com der GitHub, Inc. (88 Colin P Kelly Jr St, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Browser-Informationen, um die Seite auszuliefern und vor Missbrauch zu schützen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer sicheren, funktionierenden Website). Eine Übermittlung in die USA ist möglich; GitHub ist nach dem EU-US Data Privacy Framework zertifiziert. Mehr: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>' +
-      '<h4>3a. ANONYMER AUFRUFZÄHLER</h4><p>Beim Öffnen der Seite erhöht dein Browser einen Zähler auf unserem Supabase-Server in Frankfurt (EU) um eins. Gespeichert wird nur die Gesamtzahl der Aufrufe pro Tag – keine IP-Adresse, keine Kennung, nichts in deinem Browser. Technisch wird beim Aufruf deine IP-Adresse verarbeitet, um die Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu sehen, ob die Seite genutzt wird).</p>' +
+      '<h4>3a. ANONYMER AUFRUFZÄHLER</h4><p>Beim Öffnen der Seite erhöht dein Browser einen Zähler auf unserem Supabase-Server in Frankfurt (EU) um eins. Gespeichert wird nur die Gesamtzahl der Aufrufe pro Tag – keine IP-Adresse, keine Kennung, nichts in deinem Browser. Genauso zählen wir, wie oft am Tag welche Bereiche der Seite geöffnet werden (z. B. Shop, Ranglisten, Glücks-Knopf) – nur als Zahl pro Bereich und Tag, ohne Bezug zu dir. Technisch wird beim Aufruf deine IP-Adresse verarbeitet, um die Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu sehen, ob die Seite genutzt wird).</p>' +
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
@@ -2289,13 +2339,57 @@
     }
     return h;
   }
+  // 👤 „Ich“: alles Persönliche an einem Ort
+  function ichHtml() {
+    if (!sitzung) {
+      return '<div class="sbox ichbox"><h3>👤 DEIN KAZETOPIA</h3><p>Mit Twitch anmelden und du bekommst:</p><ul class="ichvorteile"><li>🍀 jeden Tag den <b>Glücks-Knopf</b> (100 bis 10.000 Zeni)</li><li>🛍️ den <b>Zeni-Shop</b> für Rahmen, Banner und Titel</li><li>✏️ deine eigene <b>Profilkarte</b></li><li>🎟️ <b>Codes</b> einlösen und 🤝 <b>Freunde</b> einladen</li><li>🎮 beim <b>Spiele-Voting</b> mitbestimmen</li></ul><button class="vtw tw" id="ichlogin">Mit Twitch anmelden</button>' +
+        (ich ? '' : '<p class="leise">Ohne Anmeldung: such dich unter 🏆 Ranglisten und tipp bei deinem Namen auf ⭐ Das bin ich.</p>') + '</div>' + ichKacheln(false);
+    }
+    var z = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[sitzung.name] : null);
+    return '<div class="sbox ichbox"><div class="mkopf"' + dl(sitzung.name) + '>' + avatarMitRahmen(sitzung.name) + '<div><b' + fs(sitzung.name) + '>' + esc(prof(sitzung.name).n || sitzung.name) + '</b><div class="leise">' + (z != null ? '💰 ' + zahl(z) + ' Zeni · ' : '') + 'Profil ansehen ›</div></div></div></div>' + ichKacheln(true);
+  }
+  function ichKacheln(an) {
+    var k = [];
+    if (an) {
+      k.push(['profil', '👤', 'Mein Profil', 'Ränge, Erfolge, Abzeichen']);
+      k.push(['gestalten', '✏️', 'Profil gestalten', 'Farbe, Titel, Rahmen, Banner']);
+      k.push(['code', '🎟️', 'Code einlösen', 'aus Stream oder Discord']);
+      k.push(['einladen', '🤝', 'Freunde einladen', 'beide bekommen 2.000 Zeni']);
+      k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
+    }
+    if (!istApp()) k.push(['app', '📱', 'Als App', 'auf den Homescreen']);
+    k.push(['kalender', '📅', 'Streams im Kalender', 'nie wieder einen verpassen']);
+    if (an && sitzung.name === 'kazenity') k.push(['admin', '🛠️', 'Admin', 'nur für dich']);
+    var h = '<div class="ichgrid">' + k.map(function (x) { return '<button class="ichk" data-ich-k="' + x[0] + '"><span>' + x[1] + '</span><b>' + x[2] + '</b><small>' + x[3] + '</small></button>'; }).join('') + '</div>';
+    if (an) h += '<div class="ichunten"><button class="vlink" data-ich-k="ab">↩️ Abmelden</button><button class="vlink" data-ich-k="loeschen">🗑️ Meine Daten löschen</button><a class="vlink" href="#datenschutz" data-ich-k="ds">Datenschutz</a></div>';
+    return h;
+  }
+  function ichEvents() {
+    if ($('ichlogin')) $('ichlogin').onclick = einloggenFragen;
+    var mk = document.querySelector('.ichbox .mkopf'); if (mk) mk.onclick = function () { profilZeigen(sitzung.name); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ich-k]'), function (b) { b.onclick = function (e) {
+      e.preventDefault(); var k = b.getAttribute('data-ich-k');
+      if (k === 'profil') profilZeigen(sitzung.name);
+      else if (k === 'gestalten') designEditor(sitzung.name);
+      else if (k === 'code') codeDialog('');
+      else if (k === 'einladen') einladenDialog();
+      else if (k === 'wunsch') { shopF.typ = 'wunsch'; shopFilterSetzen('typ', 'wunsch'); geheZu('shop'); }
+      else if (k === 'app') appInstallieren();
+      else if (k === 'kalender') kalenderLaden();
+      else if (k === 'admin') adminOeffnen('start');
+      else if (k === 'ab') { ausloggen(); meineBest = null; glueck.stand = null; kopfleiste(); zeigen(); }
+      else if (k === 'loeschen') datenLoeschenFragen();
+      else if (k === 'ds') datenschutz();
+    }; });
+  }
   function sonder() {
-    var spezial = reiter === 'start' || reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'ruhm' || reiter === 'spiele' || reiter === 'shop';
+    var spezial = reiter === 'start' || reiter === 'bingo' || reiter === 'danke' || reiter === 'emotes' || reiter === 'clips' || reiter === 'ruhm' || reiter === 'spiele' || reiter === 'shop' || reiter === 'ich';
     $('podest').style.display = spezial ? 'none' : '';
     $('suche').style.display = spezial ? 'none' : '';
     if (!spezial) { $('liste').className = 'liste'; return false; }
     if (reiter === 'start') { $('liste').className = ''; $('liste').innerHTML = startHtml(); startEvents(); $('hinweis').textContent = ''; return true; }
     if (reiter === 'shop') { $('liste').className = ''; $('liste').innerHTML = shopHtml(); shopEvents(); $('hinweis').textContent = 'Zeni sind Spielgeld aus dem Stream ohne Geldwert · Artikel sind rein kosmetisch · kein Tausch, kein Echtgeld-Handel'; return true; }
+    if (reiter === 'ich') { $('liste').className = ''; $('liste').innerHTML = ichHtml(); ichEvents(); $('hinweis').textContent = ''; return true; }
     if (reiter === 'ruhm') { $('liste').className = ''; $('liste').innerHTML = ruhmHtml(); $('hinweis').textContent = 'Von Kaze jede Woche und jeden Monat ausgezeichnet'; return true; }
     if (reiter === 'emotes') {
       var em = daten.emotes || [];
@@ -2408,9 +2502,11 @@
     clips: 'Die besten Momente aus dem Stream',
     ruhm: 'Die Ruhmeshalle von Kazetopia',
     spiele: 'Was spielen wir als Nächstes? Stimm mit ab!',
-    shop: 'Rahmen, Banner & Titel für deine Profilkarte'
+    shop: 'Rahmen, Banner & Titel für deine Profilkarte',
+    ich: 'Dein Profil, Codes, Einladungen & App'
   };
   function zeigen() {
+    try { zaehlen(reiter); } catch (x) { }
     $('unter').textContent = untertitel[reiter] || '';
     if (!daten) return;
     var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
