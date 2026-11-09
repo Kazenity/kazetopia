@@ -391,6 +391,9 @@
   .angebot .svor .av { width: 40px; height: 40px; font-size: 16px; }
   .angebot b { font-size: 15px; } .angebot .leise { font-size: 12px; color: var(--grau); }
   .sbadge { position: absolute; top: 8px; right: 8px; background: #ff7a3d; color: #fff; font-size: 11px; font-weight: 800; border-radius: 8px; padding: 2px 7px; }
+  .sbadge.rot { background: #6a2c8c; } .sbadge.sai { background: #2f6fbf; }
+  .sitem.bald { opacity: .62; }
+  .shopunter { font-size: 11px; letter-spacing: .5px; color: var(--grau); font-weight: 600; margin-left: 6px; }
   .sitem { position: relative; } .spreis s { color: var(--grau); font-weight: 600; font-size: 12px; margin-right: 4px; }
   .questkarte { margin-bottom: 14px; }
   .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
@@ -750,6 +753,7 @@
     var stand = liveZeni !== null ? liveZeni : ((daten.shop.zeni || {})[me] || 0);
     return stand >= preisVon(a) ? 'kaufen' : 'fehlt';
   }
+  function tagMonat(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' : ''; }
   function shopHtml() {
     var sh = daten.shop;
     if (!sh || !sh.artikel) return '<div class="liste"><div class="leer">Der Zeni-Shop öffnet bald. 🛍️</div></div>';
@@ -770,28 +774,49 @@
       });
       h += '</div>';
     }
-    [['rahmen', '💠 RAHMEN'], ['banner', '🌄 BANNER'], ['titel', '🏷️ TITEL']].forEach(function (t) {
-      var liste = sh.artikel.filter(function (a) { return a.kaufbar !== false && a.id.indexOf(t[0] + '_') === 0; }).sort(function (x, y) { return x.preis - y.preis; });
-      if (!liste.length) return;
-      h += '<h3 class="shoph">' + t[1] + '</h3><div class="shopgrid ' + t[0] + '">';
-      liste.forEach(function (a) {
-        var stf = STUFE[a.stufe] || STUFE.g, z = shopZustand(a), vor;
-        if (t[0] === 'rahmen') vor = '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(a.id) + '"></span></div>';
-        else if (t[0] === 'banner') vor = '<div class="svor bnr" style="background-image:url(' + kosBild(a.id) + ')"></div>';
-        else vor = '<div class="svor"><span class="stitel">' + esc(a.name) + '</span></div>';
-        var knopf = {
-          login: '<button class="sbtn" data-login>Kaufen</button>',
-          hat: '<button class="sbtn hat" data-anlegen>✓ Im Besitz · Anlegen</button>',
-          wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>' + (kaufAlt(a.id) ? '☕ Der Shopbetreiber ist gerade einen Kaffee trinken. Komm später wieder! :)' : 'dauert meist 1–2 Min.') + '</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
-          zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
-          kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
-          fehlt: '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>'
-        }[z];
-        var rab = preisVon(a) !== a.preis;
-        h += '<div class="sitem st-' + esc(a.stufe) + '">' + (rab ? '<span class="sbadge">🔥 −20 %</span>' : '') + vor + '<div class="sname">' + esc(t[0] === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(preisVon(a)) + ' Zeni</div>' + knopf + '</div>';
+    var TYPEN = [['rahmen', '💠 RAHMEN'], ['banner', '🌄 BANNER'], ['titel', '🏷️ TITEL']];
+    function karte(a, typ, vorschau) {
+      var stf = STUFE[a.stufe] || STUFE.g, z = shopZustand(a), vor;
+      if (typ === 'rahmen') vor = '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(a.id) + '"></span></div>';
+      else if (typ === 'banner') vor = '<div class="svor bnr" style="background-image:url(' + kosBild(a.id) + ')"></div>';
+      else vor = '<div class="svor"><span class="stitel">' + esc(a.name) + '</span></div>';
+      var knopf = vorschau ? '<button class="sbtn" disabled>👀 ab Sonntag</button>' : {
+        login: '<button class="sbtn" data-login>Kaufen</button>',
+        hat: '<button class="sbtn hat" data-anlegen>✓ Im Besitz · Anlegen</button>',
+        wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>' + (kaufAlt(a.id) ? '☕ Der Shopbetreiber ist gerade einen Kaffee trinken. Komm später wieder! :)' : 'dauert meist 1–2 Min.') + '</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
+        zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
+        kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
+        fehlt: '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>'
+      }[z];
+      if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
+      var rab = !vorschau && preisVon(a) !== a.preis;
+      var badge = rab ? '<span class="sbadge">🔥 −20 %</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
+      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '</div>';
+    }
+    function bereich(titel, unter, liste, vorschau) {
+      if (!liste.length) return '';
+      var r = '<h3 class="shoph">' + titel + (unter ? ' <span class="shopunter">' + unter + '</span>' : '') + '</h3>';
+      TYPEN.forEach(function (t) {
+        var l = liste.filter(function (a) { return a.id.indexOf(t[0] + '_') === 0; }).sort(function (x, y) { return x.preis - y.preis; });
+        if (!l.length) return;
+        r += '<div class="shopgrid ' + t[0] + '">';
+        l.forEach(function (a) { r += karte(a, t[0], vorschau); });
+        r += '</div>';
       });
-      h += '</div>';
+      return r;
+    }
+    var aus = sh.auslage || {};
+    var inAuslage = sh.artikel.filter(function (a) { return a.kaufbar !== false && a.auslage; });
+    if (inAuslage.length) {
+      var tage = aus.bis ? Math.max(1, Math.ceil((new Date(aus.bis + 'T00:00:00') - new Date()) / 86400000)) : 0;
+      h += bereich('🔄 WOCHEN-AUSLAGE', tage ? 'wechselt in ' + tage + (tage === 1 ? ' Tag' : ' Tagen') : '', inAuslage, false);
+    }
+    h += bereich('⏳ SAISON', 'nur für kurze Zeit', sh.artikel.filter(function (a) { return a.kaufbar !== false && a.saisonBis; }), false);
+    TYPEN.forEach(function (t) {
+      h += bereich(t[1], '', sh.artikel.filter(function (a) { return a.kaufbar !== false && !a.auslage && !a.saisonBis && a.id.indexOf(t[0] + '_') === 0; }), false);
     });
+    var bald = (aus.naechste || []).map(function (id) { return kosArtikel(id); }).filter(function (a) { return a; });
+    h += bereich('👀 NÄCHSTE WOCHE IN DER AUSLAGE', 'ab Sonntag', bald, true);
     h += '<p class="leise shopinfo">Käufe werden sofort gebucht – rund um die Uhr. Dein Zeni-Stand wird aktualisiert, solange Kazes Stream-Bot läuft. Reichen deine Zeni dann nicht, passiert nichts. Gekaufte Artikel legst du unter <b>✏️ Profil gestalten</b> an.</p>';
     return h;
   }
