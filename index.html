@@ -458,6 +458,13 @@
   }
   /* --- v2: Lesbarkeit auf Bannern --- */
   .kopf.mitbanner b, .kopf.mitbanner .titel, .kopf.mitbanner .rang, .kopf.mitbanner .kk, .kopf.mitbanner .leise { text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 10px rgba(0,0,0,.7); }
+  /* Banner oben als Kopfbild, Avatar ragt hinein, Text darunter auf ruhigem Grund – immer lesbar, Banner bleibt ganz sichtbar */
+  .karte .kopf.mitbanner { display: block; background-color: var(--bg) !important; background-size: 100% 150px !important; background-repeat: no-repeat !important; background-position: top center !important; padding: 92px 16px 16px !important; min-height: 0; border: 1px solid var(--rand); }
+  .karte .kopf.mitbanner > .rwrap, .karte .kopf.mitbanner > .av { display: inline-block; margin: 0 0 8px 0 !important; }
+  .karte .kopf.mitbanner > .rwrap { margin: 0 0 26px 14px !important; }
+  .karte .kopf.mitbanner > .av { border-color: var(--bg); border-width: 4px; }
+  .karte .kopf.mitbanner > div:last-child { text-shadow: none; }
+  .karte .kopf.mitbanner b, .karte .kopf.mitbanner .titel, .karte .kopf.mitbanner .rang, .karte .kopf.mitbanner .kk { text-shadow: none; }
   /* --- v2: Shop-Filter --- */
   .sfilter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 10px; margin: 18px 0 4px; }
   .sfilter .sfchips { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -483,6 +490,19 @@
   .shopcode { text-align: right; margin: 10px 0 -8px; }
   .codefeld { display: block; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-align: center; color: var(--hell); background: var(--bg); border: 2px solid var(--rand); border-radius: 12px; padding: 12px; margin: 8px 0 4px; }
   .codefeld:focus { outline: none; border-color: var(--rosa); }
+  .glueck { margin-bottom: 14px; border-color: rgba(123,216,143,.35); background: linear-gradient(135deg, rgba(123,216,143,.08), rgba(255,209,102,.06)), var(--flaeche); }
+  .glueck .gl-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .glueck .gl-zeile > .leise { flex: 1 1 220px; }
+  .gl-knopf { font-family: inherit; font-size: 18px; font-weight: 800; color: #1a0f12; background: linear-gradient(135deg, #7bd88f, #ffd166); border: 0; border-radius: 14px; padding: 14px 22px; min-width: 190px; cursor: pointer; box-shadow: 0 6px 18px rgba(123,216,143,.25); }
+  .gl-knopf:hover:not(:disabled) { transform: translateY(-1px); }
+  .gl-knopf:disabled { cursor: default; }
+  .gl-erg { font-size: 15px; }
+  .gl-erg.neu { font-size: 18px; animation: glpop .5s ease-out; }
+  @keyframes glpop { 0% { transform: scale(.7); opacity: 0; } 70% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+  .gl-chancen { margin-top: 10px; }
+  .gl-chancen summary { cursor: pointer; color: var(--grau); font-size: 12.5px; font-weight: 700; }
+  .gl-chancen .tab div { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--rand); }
+  @media (max-width: 560px) { .gl-knopf { width: 100%; } }
   .mziel a.zumshop { color: var(--rosa); font-weight: 800; text-decoration: none; white-space: nowrap; }
   .probe .kopf { margin: 0; }
   /* --- v2: Handy – Navigation unten, große Tipp-Flächen --- */
@@ -765,7 +785,7 @@
     var k = kosmetik(l), av = bild(l, true);
     return k.rahmen ? '<span class="rwrap">' + av + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild('rahmen_' + k.rahmen) + '"></span>' : av;
   }
-  var BANNER_VERLAUF = 'linear-gradient(90deg, rgba(15,8,25,.85), rgba(15,8,25,.6) 45%, rgba(15,8,25,.15) 85%)';
+  var BANNER_VERLAUF = 'linear-gradient(180deg, rgba(24,10,28,0) 55%, rgba(24,10,28,.85))';
   function bannerStil(l) {
     var k = kosmetik(l);
     return k.banner ? ' style="background-image:' + BANNER_VERLAUF + ', url(' + kosBild('banner_' + k.banner) + ')"' : '';
@@ -978,7 +998,7 @@
         else if (k === 'shop') geheZu('shop');
         else if (k === 'code') codeDialog('');
         else if (k === 'loeschen') datenLoeschenFragen();
-        else if (k === 'ab') { ausloggen(); meineBest = null; kopfleiste(); }
+        else if (k === 'ab') { ausloggen(); meineBest = null; glueck.stand = null; kopfleiste(); }
       }; });
     } else {
       el.innerHTML = '<button class="klogin" id="klogin"><svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg><span>Anmelden</span></button>';
@@ -1223,6 +1243,7 @@
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r) { return '<div class="sbox klick" data-geh="' + r + '"><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + '<div class="mehr-link">Alle anzeigen ›</div></div>'; }
     h += besuchKarte();
+    h += glueckKarte();
     h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += questKarte();
@@ -1397,7 +1418,62 @@
     if (sp.d) h += '<div class="mziel">🏅 Beste Watch-Streak: <b>' + zahl(sp.d) + ' Streams</b> am Stück</div>';
     return h + '</div>';
   }
+  // 🍀 Täglicher Glücks-Knopf – Ziehung nur in Supabase, hier nur Anzeige
+  var glueck = { stand: null, laedt: false, dreht: false };
+  var GLUECK_TAB = [['60 %', '100 Zeni'], ['22 %', '200 Zeni'], ['10 %', '400 Zeni'], ['5 %', '750 Zeni'], ['2 %', '1.500 Zeni'], ['0,7 %', '3.000 Zeni'], ['0,15 %', '🎉 10.000 Zeni'], ['0,1 %', '🏷️ Titel „Glückspilz“'], ['0,05 %', '💎 1 Monat VIP']];
+  function glueckText(g, z) { return g === 'titel' ? '🏷️ Titel „Glückspilz“' : g === 'vip' ? '💎 1 Monat VIP' : (g === 'jackpot' ? '🎉 ' : '') + zahl(z || 0) + ' Zeni'; }
+  function bisMorgen() { var n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); var min = Math.max(1, Math.ceil((m - n) / 60000)); return (min >= 60 ? Math.floor(min / 60) + ' Std. ' : '') + (min % 60) + ' Min.'; }
+  function glueckKarte() {
+    var chancen = '<details class="gl-chancen"><summary>Chancen ansehen</summary><div class="tab">' + GLUECK_TAB.map(function (x) { return '<div><span>' + x[1] + '</span><span>' + x[0] + '</span></div>'; }).join('') + '</div><p class="leise">Kostenlos, ohne Einsatz, einmal pro Tag (neuer Tag ab 0 Uhr). Nur für Konten, die schon Zeni aus dem Stream haben. Wer den Titel schon hat, bekommt 3.000 Zeni, VIPs und Mods statt VIP 5.000 Zeni. Zeni haben keinen Geldwert.</p></details>';
+    var h = '<div class="sbox glueck" id="glueck"><h3>🍀 TÄGLICHER GLÜCKS-KNOPF</h3>';
+    if (!sitzung) return h + '<div class="gl-zeile"><span class="leise">Einmal am Tag drücken und Zeni, einen seltenen Titel oder sogar VIP gewinnen – kostenlos.</span><button class="vtw" id="glogin">Anmelden &amp; drücken</button></div>' + chancen + '</div>';
+    if (glueck.stand === null && !glueck.laedt) {
+      glueck.laedt = true;
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/gluecksknopf_stand', { method: 'POST', body: {} }); })
+        .then(function (r) { glueck.stand = r || { heute: false }; })
+        .catch(function () { glueck.stand = { heute: false }; })
+        .then(function () { glueck.laedt = false; var el = $('glueck'); if (el) { el.outerHTML = glueckKarte(); glueckEvents(); } });
+    }
+    var st = glueck.stand || {};
+    if (st.heute) {
+      var extra = '';
+      if (st.neu && st.gewinn === 'vip') extra = rolle(sitzung.name) ? 'Du bist schon VIP oder Mod – dafür bekommst du 5.000 Zeni.' : 'Kaze vergibt dir den VIP im nächsten Stream. 💜';
+      else if (st.neu && st.gewinn === 'titel') extra = 'Leg ihn unter ✏️ Profil gestalten an.';
+      else if (st.neu) extra = 'Die Zeni kannst du sofort im Shop ausgeben.';
+      h += '<div class="gl-zeile"><div class="gl-erg' + (st.neu ? ' neu' : '') + '">' + (st.neu ? (st.gewinn === 'jackpot' ? 'JACKPOT! ' : '🎉 ') + 'Du hast <b>' + glueckText(st.gewinn, st.zeni) + '</b> gewonnen!' : 'Heute gewonnen: <b>' + glueckText(st.gewinn, st.zeni) + '</b>') + (extra ? '<div class="leise">' + extra + '</div>' : '') + '</div><span class="leise">Nächster Versuch in ' + bisMorgen() + '</span></div>';
+    } else if (st.neuKonto) {
+      h += '<div class="gl-zeile"><span class="leise">Der Glücks-Knopf ist für Zuschauer aus dem Stream – schau einmal im Stream vorbei und sammle ein paar Zeni, dann bist du dabei.</span></div>';
+    } else {
+      h += '<div class="gl-zeile"><span class="leise">Einmal am Tag drücken: 100 bis 10.000 Zeni, ein seltener Titel oder sogar 1 Monat VIP.</span><button class="gl-knopf" id="gknopf"' + (glueck.stand === null ? ' disabled' : '') + '>🍀 Drücken</button></div><div class="leise" id="gfehler"></div>';
+    }
+    return h + chancen + '</div>';
+  }
+  function glueckDrehen() {
+    var b = $('gknopf'); if (!b || glueck.dreht) return;
+    glueck.dreht = true; b.disabled = true;
+    var namen = ['100 Zeni', '400 Zeni', '🎉 10.000', '1.500 Zeni', '💎 VIP', '200 Zeni', '🏷️ Glückspilz', '750 Zeni', '3.000 Zeni'], i = 0;
+    var tick = setInterval(function () { b.textContent = namen[i++ % namen.length]; }, 90), start = Date.now();
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/gluecksknopf', { method: 'POST', body: {} }); }).then(function (r) {
+      setTimeout(function () {
+        clearInterval(tick); glueck.dreht = false; r = r || {};
+        if (r.ok || r.grund === 'heute') {
+          glueck.stand = { heute: true, gewinn: r.gewinn, zeni: r.zeni, neu: !!r.ok };
+          if (typeof r.rest === 'number') liveZeni = r.rest;
+          if (r.ok && r.gewinn === 'titel') sofortBesitz['titel_glueckspilz'] = true;
+        } else if (r.grund === 'neu') glueck.stand = { heute: false, neuKonto: true };
+        var el = $('glueck'); if (el) { el.outerHTML = glueckKarte(); glueckEvents(); }
+      }, Math.max(0, 1700 - (Date.now() - start)));
+    }).catch(function (x) {
+      clearInterval(tick); glueck.dreht = false; b.disabled = false; b.textContent = '🍀 Drücken';
+      var el = $('gfehler'); if (el) el.textContent = /404|PGRST202|gluecksknopf/.test(x.message) ? 'Der Glücks-Knopf startet gleich – versuch es etwas später nochmal.' : x.message;
+    });
+  }
+  function glueckEvents() {
+    if ($('gknopf')) $('gknopf').onclick = glueckDrehen;
+    if ($('glogin')) $('glogin').onclick = einloggenFragen;
+  }
   function startEvents() {
+    glueckEvents();
     if ($('besuchzu')) $('besuchzu').onclick = function (e) { e.stopPropagation(); besuchInfo = null; $('besuch').remove(); };
     if ($('kalender')) $('kalender').onclick = function (e) { e.stopPropagation(); kalenderLaden(); };
     if ($('onbzu')) $('onbzu').onclick = function (e) { e.stopPropagation(); try { localStorage.setItem('kz_onboarding', '1'); } catch (x) { } $('onboard').remove(); };
@@ -1886,7 +1962,7 @@
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
