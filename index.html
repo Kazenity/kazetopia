@@ -51,7 +51,7 @@
   .kmenue.offen { display: block; }
   .kmenue button { display: block; width: 100%; text-align: left; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--hell); background: none; border: 0; border-radius: 8px; padding: 9px 10px; cursor: pointer; }
   .kmenue button:hover { background: var(--hover); } .kmenue button.weg { color: #ff9aa8; }
-  @media (max-width: 560px) { .kopfleiste { top: -18px; } .kchip .knm { display: none; } .kchip { padding: 3px; } .klogin span { display: none; } .klogin { padding: 7px; } }
+  @media (max-width: 560px) { .kopfleiste { top: -18px; } .kchip .knm { display: none; } .kchip { padding: 3px; } .klogin { padding: 6px 10px; font-size: 12px; gap: 5px; } .klogin svg { width: 13px; height: 13px; } header .kl { padding-top: 16px; } }
   header .kl { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--rosa); }
   header h1 { font-size: clamp(30px, 7vw, 46px); font-weight: 800; line-height: 1.1; margin: 6px 0 8px; }
   header h1 span { color: var(--rosa); }
@@ -585,6 +585,12 @@
   .aufp > div { min-width: 0; } .aufp b.nm { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
+  .aufkarte { margin-top: 12px; }
+  .seite .aufkarte { margin-top: 0; } .seite .aufreihe { grid-template-columns: 1fr; gap: 6px; } .seite .aufp { padding: 8px 10px; }
+  .seite.frei { position: static; }
+  @media (min-width: 1100px) { .startgrid { grid-template-columns: 1fr; } }
+  .nfmehr summary { cursor: pointer; color: var(--rosa); font-weight: 700; font-size: 13px; padding: 8px 0 2px; list-style: none; }
+  .nfmehr summary::-webkit-details-marker { display: none; } .nfmehr[open] summary { display: none; }
   @media (max-width: 560px) {
     .aufreihe { grid-template-columns: 1fr; gap: 6px; }
     .aufp { padding: 7px 10px; } .aufp .av { width: 34px; height: 34px; }
@@ -599,6 +605,15 @@
   .stempel i { aspect-ratio: 1; border-radius: 50%; border: 2px dashed rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 15px; }
   .stempel i.an { border: 2px solid #ff7eb0; background: radial-gradient(circle, rgba(255,126,176,.35), rgba(255,126,176,.08)); }
   @media (max-width: 560px) { .stempel { grid-template-columns: repeat(5, 1fr); gap: 8px; } .stempel i { max-width: 44px; justify-self: center; width: 100%; } }
+  .stempelheft { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-top: 6px; }
+  .stk { position: relative; text-align: center; }
+  .stk img, .stk .stph { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; border: 2px solid #ff7eb0; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 26px; box-sizing: border-box; }
+  .stk.gold img, .stk.gold .stph { border-color: #ffd166; box-shadow: 0 0 12px rgba(255,209,102,.45); }
+  .stk i { position: absolute; top: -6px; right: -6px; font-style: normal; font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  .stk small { display: block; font-size: 10.5px; line-height: 1.25; margin-top: 4px; color: var(--grau); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .stregel { font-size: 11.5px; line-height: 1.45; color: var(--grau); margin-top: 8px; }
+  .heftlauf .leise { font-size: 12.5px; }
+  .heftlauf { background: var(--bg); border: 1px dashed var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 13px; }
   .stpmini { letter-spacing: 1px; font-size: 11px; color: #ff7eb0; white-space: nowrap; } .stpmini s { text-decoration: none; color: rgba(255,255,255,.25); }
   .mwoche { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); }
   .mwoche .mw-t { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--rosa); }
@@ -894,7 +909,7 @@
   // ================= Zeni-Shop =================
   var STUFE = { g: ['⚪', 'Gewöhnlich'], s: ['🟢', 'Selten'], e: ['🔵', 'Episch'], l: ['🟣', 'Legendär'], m: ['🟡', 'Mythisch'] };
   var STUFEN_REIHE = ['g', 's', 'e', 'l', 'm'];
-  var shopF = { typ: '', stufe: '', sort: 'preis', leisten: false };
+  var shopF = { typ: 'rahmen', stufe: '', sort: 'preis', leisten: false };
   try { var sfGemerkt = JSON.parse(localStorage.getItem('kz_shopfilter') || 'null'); if (sfGemerkt) for (var sfk in shopF) if (sfGemerkt[sfk] !== undefined) shopF[sfk] = sfGemerkt[sfk]; } catch (x) { }
   function wuensche() { try { return JSON.parse(localStorage.getItem('kz_wunsch') || '[]').filter(function (id) { return /^(rahmen|banner|titel)_[a-z0-9_]+$/.test(id); }); } catch (x) { return []; } }
   function wunschUmschalten(id) { var w = wuensche(), i = w.indexOf(id); if (i >= 0) w.splice(i, 1); else w.push(id); try { localStorage.setItem('kz_wunsch', JSON.stringify(w.slice(-12))); } catch (x) { } zeigen(); }
@@ -1044,7 +1059,7 @@
     if ($('sfstufe')) $('sfstufe').onchange = function () { shopFilterSetzen('stufe', this.value); };
     if ($('sfsort')) $('sfsort').onchange = function () { shopFilterSetzen('sort', this.value); };
     if ($('sfleisten')) $('sfleisten').onchange = function () { shopFilterSetzen('leisten', this.checked); };
-    if ($('sfreset')) $('sfreset').onclick = function () { shopF = { typ: '', stufe: '', sort: shopF.sort, leisten: false }; shopFilterSetzen('typ', ''); };
+    if ($('sfreset')) $('sfreset').onclick = function () { shopF = { typ: 'rahmen', stufe: '', sort: shopF.sort, leisten: false }; shopFilterSetzen('typ', 'rahmen'); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-probe]'), function (b) { b.onclick = function () { anprobieren(b.getAttribute('data-probe')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-wunsch]'), function (b) { b.onclick = function () { wunschUmschalten(b.getAttribute('data-wunsch')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-login]'), function (b) { b.onclick = einloggenFragen; });
@@ -1376,10 +1391,10 @@
     return a.filter(function (x) { return x.vor >= 1 && x.wo > 0 && x.pv > x.pn; })
       .sort(function (p, q) { return (q.pv - q.pn) - (p.pv - p.pn) || q.wo - p.wo; });
   }
-  function aufsteigerKarte() {
+  function aufsteigerKarte(kl) {
     var al = aufsteigerListe(); if (!al.length) return '';
     var l = ich || (sitzung && sitzung.name) || '', ich3 = false;
-    var h = '<div class="sbox aufkarte"><h3>📈 AUFSTEIGER DER WOCHE<span class="leise">Watchtime-Rangliste seit Sonntag</span></h3><div class="aufreihe">';
+    var h = '<div class="sbox aufkarte' + (kl ? ' ' + kl : '') + '"><h3>📈 AUFSTEIGER DER WOCHE<span class="leise">Watchtime-Rangliste seit Sonntag</span></h3><div class="aufreihe">';
     al.slice(0, 3).forEach(function (x, i) {
       if (x.l === l) ich3 = true;
       h += '<div class="aufp"' + dl(x.l) + '>' + bild(x.l) + '<div><b class="nm"' + fs(x.l) + '>' + ['🥇 ', '🥈 ', '🥉 '][i] + esc(prof(x.l).n || x.l) + '</b><span class="hoch">▲ ' + (x.pv - x.pn) + (x.pv - x.pn === 1 ? ' Platz' : ' Plätze') + '</span><span class="leise">jetzt #' + x.pn + ' · +' + zahl(x.wo) + ' Std.</span></div></div>';
@@ -1388,32 +1403,45 @@
     if (l && !ich3) al.forEach(function (x, i) { if (x.l === l) h += '<div class="leise" style="margin-top:8px">Du: <b>▲ ' + (x.pv - x.pn) + (x.pv - x.pn === 1 ? ' Platz' : ' Plätze') + '</b> diese Woche · Platz ' + (i + 1) + ' bei den Aufsteigern</div>'; });
     return h + '</div>';
   }
-  // 📕 Stempelheft pro Spiel: 1 Stempel pro Stream, bei dem man dabei war · 10 Stempel = Heft voll
-  var HEFT = 10;
+  // 📕 Stempelheft: ein Stempel pro Spiel – ausgewertet, wenn Kaze das Spiel beendet
+  //    🌸 mind. 50 % der Streams oder mind. 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt)
+  var STEMPEL_SICHER = 8;
   function aktSpiel() {
     if (daten.live && daten.live.an && daten.live.spiel) return daten.live.spiel;
-    var st = daten.stempel || {}, n = planTermine().filter(function (x) { return x.d.getTime() > Date.now() - 6 * 3600000; })[0];
+    var n = planTermine().filter(function (x) { return x.d.getTime() > Date.now() - 6 * 3600000; })[0];
     if (n && n.t.spiel) return n.t.spiel;
-    var b = '', m = -1; Object.keys(st).forEach(function (k) { if (st[k] > m) { m = st[k]; b = k; } });
+    var st = daten.stempel || {}, b = '', m = -1; Object.keys(st).forEach(function (k) { if (st[k] > m) { m = st[k]; b = k; } });
     return b;
   }
-  function heftStand(n) { var voll = Math.floor(n / HEFT), im = n % HEFT; if (n > 0 && im === 0) { voll--; im = HEFT; } return { voll: voll, im: im }; }
-  function heftAnzahl(sp, spiel) { var st = (sp && sp.st) || {}, n = 0; Object.keys(st).forEach(function (k) { if (k.toLowerCase().trim() === String(spiel || '').toLowerCase().trim()) n += st[k]; }); return n; }
-  function heftHtml(spiel, n) {
-    var s = heftStand(n), c = coverFuer(spiel), h = '';
-    for (var i = 0; i < HEFT; i++) h += '<i' + (i < s.im ? ' class="an"' : '') + '>' + (i < s.im ? '🌸' : '') + '</i>';
-    return '<div class="heft"><div class="heft-k">' + (c ? '<img loading="lazy" alt="" src="' + esc(c) + '">' : '') + '<div><b>' + esc(spiel) + '</b><span class="leise">' + (s.voll > 0 ? '📕 ' + s.voll + '× voll · ' : '') + 'Heft ' + (s.voll + 1) + ': ' + s.im + ' von ' + HEFT + (s.im === HEFT ? ' · voll! 🎉' : '') + '</span></div></div><div class="stempel">' + h + '</div></div>';
+  function gleichesSpiel(o, spiel) { var r = null; Object.keys(o || {}).forEach(function (k) { if (k.toLowerCase().trim() === String(spiel || '').toLowerCase().trim()) r = k; }); return r; }
+  function stempelLauf(sp, spiel) {   // Zwischenstand eines laufenden Spiels
+    var k = gleichesSpiel(daten.stempel, spiel); if (!k) return null;
+    var n = daten.stempel[k] || 0, ks = gleichesSpiel((sp && sp.st) || {}, k), x = ks ? sp.st[ks] : 0;
+    var auf = x >= STEMPEL_SICHER || x * 2 >= n, fehlt = n - x, braucht = Math.min(n - 2 * x, STEMPEL_SICHER - x);
+    var gold = fehlt === 0 ? '🌟 Gold-Stempel möglich – keinen Stream verpasst' : fehlt === 1 ? '🌟 Gold noch möglich, wenn das Spiel mind. 10 Streams geht' : '';
+    return { spiel: k, n: n, x: x, auf: auf, braucht: braucht, gold: gold, pct: n ? Math.round(x / n * 100) : 0 };
   }
-  function stempelHtml(sp) {
-    var st = (sp && sp.st) || {}, ks = Object.keys(st).filter(function (k) { return st[k] > 0; }).sort(function (a, b) { return st[b] - st[a]; });
-    if (!ks.length) return '';
-    return '<h4>📕 STEMPELHEFTE <span class="leise" style="font-weight:600;letter-spacing:0">1 Stempel pro Stream</span></h4>' + ks.map(function (k) { return heftHtml(k, st[k]); }).join('');
+  function stempelText(z) {
+    return 'bei <b>' + z.x + ' von ' + z.n + '</b> Streams dabei (' + z.pct + ' %) · ' + (z.auf ? '✓ Stempel auf Kurs' : 'komm zu den nächsten <b>' + z.braucht + '</b>' + (z.braucht === 1 ? ' Stream' : ' Streams') + ', dann bist du auf Kurs');
   }
   function stempelZeile(sp) {
-    var spiel = aktSpiel(); if (!spiel) return '';
-    var s = heftStand(heftAnzahl(sp, spiel)), d = '';
-    for (var i = 0; i < HEFT; i++) d += i < s.im ? '●' : '<s>●</s>';
-    return '<div class="mziel">📕 Stempelheft <b>' + esc(spiel) + '</b>: <b>' + s.im + '/' + HEFT + '</b>' + (s.voll ? ' · ' + s.voll + '× voll' : '') + ' <span class="stpmini">' + d + '</span>' + (s.im === 0 ? '<div class="leise">Sei beim nächsten Stream dabei – das gibt deinen ersten Stempel</div>' : '') + '</div>';
+    var spiel = aktSpiel(); if (!spiel || gleichesSpiel(daten.stempelFertig, spiel)) return '';
+    var z = stempelLauf(sp, spiel); if (!z) return '';
+    return '<div class="mziel">📕 Stempelheft <b>' + esc(z.spiel) + '</b>: ' + stempelText(z) + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '<div class="balken"><i style="width:' + Math.min(100, z.auf ? 100 : Math.round(z.x / Math.max(1, Math.min(STEMPEL_SICHER, Math.ceil(z.n / 2))) * 100)) + '%"></i></div></div>';
+  }
+  function stempelHtml(sp) {
+    var sx = (sp && sp.sx) || {}, fertig = daten.stempelFertig || {}, st = (sp && sp.st) || {};
+    var hat = Object.keys(sx).sort(function (a, b) { return String(fertig[b] || '').localeCompare(String(fertig[a] || '')); });
+    var offen = Object.keys(st).filter(function (k) { return !gleichesSpiel(fertig, k) && !gleichesSpiel(sx, k); });
+    if (!hat.length && !offen.length) return '';
+    var h = '<h4>📕 STEMPELHEFT <span class="leise" style="font-weight:600;letter-spacing:0">' + hat.length + (hat.length === 1 ? ' Stempel' : ' Stempel') + ' · ein Stempel pro Spiel</span></h4>';
+    if (hat.length) h += '<div class="stempelheft">' + hat.map(function (k) { var c = coverFuer(k), g = sx[k] === 'g'; return '<div class="stk' + (g ? ' gold' : '') + '" title="' + esc(k) + (g ? ' · Gold-Stempel' : '') + '">' + (c ? '<img loading="lazy" alt="" src="' + esc(c) + '">' : '<span class="stph">🎮</span>') + '<i>' + (g ? '🌟' : '🌸') + '</i><small>' + esc(k) + '</small></div>'; }).join('') + '</div>';
+    offen.forEach(function (k) { var z = stempelLauf(sp, k); if (z) h += '<div class="heftlauf"><b>' + esc(z.spiel) + '</b> <span class="leise">läuft noch</span><div class="leise">' + stempelText(z) + '</div>' + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '</div>'; });
+    return h + '<div class="stregel">🌸 ab 50 % der Streams oder 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt) · vergeben, wenn Kaze das Spiel beendet</div>';
+  }
+  function votingBox(kl) {
+    var vt = daten.voting || [];
+    return '<div class="sbox voting-box klick' + (kl ? ' ' + kl : '') + '" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
   }
   function startHtml() {
     var h = '';
@@ -1429,10 +1457,10 @@
     h += questKarte();
     h += '<div class="startgrid">';
     var ev = neuFreigeschaltet();
-    h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.map(function (e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }).join('') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
-    var vt = daten.voting || [];
-    h += '<div class="sbox voting-box klick" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
-    h += '</div>' + aufsteigerKarte() + '<div class="top3reihe">';
+    function nfZeile(e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }
+    h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.slice(0, 5).map(nfZeile).join('') + (ev.length > 5 ? '<details class="nfmehr"><summary>' + (ev.length - 5) + ' weitere anzeigen</summary>' + ev.slice(5).map(nfZeile).join('') + '</details>' : '') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
+    h += votingBox('nur-schmal');
+    h += '</div>' + aufsteigerKarte('nur-schmal') + '<div class="top3reihe">';
     h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
     h += top3('💬 CHAT', daten.chat, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat');
     h += top3('💰 ZENI', daten.zeni, function (w) { return Number(w).toLocaleString('de-DE'); }, 'zeni');
@@ -1764,7 +1792,10 @@
     }
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
     if (cw) h += '<div class="sbox"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + ' · ▶ ' + Number(cw.aufrufe).toLocaleString('de-DE') + '</div></div>';
+    if (reiter === 'start') h += votingBox('') + aufsteigerKarte('');
     $('seite').innerHTML = h;
+    $('seite').classList.toggle('frei', reiter === 'start');
+    Array.prototype.forEach.call($('seite').querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
   }
   // „Das bin ich“-Leiste unten
   function ichLeiste(l, monat) {
