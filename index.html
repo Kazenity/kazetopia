@@ -586,6 +586,11 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  div.posteintrag { position: relative; padding-right: 38px !important; }
+  .pweg { position: absolute; top: 8px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--rand); background: var(--bg); color: var(--grau); font-size: 15px; line-height: 1; cursor: pointer; }
+  .pweg:hover { color: #fff; border-color: var(--rosa); }
+  .pallweg { text-align: center; margin-top: 10px; }
+  .angebot.tagesang { border-color: rgba(255,209,102,.55); margin-top: 10px; }
   .ntitel { display: block; font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: .02em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pn { display: flex; flex-direction: column; min-width: 0; }
   .shopneu { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(127,231,255,.12); border: 1px solid rgba(127,231,255,.4); font-size: 13px; }
@@ -994,7 +999,8 @@
   }
   // Wartet eine Bestellung schon länger als 3 Min.? (Zeitpunkt nur im Browser gemerkt)
   function kaufAlt(id) { var t = 0; try { t = Number(localStorage.getItem('kz_kauf_' + id) || 0); } catch (x) { } return !t || Date.now() - t > 180000; }
-  function preisVon(a) { var an = daten.shop && daten.shop.angebot; return an && an.id === a.id ? an.preis : a.preis; }
+  function tagesAngebot() { var t = daten && daten.shop && daten.shop.tag; return t && t.tag === heuteIso() ? t : null; }
+  function preisVon(a) { var an = daten.shop && daten.shop.angebot, ta = tagesAngebot(); return an && an.id === a.id ? an.preis : ta && ta.id === a.id ? ta.preis : a.preis; }
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
     if (a.einmalig) { var bes = einmalBesitzer(a.id); if (bes && bes !== me) return 'vergeben'; }
@@ -1033,6 +1039,11 @@
     if (an && an.kaufbar !== false) {
       var av = an.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(an.id) + ')"></div>' : an.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(an.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(an.name) + '</span></div>';
       h += '<div class="angebot">' + av + '<div><div class="leise">🔥 ANGEBOT DER WOCHE · bis Sonntag</div><b>' + esc(an.name) + '</b><div class="spreis"><s>' + zahl(an.preis) + '</s>' + zahl(sh.angebot.preis) + ' Zeni</div></div></div>';
+    }
+    var ta = tagesAngebot(), tan = ta && kosArtikel(ta.id);
+    if (tan && tan.kaufbar !== false) {
+      var tv = tan.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(tan.id) + ')"></div>' : tan.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(tan.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(tan.name) + '</span></div>';
+      h += '<div class="angebot tagesang">' + tv + '<div><div class="leise">☀️ TAGESANGEBOT · nur heute</div><b>' + esc(tan.name) + '</b><div class="spreis"><s>' + zahl(tan.preis) + '</s>' + zahl(ta.preis) + ' Zeni</div></div></div>';
     }
     var zl = (sh.letzte || []).filter(function (x) { return kosArtikel(x.a); }).slice(0, 6);
     if (zl.length) {
@@ -1079,8 +1090,8 @@
         vergeben: '<button class="sbtn hat" disabled>👑 Gehört ' + esc(prof(einmalBesitzer(a.id)).n || einmalBesitzer(a.id)) + '</button>'
       }[z];
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
-      var rab = !vorschau && preisVon(a) !== a.preis;
-      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">🔥 −20 %</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
+      var rab = !vorschau && preisVon(a) !== a.preis, heuteRab = rab && tagesAngebot() && tagesAngebot().id === a.id;
+      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
       return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
@@ -1518,6 +1529,7 @@
   }
   function wochenAbzeichen(login, sp) {
     var w = daten.wochenSieger || {}, chips = [];
+    if (sp && sp.tier === 3) chips.push('👑 Tier-3-Sub'); else if (sp && sp.tier === 2) chips.push('💜 Tier-2-Sub');
     (w.auf || []).forEach(function (x) { if (x.l === login) chips.push('📈 Aufsteiger der Woche'); });
     if (w.w && w.w.l === login) chips.push('⏱️ Wochensieger Watchtime');
     if (w.c && w.c.l === login) chips.push('💬 Wochensieger Chat');
@@ -2705,7 +2717,8 @@
     if (sn.length) e.push({ id: 'ns:' + sn.join(','), t: null, art: 'shop', text: '🛍️ <b>Neu im Shop:</b> ' + sn.slice(0, 4).map(function (id) { var a = kosArtikel(id); return a ? esc(a.name) : ''; }).join(', ') + (sn.length > 4 ? ' und ' + (sn.length - 4) + ' weitere' : '') });
     if (sitzung && sitzung.name !== 'kazenity' && glueck.stand && !glueck.stand.heute) e.push({ id: 'gl:' + heuteTag(), t: null, art: 'glueck', text: '🍀 Dein täglicher Glücks-Knopf ist bereit' });
     e.sort(function (a, b) { return (b.t ? new Date(b.t).getTime() : jetzt) - (a.t ? new Date(a.t).getTime() : jetzt); });
-    return e;
+    var weg = postGelesen();
+    return e.filter(function (x) { return weg[x.id] !== 2; });   // 2 = vom Nutzer gelöscht
   }
   function postUngelesen() { if (!sitzung) return 0; var g = postGelesen(); return postEintraege().filter(function (x) { return !g[x.id]; }).length; }
   function posteingangAktualisieren() {
@@ -2724,11 +2737,14 @@
     var e = postEintraege(), g = postGelesen();
     function wann(t) { if (!t) return ''; var d = new Date(t), m = Math.round((Date.now() - d) / 60000); return m < 60 ? 'vor ' + Math.max(1, m) + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }); }
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📬 Posteingang</b><div class="kk">Was es Neues für dich gibt</div></div></div>' +
-      (e.length ? e.map(function (x) { return '<div class="posteintrag' + (g[x.id] ? ' gelesen' : '') + '"><div class="pt">' + x.text + '<span class="leise">' + wann(x.t) + '</span></div>' +
+      (e.length ? e.map(function (x) { return '<div class="posteintrag' + (g[x.id] ? ' gelesen' : '') + '"><button class="pweg" data-pweg="' + esc(x.id) + '" aria-label="Löschen" title="Löschen">×</button><div class="pt">' + x.text + '<span class="leise">' + wann(x.t) + '</span></div>' +
         (x.art === 'anfrage' ? '<div class="pk"><button class="vtw" data-pa="' + esc(x.an) + '">Annehmen</button><button class="vlink" data-pab="' + esc(x.an) + '">Ablehnen</button></div>' : x.art === 'shop' ? '<div class="pk"><button class="vtw" data-pgeh="shop">Zum Shop</button></div>' : x.art === 'glueck' ? '<div class="pk"><button class="vtw" data-pgeh="start">Drücken</button></div>' : x.an ? '<div class="pk"><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : '') + '</div>'; }).join('')
         : '<p class="leise">Gerade nichts Neues. Hier landen Freundschaftsanfragen, neue Erfolge und Neuigkeiten zu deinen Einladungen.</p>') + '</div>';
+    if (e.length) h = h.replace(/<\/div>$/, '<div class="pallweg"><button class="vlink" id="pallweg">🗑️ Alle löschen</button></div></div>');
     karteOeffnen(h);
     e.forEach(function (x) { g[x.id] = 1; }); postMerken(g); posteingangAktualisieren();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pweg]'), function (b) { b.onclick = function () { var g2 = postGelesen(); g2[b.getAttribute('data-pweg')] = 2; postMerken(g2); posteingangAktualisieren(); posteingangOeffnen(); }; });
+    if ($('pallweg')) $('pallweg').onclick = function () { var g2 = postGelesen(); e.forEach(function (x) { g2[x.id] = 2; }); postMerken(g2); posteingangAktualisieren(); posteingangOeffnen(); };
     var neuLaden = function () { post.zeit = 0; freunde.meine = null; oeffentlichLaden(); meineFreundeLaden().then(function () { posteingangAktualisieren(); posteingangOeffnen(); }); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-pa]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_setzen', { method: 'POST', body: { p_an: b.getAttribute('data-pa'), p_an_aus: true } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pab]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_ablehnen', { method: 'POST', body: { p_von: b.getAttribute('data-pab') } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
