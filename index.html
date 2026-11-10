@@ -1441,8 +1441,7 @@
     return h + lw + '</div>';
   }
   // 📕 Stempelheft: ein Stempel pro Spiel – ausgewertet, wenn Kaze das Spiel beendet
-  //    🌸 mind. 50 % der Streams oder mind. 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt)
-  var STEMPEL_SICHER = 8;
+  //    🌸 bei mind. 50 % der Streams dabei · 🌟 Gold: bei mind. 90 % dabei
   function aktSpiel() {
     if (daten.live && daten.live.an && daten.live.spiel) return daten.live.spiel;
     var n = planTermine().filter(function (x) { return x.d.getTime() > Date.now() - 6 * 3600000; })[0];
@@ -1454,8 +1453,8 @@
   function stempelLauf(sp, spiel) {   // Zwischenstand eines laufenden Spiels
     var k = gleichesSpiel(daten.stempel, spiel); if (!k) return null;
     var n = daten.stempel[k] || 0, ks = gleichesSpiel((sp && sp.st) || {}, k), x = ks ? sp.st[ks] : 0;
-    var auf = x >= STEMPEL_SICHER || x * 2 >= n, fehlt = n - x, braucht = Math.min(n - 2 * x, STEMPEL_SICHER - x);
-    var gold = fehlt === 0 ? '🌟 Gold-Stempel möglich – keinen Stream verpasst' : fehlt === 1 ? '🌟 Gold noch möglich, wenn das Spiel mind. 10 Streams geht' : '';
+    var auf = x * 2 >= n, braucht = n - 2 * x;
+    var gold = x * 10 >= n * 9 ? '🌟 Gold auf Kurs (90 % oder mehr)' : '';
     return { spiel: k, n: n, x: x, auf: auf, braucht: braucht, gold: gold, pct: n ? Math.round(x / n * 100) : 0 };
   }
   function stempelText(z) {
@@ -1464,7 +1463,7 @@
   function stempelZeile(sp) {
     var spiel = aktSpiel(); if (!spiel || gleichesSpiel(daten.stempelFertig, spiel)) return '';
     var z = stempelLauf(sp, spiel); if (!z) return '';
-    return '<div class="mziel">📕 Stempelheft <b>' + esc(z.spiel) + '</b>: ' + stempelText(z) + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '<div class="balken"><i style="width:' + Math.min(100, z.auf ? 100 : Math.round(z.x / Math.max(1, Math.min(STEMPEL_SICHER, Math.ceil(z.n / 2))) * 100)) + '%"></i></div></div>';
+    return '<div class="mziel">📕 Stempelheft <b>' + esc(z.spiel) + '</b>: ' + stempelText(z) + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '<div class="balken"><i style="width:' + z.pct + '%"></i></div></div>';
   }
   function stempelHtml(sp) {
     var sx = (sp && sp.sx) || {}, fertig = daten.stempelFertig || {}, st = (sp && sp.st) || {};
@@ -1476,7 +1475,7 @@
     var h = '<details class="stdet"><summary><b>📕 STEMPELHEFT</b><span class="stsum">' + (hat.length ? hat.length + ' Stempel ' + mini : 'noch kein Stempel') + (lauf ? ' · ' + esc(lauf.spiel) + ' ' + lauf.x + '/' + lauf.n : '') + '</span><span class="stauf">▾</span></summary>';
     if (hat.length) h += '<div class="stempelheft">' + hat.map(function (k) { var c = coverFuer(k), g = sx[k] === 'g'; return '<div class="stk' + (g ? ' gold' : '') + '" title="' + esc(k) + (g ? ' · Gold-Stempel' : '') + '">' + (c ? '<img loading="lazy" alt="" src="' + esc(c) + '">' : '<span class="stph">🎮</span>') + '<i>' + (g ? '🌟' : '🌸') + '</i><small>' + esc(k) + '</small></div>'; }).join('') + '</div>';
     offen.forEach(function (k) { var z = stempelLauf(sp, k); if (z) h += '<div class="heftlauf"><b>' + esc(z.spiel) + '</b> <span class="leise">läuft noch</span><div class="leise">' + stempelText(z) + '</div>' + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '</div>'; });
-    return h + '<div class="stregel">🌸 ab 50 % der Streams oder 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt) · vergeben, wenn Kaze das Spiel beendet</div></details>';
+    return h + '<div class="stregel">🌸 Stempel: bei mindestens der Hälfte der Streams eines Spiels dabei · 🌟 Gold: ab 90 % · vergeben, wenn Kaze das Spiel beendet</div></details>';
   }
   // 🏆 Wochen-Belohnungen (Aufsteiger + Wochensieger der letzten Woche)
   function letzteWocheZeile() {
