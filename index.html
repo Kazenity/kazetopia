@@ -586,6 +586,13 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .gruss { margin: 14px 0 2px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(120deg, rgba(177,151,252,.18), rgba(255,126,176,.14)); border: 1px solid rgba(177,151,252,.45); font-size: 14px; font-style: italic; line-height: 1.5; }
+  .gruss span { display: block; font-style: normal; font-size: 12px; color: var(--grau); margin-top: 4px; font-weight: 700; }
+  .edfvor { display: flex; justify-content: center; margin: 22px 0 26px; } .edfvor .rwrap { transform: scale(1.7); }
+  .edftoene { display: flex; flex-wrap: wrap; gap: 6px; }
+  .edftoene button { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--rand); color: var(--hell); border-radius: 999px; padding: 6px 11px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .edftoene button i { width: 12px; height: 12px; border-radius: 50%; background: var(--ton); }
+  .edftoene button.an { border-color: var(--rosa); box-shadow: 0 0 0 2px rgba(255,126,176,.35); }
   div.posteintrag { position: relative; padding-right: 38px !important; }
   .pweg { position: absolute; top: 8px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--rand); background: var(--bg); color: var(--grau); font-size: 15px; line-height: 1; cursor: pointer; }
   .pweg:hover { color: #fff; border-color: var(--rosa); }
@@ -945,9 +952,19 @@
     });
     return r;
   }
+  var sofortFarbe = {};   // eigene Umfärbung sofort sichtbar, bis der Bot sie gebucht hat
+  function rahmenFarbe(l, kurz) {
+    l = String(l || '').toLowerCase();
+    var id = 'rahmen_' + kurz, a = kosArtikel(id); if (!a || !a.faerbbar) return null;
+    var eigen = sitzung && sitzung.name === l && sofortFarbe[id] !== undefined ? sofortFarbe[id] : null;
+    var f = eigen !== null ? eigen : (daten && daten.shop && daten.shop.farben && daten.shop.farben[l] ? daten.shop.farben[l][id] : null);
+    return f === null || f === undefined ? null : f;
+  }
+  function filterFuer(kurz, ton) { var a = kosArtikel('rahmen_' + kurz); if (!a || ton === null || ton === undefined) return ''; var d = ((ton - (a.farbton || 0)) % 360 + 360) % 360; return d ? ' style="filter:hue-rotate(' + d + 'deg)"' : ''; }
+  function rahmenStil(l, kurz) { return filterFuer(kurz, rahmenFarbe(l, kurz)); }
   function avatarMitRahmen(l) {
     var k = kosmetik(l), av = bild(l, true);
-    return k.rahmen ? '<span class="rwrap">' + av + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild('rahmen_' + k.rahmen) + '"></span>' : av;
+    return k.rahmen ? '<span class="rwrap">' + av + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild('rahmen_' + k.rahmen) + '"' + rahmenStil(l, k.rahmen) + '></span>' : av;
   }
   var BANNER_VERLAUF = 'linear-gradient(180deg, rgba(24,10,28,0) 55%, rgba(24,10,28,.85))';
   function bannerStil(l) {
@@ -973,7 +990,7 @@
     var typ = id.split('_')[0], kurz = id.substring(typ.length + 1);
     var rahmen = typ === 'rahmen' ? kurz : k.rahmen, banner = typ === 'banner' ? kurz : k.banner, titel = typ === 'titel' ? a.name : dz.t;
     var av = l ? bild(l, true) : '<span class="av">?</span>';
-    if (rahmen) av = '<span class="rwrap">' + av + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + rahmen) + '"></span>';
+    if (rahmen) av = '<span class="rwrap">' + av + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + rahmen) + '"' + (typ === 'rahmen' ? '' : rahmenStil(l, rahmen)) + '></span>';
     var stil = banner ? ' style="background-image:' + BANNER_VERLAUF + ', url(' + kosBild('banner_' + banner) + ')"' : '';
     var name = l ? (prof(l).n || l) : 'Dein Name';
     var z = shopZustand(a), knopf = '';
@@ -1092,7 +1109,7 @@
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
       var rab = !vorschau && preisVon(a) !== a.preis, heuteRab = rab && tagesAngebot() && tagesAngebot().id === a.id;
       var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
-      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
+      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
       liste = liste.filter(function (a) { return passt(a, vorschau); });
@@ -1254,13 +1271,42 @@
         return '<h4>' + titel + '</h4><div class="edslot" data-typ="' + typ + '"><button data-w="aus" class="' + (wahl[typ] === 'aus' ? 'an' : '') + '"><span class="ph">✕</span>Keiner</button>' +
           liste.map(function (n) { var b = kosBild(typ + '_' + n); return '<button data-w="' + n + '" class="' + (wahl[typ] === n ? 'an' : '') + '">' + (b ? '<img alt="" loading="lazy" src="' + b + '" class="' + typ + '">' : '') + esc(kosName(typ + '_' + n)) + '</button>'; }).join('') + '</div>';
       }
-      e += slot('rahmen', '💠 RAHMEN') + slot('banner', '🌄 BANNER');
+      e += slot('rahmen', '💠 RAHMEN') + '<div id="edfarbe"></div>' + slot('banner', '🌄 BANNER');
       e += '<h4>🖼️ PROFIL-HINTERGRUND <span class="leise">(wird von einem Banner überdeckt)</span></h4><div class="edbg"><button data-h="" class="' + (!wahl.hintergrund ? 'an' : '') + '">Standard</button>' + bgs.map(function (k) { return '<button data-h="' + k + '" class="bg-' + k + (wahl.hintergrund === k ? ' an' : '') + '">' + HG[k][0] + ' ' + HG[k][1] + '</button>'; }).join('') + '</div>' + (bgs.length < 4 ? '<p class="leise">Weitere Hintergründe schaltest du mit dem ersten Rang in Watchtime, Chat, Treue oder Sub-Treue frei.</p>' : '');
       e += '<div class="edknoepfe"><button class="vtw" id="edsave">Speichern</button><button class="vlink" id="edreset">Alles zurücksetzen</button></div><p class="leise" id="edinfo">Für dich sofort sichtbar, für alle anderen ab dem nächsten Kazetopia-Update (während der Streams alle 10 Minuten).</p>';
       $('ededaten').outerHTML = e;
       Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (b) { b.onclick = function () { wahl.farbe = b.getAttribute('data-f'); Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.toggle('an', x === b); }); }; });
       if ($('edeigen')) $('edeigen').oninput = function () { wahl.farbe = this.value; Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.remove('an'); }); };
-      Array.prototype.forEach.call(document.querySelectorAll('.edslot button'), function (b) { b.onclick = function () { var typ = b.parentNode.getAttribute('data-typ'); wahl[typ] = b.getAttribute('data-w'); Array.prototype.forEach.call(b.parentNode.children, function (x) { x.classList.toggle('an', x === b); }); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('.edslot button'), function (b) { b.onclick = function () { var typ = b.parentNode.getAttribute('data-typ'); wahl[typ] = b.getAttribute('data-w'); Array.prototype.forEach.call(b.parentNode.children, function (x) { x.classList.toggle('an', x === b); }); if (typ === 'rahmen') farbBereich(); }; });
+      // 🎨 Rahmen umfärben: 25 % des Rahmenpreises, mindestens 5.000 Zeni
+      var FARBTOENE = [['Rot', 355], ['Orange', 28], ['Gold', 46], ['Grün', 125], ['Türkis', 175], ['Blau', 215], ['Lila', 270], ['Pink', 320]];
+      function farbBereich() {
+        var el = $('edfarbe'); if (!el) return;
+        var kurz = wahl.rahmen, a = kurz && kurz !== 'aus' ? kosArtikel('rahmen_' + kurz) : null;
+        if (!a || !a.faerbbar) { el.innerHTML = kurz && kurz !== 'aus' ? '<p class="leise">🎨 Dieser Rahmen lässt sich nicht umfärben.</p>' : ''; return; }
+        var akt = rahmenFarbe(login, kurz), wahlTon = akt, kosten = rolle(login) === 'streamer' ? 0 : Math.max(5000, Math.round(preisVon(a) * 0.25 / 100) * 100);
+        var mitAv = function (ton) { return '<span class="rwrap">' + bild(login, true) + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + kurz) + '"' + filterFuer(kurz, ton) + '></span>'; };
+        el.innerHTML = '<h4>🎨 RAHMEN UMFÄRBEN <span class="leise">(' + (kosten ? zahl(kosten) + ' Zeni pro Umfärbung' : 'für dich kostenlos') + ')</span></h4>' +
+          '<div class="edfvor" id="edfvor">' + mitAv(akt) + '</div><div class="edftoene"><button data-ton="" class="' + (akt === null || akt === (a.farbton || 0) ? 'an' : '') + '">Original</button>' +
+          FARBTOENE.map(function (t) { return '<button data-ton="' + t[1] + '" style="--ton:hsl(' + t[1] + ',85%,62%)" class="' + (akt === t[1] ? 'an' : '') + '"><i></i>' + t[0] + '</button>'; }).join('') + '</div>' +
+          '<div class="edknoepfe"><button class="vtw" id="edfkauf" disabled>Farbe wählen</button></div><p class="leise" id="edfinfo"></p>';
+        Array.prototype.forEach.call(el.querySelectorAll('[data-ton]'), function (b) {
+          b.onclick = function () {
+            var t = b.getAttribute('data-ton'); wahlTon = t === '' ? (a.farbton || 0) : parseInt(t, 10);
+            Array.prototype.forEach.call(el.querySelectorAll('[data-ton]'), function (x) { x.classList.toggle('an', x === b); });
+            $('edfvor').innerHTML = mitAv(wahlTon);
+            var gleich = wahlTon === (akt === null ? (a.farbton || 0) : akt);
+            $('edfkauf').disabled = gleich; $('edfkauf').textContent = gleich ? 'Ist schon so' : (kosten ? 'Umfärben · ' + zahl(kosten) + ' Zeni' : 'Umfärben');
+          };
+        });
+        $('edfkauf').onclick = function () {
+          var k = $('edfkauf'); k.disabled = true; $('edfinfo').textContent = 'Wird gebucht …';
+          sFrisch().then(function () { return sbFetch('/rest/v1/rpc/faerben', { method: 'POST', body: { p_rahmen: 'rahmen_' + kurz, p_farbe: wahlTon } }); })
+            .then(function () { sofortFarbe['rahmen_' + kurz] = wahlTon; if (liveZeni !== null && kosten) liveZeni = Math.max(0, liveZeni - kosten); $('edfinfo').textContent = '✓ Umgefärbt! Für dich sofort sichtbar, für alle anderen nach dem nächsten Kazetopia-Update.'; zeigen(); })
+            .catch(function (x) { $('edfinfo').textContent = x.message; k.disabled = false; });
+        };
+      }
+      farbBereich();
       Array.prototype.forEach.call(document.querySelectorAll('.edbg button'), function (b) { b.onclick = function () { wahl.hintergrund = b.getAttribute('data-h'); Array.prototype.forEach.call(document.querySelectorAll('.edbg button'), function (x) { x.classList.toggle('an', x === b); }); }; });
       Array.prototype.forEach.call(document.querySelectorAll('.edvit input'), function (c) { c.onchange = function () { var an = document.querySelectorAll('.edvit input:checked'); if (an.length > 3) this.checked = false; }; });
       $('edsave').onclick = function () {
@@ -2154,6 +2200,7 @@
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
+    if (sp && sp.gr && sp.gr.x) h += '<div class="gruss">💜 „' + esc(sp.gr.x) + '“<span>– Kaze' + (sp.gr.t ? ' · ' + esc(String(sp.gr.t).split('-').reverse().join('.')) : '') + '</span></div>';
     h += wochenAbzeichen(login, sp);
     // Ränge als 2×2-Kacheln (Details unter „Alle Erfolge anzeigen“)
     h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
