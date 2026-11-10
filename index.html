@@ -321,7 +321,7 @@
   .shopgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .shopgrid.banner { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
   .sitem { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
-  .sitem.st-s { border-color: #3fae6a; } .sitem.st-e { border-color: #4d8fe0; } .sitem.st-l { border-color: #a066e8; box-shadow: 0 0 14px rgba(160, 102, 232, .25); } .sitem.st-m { border-color: #f2c14e; box-shadow: 0 0 18px rgba(242, 193, 78, .35); }
+  .sitem.st-s { border-color: #3fae6a; } .sitem.st-e { border-color: #4d8fe0; } .sitem.st-l { border-color: #a066e8; box-shadow: 0 0 14px rgba(160, 102, 232, .25); } .sitem.st-m { border-color: #f2c14e; box-shadow: 0 0 18px rgba(242, 193, 78, .35); } .sitem.st-x { border-color: #7fe7ff; box-shadow: 0 0 22px rgba(127, 231, 255, .4); }
   .svor { height: 104px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
   .svor .rwrap { margin: 0; } .svor .av { width: 60px; height: 60px; font-size: 24px; }
   .svor.bnr { height: 80px; border-radius: 10px; background-size: cover; background-position: right center; }
@@ -586,6 +586,10 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .ntitel { display: block; font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: .02em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pn { display: flex; flex-direction: column; min-width: 0; }
+  .shopneu { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(127,231,255,.12); border: 1px solid rgba(127,231,255,.4); font-size: 13px; }
+  .sbadge.neu { background: #7fe7ff; color: #10303a; }
   .offlineband { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255,209,102,.14); border: 1px solid rgba(255,209,102,.45); font-size: 13px; font-weight: 600; text-align: center; }
   .anz { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rand); cursor: pointer; }
   .anz b { display: block; font-size: 14px; } .anz small { color: var(--grau); font-size: 12.5px; }
@@ -918,6 +922,11 @@
     ids.forEach(function (id) { var m = String(id).match(/^(rahmen|banner|titel)_([a-z0-9_]+)$/); if (m && kosArtikel(id) && r[m[1]].indexOf(m[2]) < 0) r[m[1]].push(m[2]); });
     return r;
   }
+  function einmalBesitzer(id) {   // bei „nur einmal“-Artikeln: wer hat ihn schon (Kaze zählt nicht)
+    var inv = (daten && daten.shop && daten.shop.inventar) || {}, r = '';
+    Object.keys(inv).forEach(function (l) { if (!r && rolle(l) !== 'streamer' && (inv[l] || []).indexOf(id) >= 0) r = l; });
+    return r;
+  }
   function besitzt(l, id) { var m = String(id).match(/^(rahmen|banner|titel)_(.+)$/); return !!m && kosInventar(l)[m[1]].indexOf(m[2]) >= 0; }
   // Ausgerüstet: was im Profil gewählt ist ('aus' = bewusst nichts); ohne Auswahl wird der erste eigene Artikel getragen
   function kosmetik(l) {
@@ -942,8 +951,8 @@
   }
 
   // ================= Zeni-Shop =================
-  var STUFE = { g: ['⚪', 'Gewöhnlich'], s: ['🟢', 'Selten'], e: ['🔵', 'Episch'], l: ['🟣', 'Legendär'], m: ['🟡', 'Mythisch'] };
-  var STUFEN_REIHE = ['g', 's', 'e', 'l', 'm'];
+  var STUFE = { g: ['⚪', 'Gewöhnlich'], s: ['🟢', 'Selten'], e: ['🔵', 'Episch'], l: ['🟣', 'Legendär'], m: ['🟡', 'Mythisch'], x: ['💎', 'Exklusiv'] };
+  var STUFEN_REIHE = ['g', 's', 'e', 'l', 'm', 'x'];
   var shopF = { typ: 'rahmen', stufe: '', sort: 'preis', leisten: false };
   try { var sfGemerkt = JSON.parse(localStorage.getItem('kz_shopfilter') || 'null'); if (sfGemerkt) for (var sfk in shopF) if (sfGemerkt[sfk] !== undefined) shopF[sfk] = sfGemerkt[sfk]; } catch (x) { }
   function wuensche() { try { return JSON.parse(localStorage.getItem('kz_wunsch') || '[]').filter(function (id) { return /^(rahmen|banner|titel)_[a-z0-9_]+$/.test(id); }); } catch (x) { return []; } }
@@ -988,6 +997,7 @@
   function preisVon(a) { var an = daten.shop && daten.shop.angebot; return an && an.id === a.id ? an.preis : a.preis; }
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
+    if (a.einmalig) { var bes = einmalBesitzer(a.id); if (bes && bes !== me) return 'vergeben'; }
     if (!me) return 'login';
     if (besitzt(me, a.id)) return 'hat';
     var nr = meineBest && meineBest[a.id], st = nr && daten.shop.status ? daten.shop.status[nr] : null;
@@ -997,12 +1007,27 @@
     return stand >= preisVon(a) ? 'kaufen' : 'fehlt';
   }
   function tagMonat(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' : ''; }
+  // ✨ Neu im Shop: Artikel, die es beim letzten Besuch noch nicht gab (nur lokal gemerkt; beim allerersten Besuch ist nichts „neu“)
+  var shopNeuJetzt = [];
+  function shopBekannt() { try { return JSON.parse(localStorage.getItem('kz_shop_bekannt') || 'null'); } catch (x) { return null; } }
+  function shopNeu() {
+    if (!daten || !daten.shop) return [];
+    var ids = shopArtikel().filter(function (a) { return a.kaufbar !== false; }).map(function (a) { return a.id; }), b = shopBekannt();
+    if (!b) { try { localStorage.setItem('kz_shop_bekannt', JSON.stringify(ids)); } catch (x) { } return []; }
+    return ids.filter(function (id) { return b.indexOf(id) < 0; });
+  }
+  function shopGesehen() {
+    var ids = shopArtikel().map(function (a) { return a.id; }), b = shopBekannt() || [];
+    ids.forEach(function (id) { if (b.indexOf(id) < 0) b.push(id); });
+    try { localStorage.setItem('kz_shop_bekannt', JSON.stringify(b)); } catch (x) { }
+  }
   function shopHtml() {
     var sh = daten.shop;
     if (!sh || !sh.artikel) return '<div class="liste"><div class="leer">Der Zeni-Shop öffnet bald. 🛍️</div></div>';
     var me = sitzung && sitzung.name, stand = me ? (liveZeni !== null ? liveZeni : ((sh.zeni || {})[me] || 0)) : 0;
     var h = '<div class="shopkopf"><div><b>🛍️ ZENI-SHOP</b><div class="leise">Gib deine Zeni aus dem Stream für Rahmen, Banner und Titel auf deiner Profilkarte aus. Feste Preise, kein Zufall.</div></div>' +
       (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw tw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
+    if (shopNeuJetzt.length) h += '<div class="shopneu">✨ <b>' + shopNeuJetzt.length + (shopNeuJetzt.length === 1 ? ' neuer Artikel' : ' neue Artikel') + '</b> seit deinem letzten Besuch – mit „Neu“ markiert</div>';
     h += '<div class="shopcode"><button class="vlink" id="shopcode">🎟️ Code einlösen</button></div><!--SFILTER-->';
     var an = sh.angebot && kosArtikel(sh.angebot.id);
     if (an && an.kaufbar !== false) {
@@ -1050,11 +1075,12 @@
         wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>' + (kaufAlt(a.id) ? '☕ Der Shopbetreiber ist gerade einen Kaffee trinken. Komm später wieder! :)' : 'dauert meist 1–2 Min.') + '</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
         zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
         kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
-        fehlt: '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>'
+        fehlt: '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>',
+        vergeben: '<button class="sbtn hat" disabled>👑 Gehört ' + esc(prof(einmalBesitzer(a.id)).n || einmalBesitzer(a.id)) + '</button>'
       }[z];
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
       var rab = !vorschau && preisVon(a) !== a.preis;
-      var badge = rab ? '<span class="sbadge">🔥 −20 %</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
+      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">🔥 −20 %</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
       return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
@@ -1289,7 +1315,9 @@
     return [Math.round(f(p, q, h + 1 / 3) * 255), Math.round(f(p, q, h) * 255), Math.round(f(p, q, h - 1 / 3) * 255)];
   }
   function fs(n) { var f = farbe(n); return f ? ' style="color:' + f + '"' : ''; }
-  function person(n, zusatz) { var nm = String(prof(n).n || n); return '<div class="person">' + bild(n) + '<span' + (nm.length > 13 ? ' class="lang"' : '') + fs(n) + '>' + esc(nm) + '</span>' + (zusatz || '') + '</div>'; }
+  function titelVon(n) { var d = designGueltig(String(n || '').toLowerCase()); return d && d.t ? d.t : ''; }
+  function tTag(n) { var t = titelVon(n); return t ? '<small class="ntitel">' + esc(t) + '</small>' : ''; }
+  function person(n, zusatz) { var nm = String(prof(n).n || n), t = tTag(n); return '<div class="person">' + bild(n) + (t ? '<div class="pn"><span' + (nm.length > 13 ? ' class="lang"' : '') + fs(n) + '>' + esc(nm) + '</span>' + t + '</div>' : '<span' + (nm.length > 13 ? ' class="lang"' : '') + fs(n) + '>' + esc(nm) + '</span>') + (zusatz || '') + '</div>'; }
 
   // ================= ERFOLGE =================
   // Große Leitern: [ab, Symbol, Name]
@@ -1536,7 +1564,7 @@
     var h = '';
     var neu = false; try { neu = !localStorage.getItem('kz_onboarding'); } catch (x) { }
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
-    function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
+    function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
     h += gebKarte();
     h += besuchKarte();
     h += glueckKarte();
@@ -1554,19 +1582,21 @@
     function woche(f) { var a = []; Object.keys(daten.spieler || {}).forEach(function (k) { var x = daten.spieler[k], v = x ? f(x) : 0; if (v > 0) a.push({ n: x.n || k, w: v }); }); return a.sort(function (p, q) { return q.w - p.w; }); }
     var wW = woche(function (x) { return x.wo ? x.wo.w : 0; }), wC = woche(function (x) { return x.wo ? x.wo.c : 0; }), wT = woche(function (x) { return x.ds || 0; });
     var al = aufsteigerListe(), lwz = letzteWocheZeile();
+    var gleich = function (l, f) { if (l.length <= 3) return ''; var w3 = l[2].w, n = l.slice(3).filter(function (x) { return x.w === w3; }).length; return n ? '<div class="leise" style="margin-top:6px">+ ' + n + ' weitere mit ' + f(w3) + '</div>' : ''; };
+    var stxt = function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); };
     if (wW.length || wC.length || wT.length || al.length) {
-      var reihe = function (l, f) { return l.slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten diese Woche.</div>'; };
+      var reihe = function (l, f) { return l.slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten diese Woche.</div>'; };
       var tabs = [];
       if (al.length) tabs.push(['auf', 'Aufsteiger', al.slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.l) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.l) + '<span class="nm"' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</span><b class="hoch">▲ ' + (x.pv - x.pn) + '</b></div>'; }).join('') + '<div class="leise" style="margin-top:6px">Plätze gutgemacht in der Watchtime-Rangliste</div>']);
       tabs.push(['w', 'Watchtime', reihe(wW, function (w) { return zahl(w) + ' Std.'; })]);
       tabs.push(['c', 'Chat', reihe(wC, function (w) { return Number(w).toLocaleString('de-DE'); })]);
-      tabs.push(['t', 'Streak', reihe(wT, function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); }) + '<div class="leise" style="margin-top:6px">Streams am Stück dabei</div>']);
+      tabs.push(['t', 'Streak', reihe(wT, stxt) + gleich(wT, stxt) + '<div class="leise" style="margin-top:6px">Streams am Stück dabei (gezählt seit 08.11.)</div>']);
       h += '<div class="sbox wochekarte nur-schmal"><h3>🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></h3><div class="wtabs">' + tabs.map(function (t, i) { return '<button data-wt="' + t[0] + '"' + (i === 0 ? ' class="an"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>' +
         tabs.map(function (t, i) { return '<div class="wpan" data-wp="' + t[0] + '"' + (i === 0 ? '' : ' hidden') + '>' + t[2] + '</div>'; }).join('') + lwz + '</div>';
       h += '<div class="nur-breit"><div class="wochenkopf">🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></div><div class="top3reihe">';
       h += top3('⏱️ WATCHTIME', wW, function (w) { return zahl(w) + ' Std.'; }, 'watchtime', 'Gesamt-Rangliste ›');
       h += top3('💬 CHAT', wC, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat', 'Gesamt-Rangliste ›');
-      h += top3('🔥 WATCH-STREAK', wT, function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); }, '', '');
+      h += top3('🔥 WATCH-STREAK', wT, stxt, '', '').replace(/<\/div>$/, gleich(wT, stxt) + '</div>');
       h += '</div>';
     } else {
       h += '<div class="top3reihe">';
@@ -1723,7 +1753,7 @@
       var pr = balken(v, info.akt ? info.akt[0] : 0, info.nx[0]);
       if (!best || pr > best.pr) best = { g: g, v: v, nx: info.nx, pr: pr };
     });
-    var h = '<div class="sbox meinbox"' + dl(l) + '><h3>👤 DEIN BEREICH</h3><div class="mkopf">' + avatarMitRahmen(l) + '<div><b' + fs(l) + '>' + esc(prof(l).n || l) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
+    var h = '<div class="sbox meinbox"' + dl(l) + '><h3>👤 DEIN BEREICH</h3><div class="mkopf">' + avatarMitRahmen(l) + '<div><b' + fs(l) + '>' + esc(prof(l).n || l) + '</b>' + tTag(l) + '<div class="leise">Profil & Erfolge ›</div></div></div>' +
       '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div><!--MZ-->';
     if (best) h += '<div class="mziel">Nächster Rang: ' + best.nx[1] + ' <b>' + esc(best.nx[2]) + '</b> · noch <b>' + best.g.fmt(Math.ceil((best.nx[0] - best.v) * 10) / 10) + '</b><div class="balken"><i style="width:' + best.pr + '%"></i></div></div>';
     if (zeni != null && daten.shop && daten.shop.artikel) {
@@ -1886,7 +1916,7 @@
   function seiteZeigen() {
     if (!daten) return;
     function platzIn(l) { var p = 0; (l || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) p = i + 1; }); return p ? '#' + p : '–'; }
-    function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
+    function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
     var h = '';
     if (reiter === 'start') { }
     else if (ich) {
@@ -2671,6 +2701,8 @@
     erfolgeFuer(l).forEach(function (t) { e.push({ id: 'er:' + t.replace(/<[^>]+>/g, ''), t: null, text: t }); });
     var zeni = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[l] : null);
     if (zeni != null) wuensche().forEach(function (id) { var a = kosArtikel(id); if (a && a.kaufbar !== false && !besitzt(l, id) && preisVon(a) <= zeni) e.push({ id: 'wu:' + id + ':' + preisVon(a), t: null, art: 'shop', text: '♥ Du kannst dir deinen Wunsch <b>' + esc(a.name) + '</b> jetzt leisten' }); });
+    var sn = shopNeu();
+    if (sn.length) e.push({ id: 'ns:' + sn.join(','), t: null, art: 'shop', text: '🛍️ <b>Neu im Shop:</b> ' + sn.slice(0, 4).map(function (id) { var a = kosArtikel(id); return a ? esc(a.name) : ''; }).join(', ') + (sn.length > 4 ? ' und ' + (sn.length - 4) + ' weitere' : '') });
     if (sitzung && sitzung.name !== 'kazenity' && glueck.stand && !glueck.stand.heute) e.push({ id: 'gl:' + heuteTag(), t: null, art: 'glueck', text: '🍀 Dein täglicher Glücks-Knopf ist bereit' });
     e.sort(function (a, b) { return (b.t ? new Date(b.t).getTime() : jetzt) - (a.t ? new Date(a.t).getTime() : jetzt); });
     return e;
@@ -2713,6 +2745,7 @@
       p.shop = e.some(function (x) { return x.art === 'shop' && !g[x.id]; });
       p.ich = e.some(function (x) { return !g[x.id] && x.art !== 'glueck' && x.art !== 'shop'; });
     }
+    if (reiter !== 'shop' && shopNeu().length) p.shop = true;
     Array.prototype.forEach.call(r.children, function (b) { b.classList.toggle('punkt', !!p[b.getAttribute('data-g')]); });
   }
   function sonder() {
@@ -2721,7 +2754,7 @@
     $('suche').style.display = spezial ? 'none' : '';
     if (!spezial) { $('liste').className = 'liste'; return false; }
     if (reiter === 'start') { $('liste').className = ''; $('liste').innerHTML = startHtml(); startEvents(); $('hinweis').textContent = ''; return true; }
-    if (reiter === 'shop') { $('liste').className = ''; $('liste').innerHTML = shopHtml(); shopEvents(); $('hinweis').textContent = 'Zeni sind Spielgeld aus dem Stream ohne Geldwert · Artikel sind rein kosmetisch · kein Tausch, kein Echtgeld-Handel'; return true; }
+    if (reiter === 'shop') { $('liste').className = ''; var snx = shopNeu(); if (snx.length) shopNeuJetzt = snx; shopGesehen(); setTimeout(punkteSetzen, 0); $('liste').innerHTML = shopHtml(); shopEvents(); $('hinweis').textContent = 'Zeni sind Spielgeld aus dem Stream ohne Geldwert · Artikel sind rein kosmetisch · kein Tausch, kein Echtgeld-Handel'; return true; }
     if (reiter === 'ich') { $('liste').className = ''; $('liste').innerHTML = ichHtml(); ichEvents(); $('hinweis').textContent = ''; return true; }
     if (reiter === 'ruhm') { $('liste').className = ''; $('liste').innerHTML = ruhmHtml(); $('hinweis').textContent = 'Von Kaze jede Woche und jeden Monat ausgezeichnet'; return true; }
     if (reiter === 'emotes') {
