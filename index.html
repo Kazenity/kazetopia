@@ -586,6 +586,15 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .fbfeld { width: 100%; min-height: 110px; box-sizing: border-box; background: var(--bg); color: var(--hell); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; resize: vertical; margin-top: 10px; }
+  .fbfeld:focus { outline: none; border-color: var(--rosa); }
+  .fbzeile { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 10px; }
+  .fbalt { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rand); font-size: 13px; } .fbalt small { display: block; color: var(--grau); font-size: 11.5px; margin-top: 2px; }
+  .fbneu .nm small { display: block; font-size: 11.5px; font-weight: 600; }
+  .fbneu { margin-top: 12px; }
+  .admfb.neu { border-color: var(--rosa); } .admfbk { display: flex; justify-content: space-between; gap: 8px; } .admfbt { margin: 8px 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .admfbk2 { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .rang.tier { background: rgba(177,151,252,.2); border: 1px solid rgba(177,151,252,.55); } .rang.tier.t3 { background: rgba(255,209,102,.18); border-color: rgba(255,209,102,.6); }
   .thronbox { border-color: rgba(127,231,255,.5); margin-bottom: 12px; } .thronchronik { margin-top: 10px; font-size: 13px; line-height: 1.8; } .thronchronik div { cursor: pointer; }
   .gruss { margin: 14px 0 2px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(120deg, rgba(177,151,252,.18), rgba(255,126,176,.14)); border: 1px solid rgba(177,151,252,.45); font-size: 14px; font-style: italic; line-height: 1.5; }
   .gruss span { display: block; font-style: normal; font-size: 12px; color: var(--grau); margin-top: 4px; font-weight: 700; }
@@ -1216,6 +1225,7 @@
         else if (k === 'ansicht') ansichtDialog();
       else if (k === 'app') appInstallieren();
         else if (k === 'einladen') einladenDialog();
+      else if (k === 'feedback') feedbackDialog();
         else if (k === 'admin') adminOeffnen('start');
         else if (k === 'loeschen') datenLoeschenFragen();
         else if (k === 'ab') { ausloggen(); meineBest = null; glueck.stand = null; kopfleiste(); }
@@ -1578,7 +1588,6 @@
   }
   function wochenAbzeichen(login, sp) {
     var w = daten.wochenSieger || {}, chips = [];
-    if (sp && sp.tier === 3) chips.push('👑 Tier-3-Sub'); else if (sp && sp.tier === 2) chips.push('💜 Tier-2-Sub');
     (w.auf || []).forEach(function (x) { if (x.l === login) chips.push('📈 Aufsteiger der Woche'); });
     if (w.w && w.w.l === login) chips.push('⏱️ Wochensieger Watchtime');
     if (w.c && w.c.l === login) chips.push('💬 Wochensieger Chat');
@@ -1587,6 +1596,7 @@
     if (!chips.length && !zt.length) return '';
     return '<div class="wsabz">' + chips.map(function (c) { return '<span class="wschip">' + c + '</span>'; }).join('') + (zt.length ? '<span class="leise">🏆 ' + zt.join(' · ') + '</span>' : '') + '</div>';
   }
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-fbk]')) feedbackDialog(); });
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-wt]'); if (!b) return;
     var k = b.closest('.wochekarte'); if (!k) return;
@@ -1617,6 +1627,43 @@
     });
   }
   ansichtAnwenden();
+  // 💡 Ideen & Feedback: 1× pro Woche, nur Kaze liest es. Hilfreich = 2.500 Zeni, umgesetzt = 25.000 Zeni + Titel „Ideengeber“
+  var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
+  function feedbackDialog() {
+    zaehlen('feedback');
+    if (!sitzung) { einloggenFragen(); return; }
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>💡 Ideen & Feedback</b><div class="kk">Was fehlt dir auf Kazetopia? Was nervt? Was wäre cool?</div></div></div>' +
+      '<textarea id="fbtext" class="fbfeld" maxlength="600" placeholder="Beschreib deine Idee möglichst genau – z. B. was du dir wünschst und wofür es gut wäre."></textarea>' +
+      '<div class="fbzeile"><span class="leise" id="fbzahl">0 / 600</span><button class="vtw" id="fbsenden" disabled>Abschicken</button></div><p class="leise" id="fbinfo"></p>' +
+      '<p class="leise">💡 Hilfreiche Ideen: <b>2.500 Zeni</b> · ✅ Wird sie umgesetzt: <b>25.000 Zeni</b> + Titel „Ideengeber“. Einmal pro Woche, nur Kaze liest dein Feedback.</p>' +
+      '<div id="fbliste"></div></div>');
+    var t = $('fbtext');
+    t.oninput = function () { var n = t.value.trim().length; $('fbzahl').textContent = t.value.length + ' / 600'; $('fbsenden').disabled = n < 20; $('fbsenden').textContent = n < 20 ? 'noch ' + (20 - n) + ' Zeichen' : 'Abschicken'; };
+    t.oninput();
+    $('fbsenden').onclick = function () {
+      var k = this; k.disabled = true; $('fbinfo').textContent = 'Wird gesendet …';
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/feedback_senden', { method: 'POST', body: { p_text: t.value } }); })
+        .then(function () { t.value = ''; t.oninput(); $('fbinfo').textContent = '✓ Danke! Kaze liest dein Feedback – das Ergebnis siehst du hier und im Posteingang.'; liste(); })
+        .catch(function (x) { $('fbinfo').textContent = x.message; k.disabled = false; });
+    };
+    function liste() {
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_feedbacks', { method: 'POST', body: {} }); }).then(function (r) {
+        var el = $('fbliste'); if (!el || !(r || []).length) return;
+        el.innerHTML = '<h4>DEINE IDEEN</h4>' + r.map(function (x) { var st = FB_STATUS[x.s] || FB_STATUS.neu; return '<div class="fbalt"><span>' + st[0] + '</span><div>' + esc(x.x) + (x.x.length >= 90 ? ' …' : '') + '<small>' + st[1] + ' · ' + new Date(x.t).toLocaleDateString('de-DE') + '</small></div></div>'; }).join('');
+      }).catch(function () { });
+    }
+    liste();
+  }
+  // ✨ Neu dank eurem Feedback (Startseite, nur wenn Kaze in den letzten 30 Tagen etwas umgesetzt hat)
+  var fbNeu = null;
+  function fbNeuLaden() {
+    fetch(SB_URL + '/rest/v1/rpc/feedback_umgesetzt', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : []; }).then(function (r) { fbNeu = r || []; if (fbNeu.length && reiter === 'start') zeigen(); }).catch(function () { fbNeu = []; });
+  }
+  function fbNeuKarte() {
+    if (!fbNeu || !fbNeu.length) return '';
+    return '<div class="sbox fbneu"><h3>✨ NEU DANK EUREM FEEDBACK</h3>' + fbNeu.map(function (x) { return '<div class="z"' + dl(x.l) + '>' + bild(x.l) + '<span class="nm">' + esc(x.x) + '<small class="leise">Idee von ' + esc(prof(x.l).n || x.l) + '</small></span></div>'; }).join('') + '<div class="mehr-link" data-fbk>Eigene Idee einreichen ›</div></div>';
+  }
   function votingBox(kl) {
     var vt = daten.voting || [];
     return '<div class="sbox voting-box klick' + (kl ? ' ' + kl : '') + '" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
@@ -1629,6 +1676,7 @@
     h += gebKarte();
     h += besuchKarte();
     h += glueckKarte();
+    h += fbNeuKarte();
     h += planKarte();
     h += appKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
@@ -2182,7 +2230,7 @@
     var dz = designGueltig(login) || {};
     var eigen = sitzung && sitzung.name === login;
     h += '<div class="kopf' + (dz.h || bannerStil(login) ? ' design' : '') + (dz.h ? ' bg-' + dz.h : '') + (bannerStil(login) ? ' mitbanner' : '') + '"' + bannerStil(login) + '>' + avatarMitRahmen(login) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz.t ? '<div class="titel">« ' + esc(dz.t) + ' »</div>' : '') +
-      (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') + (rolle(login) ? ' <div class="rang rolle">' + ROLLE[rolle(login)][0] + ' ' + ROLLE[rolle(login)][1] + '</div>' : '') +
+      (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') + (rolle(login) ? ' <div class="rang rolle">' + ROLLE[rolle(login)][0] + ' ' + ROLLE[rolle(login)][1] + '</div>' : '') + (sp.tier >= 2 ? ' <div class="rang tier t' + sp.tier + '">' + (sp.tier === 3 ? '👑 Tier-3-Sub' : '💜 Tier-2-Sub') + '</div>' : '') +
       '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + (sp.ds ? ' · 🔥 ' + sp.ds + ' am Stück' : '') + '</div>' + rivale(platz, std) +
       '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button>' + (eigen ? ' <button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + ' <button class="ichknopf" id="teilen">📤 Als Bild teilen</button>' + freundKnopf(login) + '</div></div>';
 
@@ -2422,7 +2470,7 @@
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') return;
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['feedback', '💡 Feedback'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -2443,6 +2491,21 @@
         var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“' };
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="admz"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
+    }).catch(fehler);
+    if (tab === 'feedback') rpc('admin_feedback').then(function (f) {
+      f = f || [];
+      var neu = f.filter(function (x) { return x.s === 'neu'; }).length;
+      $('adm').innerHTML = f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
+        var st = FB_STATUS[x.s] || FB_STATUS.neu;
+        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
+          '<input class="codefeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Bei „Umgesetzt“: Was ist neu? (erscheint auf der Startseite, optional)" value="' + esc(x.o || '') + '">' +
+          '<div class="admfbk2"><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button></div></div>';
+      }).join('') : '<p class="leise">Noch kein Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.</p>';
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fb]'), function (b) { b.onclick = function () {
+        var id = Number(b.getAttribute('data-fb')), feld = document.querySelector('[data-fbo="' + id + '"]');
+        b.disabled = true;
+        rpc('admin_feedback_setzen', { p_id: id, p_status: b.getAttribute('data-fs'), p_oeffentlich: feld ? feld.value : '' }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
+      }; });
     }).catch(fehler);
     if (tab === 'voting') rpc('admin_vorschlaege').then(function (v) {
       $('adm').innerHTML = (v || []).length ? v.map(function (x) { return '<div class="admz"><b>' + esc(x.spiel) + '</b><span class="leise">' + esc(x.von || '') + (x.frei ? ' · ✅ ' + x.stimmen + ' Stimmen' : ' · ⏳ wartet') + '</span><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
@@ -2614,7 +2677,7 @@
       '<h4>4. PROFILBILDER, CLIPS UND COVER</h4><p>Profilbilder, Clip-Vorschaubilder, Emotes und Spiele-Cover stammen ursprünglich von Twitch. Wir laden sie vorab selbst herunter und liefern sie als eigene Kopie über GitHub aus (siehe Punkt 3). Dein Browser baut beim Besuch der Seite <b>keine Verbindung zu Twitch</b> auf. Erst wenn du einen Link zu Twitch anklickst, gelten die Datenschutzbestimmungen von Twitch. Cover in der Spielesuche werden über unseren Server bei Supabase (Frankfurt) geladen und als Bilddaten mitgeschickt.</p>' +
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Ansichts-Einstellungen, eine Kopie der öffentlichen Ranglisten-Daten (damit die Seite auch ohne Verbindung etwas zeigt), deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
-      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Watch-Streak und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
+      '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Watch-Streak und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Feedback, das du über „Ideen & Feedback“ schickst, wird mit deinem Twitch-Namen auf unserem Supabase-Server gespeichert und nur von Kaze gelesen; wird eine Idee umgesetzt, kann Kaze sie kurz auf der Startseite mit deinem Namen nennen. Löschst du dein Konto, wird auch dein Feedback gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
       '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Löschst du dein Konto, werden Freundschaften und offene Einladungen mitgelöscht. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
@@ -2716,6 +2779,7 @@
       k.push(['bild', '📸', 'Karte als Bild', 'zum Teilen oder Speichern']);
       k.push(['code', '🎟️', 'Code einlösen', 'aus Stream oder Discord']);
       k.push(['einladen', '🤝', 'Freunde einladen', '10.000 Zeni pro Freund']);
+      k.push(['feedback', '💡', 'Ideen & Feedback', 'Wünsche für die Seite']);
       k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
     }
     k.push(['ansicht', '⚙️', 'Ansicht', 'Schrift, Kontrast, Animationen']);
@@ -2737,6 +2801,7 @@
       else if (k === 'bild') karteTeilen(sitzung.name, b.querySelector('b') || b);
       else if (k === 'code') codeDialog('');
       else if (k === 'einladen') einladenDialog();
+      else if (k === 'feedback') feedbackDialog();
       else if (k === 'wunsch') { shopF.typ = 'wunsch'; shopFilterSetzen('typ', 'wunsch'); geheZu('shop'); }
       else if (k === 'ansicht') ansichtDialog();
       else if (k === 'app') appInstallieren();
@@ -2748,7 +2813,7 @@
     }; });
   }
   // 📬 Posteingang: Freundschaftsanfragen, angenommene Anfragen, neue Erfolge, Einladungen, Wunsch leistbar, Glücks-Knopf
-  var post = { werbung: null, zeit: 0 };
+  var post = { werbung: null, feedback: null, zeit: 0 };
   function postGelesen() { try { return JSON.parse(localStorage.getItem('kz_post_' + sitzung.name) || '{}'); } catch (x) { return {}; } }
   function postMerken(g) { try { var k = Object.keys(g); if (k.length > 300) k.slice(0, k.length - 300).forEach(function (x) { delete g[x]; }); localStorage.setItem('kz_post_' + sitzung.name, JSON.stringify(g)); } catch (x) { } }
   function erfolgeFuer(l) {
@@ -2770,6 +2835,10 @@
         else if (mt[x] && it[x] && new Date(mt[x]) > new Date(it[x])) e.push({ id: 'fo:' + x, t: mt[x], an: x, text: '✅ <b>' + esc(prof(x).n || x) + '</b> hat deine Freundschaftsanfrage angenommen' });
       });
     }
+    (post.feedback || []).forEach(function (f) {
+      if (f.s === 'hilfreich') e.push({ id: 'fb:' + f.id + ':h', t: f.b, text: '💡 Danke für deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ – sie war hilfreich: <b>+2.500 Zeni</b>' });
+      if (f.s === 'umgesetzt') e.push({ id: 'fb:' + f.id + ':u', t: f.b, text: '✅ Deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ wurde umgesetzt: <b>+25.000 Zeni</b>' });
+    });
     (post.werbung || []).forEach(function (w) {
       e.push({ id: 'wk:' + w.l, t: w.t, an: w.l, text: '🌱 <b>' + esc(prof(w.l).n || w.l) + '</b> ist über deinen Einladungslink gekommen' + (w.s === 'wartet' ? ' – nach 5 Std. und 20 Nachrichten bekommst du 10.000 Zeni' : '') });
       if (w.s === 'belohnt') e.push({ id: 'wb:' + w.l, t: w.b || w.t, an: w.l, text: '🎉 <b>' + esc(prof(w.l).n || w.l) + '</b> hat das Ziel erreicht – du bekommst <b>10.000 Zeni</b>' });
@@ -2793,7 +2862,8 @@
     post.zeit = Date.now();
     var a = freunde.meine ? Promise.resolve() : meineFreundeLaden();
     var b = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_werbung', { method: 'POST', body: {} }); }).then(function (r) { post.werbung = r || []; }).catch(function () { });
-    Promise.all([a, b]).then(fertig);
+    var c = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_feedbacks', { method: 'POST', body: {} }); }).then(function (r) { post.feedback = r || []; }).catch(function () { });
+    Promise.all([a, b, c]).then(fertig);
   }
   function posteingangOeffnen() {
     if (!sitzung) { einloggenFragen(); return; }
@@ -3037,6 +3107,7 @@
   }
   // Anonymer Aufrufzähler: nur eine Zahl pro Tag, nichts wird im Browser gespeichert
   try { fetch(SB_URL + '/rest/v1/rpc/aufruf', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}', keepalive: true }).catch(function () { }); } catch (x) { }
+  fbNeuLaden();
   datenLaden().then(function (d) {
     daten = d;
     plaetzeMerken(d);
