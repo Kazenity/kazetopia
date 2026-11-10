@@ -586,6 +586,24 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .nur-breit { display: none; } @media (min-width: 1100px) { .nur-breit { display: block; } }
+  .wochekarte { margin-top: 12px; } .wochekarte h3 .leise { font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: 6px; }
+  .wtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin: 2px 0 10px; }
+  .wtabs button { background: var(--bg); border: 1px solid var(--rand); color: var(--hell); border-radius: 999px; padding: 6px 2px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wtabs button.an { background: var(--rosa); border-color: var(--rosa); color: #1a0a1d; }
+  .wochekarte .hoch { color: #7dffb0; }
+  @media (max-width: 370px) { .wtabs button { font-size: 11px; letter-spacing: -.2px; } }
+  @media (max-width: 700px) {
+    body.kopf-klein header .kl, body.kopf-klein header p, body.kopf-klein header .infoknopf { display: none; }
+    body.kopf-klein header h1 { font-size: 26px; margin: 4px 0 10px; text-align: left; }
+    body.kopf-klein header { padding-top: 10px; }
+  }
+  .wslw { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rand); font-size: 13px; line-height: 1.6; }
+  .wslw b { font-size: 12px; letter-spacing: 1px; color: var(--gold, #ffd166); } .wslw .wsn { font-weight: 700; cursor: pointer; }
+  .wslw .leise { font-size: 11.5px; margin-top: 2px; }
+  .wsabz { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 2px; }
+  .wschip { background: linear-gradient(120deg, rgba(255,209,102,.25), rgba(255,126,176,.2)); border: 1px solid rgba(255,209,102,.5); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
+  .wsabz .leise { font-size: 12px; }
   .wochenkopf { margin: 18px 2px -2px; font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--rosa); }
   .wochenkopf .leise { letter-spacing: 0; font-weight: 600; margin-left: 4px; }
   .seite .aufkarte { margin-top: 0; } .seite .aufreihe { grid-template-columns: 1fr; gap: 6px; } .seite .aufp { padding: 8px 10px; }
@@ -1400,7 +1418,8 @@
       .sort(function (p, q) { return (q.pv - q.pn) - (p.pv - p.pn) || q.wo - p.wo; });
   }
   function aufsteigerKarte(kl) {
-    var al = aufsteigerListe(); if (!al.length) return '';
+    var al = aufsteigerListe(), lw = letzteWocheZeile(); if (!al.length && !lw) return '';
+    if (!al.length) return '<div class="sbox aufkarte' + (kl ? ' ' + kl : '') + '"><h3>📈 AUFSTEIGER DER WOCHE</h3><div class="leise">Die neue Woche hat gerade begonnen – nach dem ersten Stream steht hier, wer am meisten aufholt.</div>' + lw + '</div>';
     var l = ich || (sitzung && sitzung.name) || '', ich3 = false;
     var h = '<div class="sbox aufkarte' + (kl ? ' ' + kl : '') + '"><h3>📈 AUFSTEIGER DER WOCHE<span class="leise">Watchtime-Rangliste seit Sonntag</span></h3><div class="aufreihe">';
     al.slice(0, 3).forEach(function (x, i) {
@@ -1409,7 +1428,7 @@
     });
     h += '</div>';
     if (l && !ich3) al.forEach(function (x, i) { if (x.l === l) h += '<div class="leise" style="margin-top:8px">Du: <b>▲ ' + (x.pv - x.pn) + (x.pv - x.pn === 1 ? ' Platz' : ' Plätze') + '</b> diese Woche · Platz ' + (i + 1) + ' bei den Aufsteigern</div>'; });
-    return h + '</div>';
+    return h + lw + '</div>';
   }
   // 📕 Stempelheft: ein Stempel pro Spiel – ausgewertet, wenn Kaze das Spiel beendet
   //    🌸 mind. 50 % der Streams oder mind. 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt)
@@ -1449,6 +1468,33 @@
     offen.forEach(function (k) { var z = stempelLauf(sp, k); if (z) h += '<div class="heftlauf"><b>' + esc(z.spiel) + '</b> <span class="leise">läuft noch</span><div class="leise">' + stempelText(z) + '</div>' + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '</div>'; });
     return h + '<div class="stregel">🌸 ab 50 % der Streams oder 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt) · vergeben, wenn Kaze das Spiel beendet</div></details>';
   }
+  // 🏆 Wochen-Belohnungen (Aufsteiger + Wochensieger der letzten Woche)
+  function letzteWocheZeile() {
+    var w = daten.wochenSieger; if (!w) return '';
+    var t = [];
+    (w.auf || []).forEach(function (x, i) { t.push(['🥇', '🥈', '🥉'][i] + ' <span' + dl(x.l) + fs(x.l) + ' class="wsn">' + esc(prof(x.l).n || x.l) + '</span>'); });
+    var h = '<div class="wslw"><b>🏆 Letzte Woche</b>';
+    if (t.length) h += '<div>📈 Aufsteiger: ' + t.join(' · ') + '</div>';
+    if (w.w) h += '<div>⏱️ Wochensieger Watchtime: <span' + dl(w.w.l) + fs(w.w.l) + ' class="wsn">' + esc(prof(w.w.l).n || w.w.l) + '</span> (' + zahl(w.w.v) + ' Std.)</div>';
+    if (w.c) h += '<div>💬 Wochensieger Chat: <span' + dl(w.c.l) + fs(w.c.l) + ' class="wsn">' + esc(prof(w.c.l).n || w.c.l) + '</span> (' + Number(w.c.v).toLocaleString('de-DE') + ' Nachr.)</div>';
+    return h + '<div class="leise">Belohnung: Aufsteiger 5.000 / 3.000 / 1.500 Zeni · Wochensieger je 3.000 Zeni</div></div>';
+  }
+  function wochenAbzeichen(login, sp) {
+    var w = daten.wochenSieger || {}, chips = [];
+    (w.auf || []).forEach(function (x) { if (x.l === login) chips.push('📈 Aufsteiger der Woche'); });
+    if (w.w && w.w.l === login) chips.push('⏱️ Wochensieger Watchtime');
+    if (w.c && w.c.l === login) chips.push('💬 Wochensieger Chat');
+    var z = (sp && sp.wz) || {}, zt = [];
+    if (z.a) zt.push(z.a + '× Aufsteiger'); if (z.w) zt.push(z.w + '× Wochensieger Watchtime'); if (z.c) zt.push(z.c + '× Wochensieger Chat');
+    if (!chips.length && !zt.length) return '';
+    return '<div class="wsabz">' + chips.map(function (c) { return '<span class="wschip">' + c + '</span>'; }).join('') + (zt.length ? '<span class="leise">🏆 ' + zt.join(' · ') + '</span>' : '') + '</div>';
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-wt]'); if (!b) return;
+    var k = b.closest('.wochekarte'); if (!k) return;
+    Array.prototype.forEach.call(k.querySelectorAll('[data-wt]'), function (x) { x.classList.toggle('an', x === b); });
+    Array.prototype.forEach.call(k.querySelectorAll('[data-wp]'), function (p) { p.hidden = p.getAttribute('data-wp') !== b.getAttribute('data-wt'); });
+  });
   function votingBox(kl) {
     var vt = daten.voting || [];
     return '<div class="sbox voting-box klick' + (kl ? ' ' + kl : '') + '" data-geh="spiele"><h3>🎮 WAS SPIELEN WIR ALS NÄCHSTES?</h3>' + (vt.length ? vt.map(function (x, i) { var c = sicher((daten.spielcover || {})[x.spiel_id]); return '<div class="vz">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="vz-ph">🎮</span>') + '<span class="nm">' + (i === 0 ? '👑 ' : '') + esc(x.spiel) + '</span><b>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + '</b></div>'; }).join('') : '<div class="leise">Noch keine Vorschläge – sei der Erste!</div>') + '<div class="vt-btn">Jetzt abstimmen ›</div></div>';
@@ -1470,15 +1516,25 @@
     function nfZeile(e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }
     h += '<div class="sbox"><h3>🎉 NEU FREIGESCHALTET</h3>' + (ev.length ? ev.slice(0, 5).map(nfZeile).join('') + (ev.length > 5 ? '<details class="nfmehr"><summary>' + (ev.length - 5) + ' weitere anzeigen</summary>' + ev.slice(5).map(nfZeile).join('') + '</details>' : '') : '<div class="leise">Im nächsten Stream gibt\'s hier die frischen Erfolge.</div>') + '</div>';
     h += votingBox('nur-schmal');
-    h += '</div>' + aufsteigerKarte('nur-schmal');
+    h += '</div>';
     // 🔥 Diese Woche (seit Sonntag) statt der Gesamt-Ranglisten – die stehen unter „Ränge“
     function woche(f) { var a = []; Object.keys(daten.spieler || {}).forEach(function (k) { var x = daten.spieler[k], v = x ? f(x) : 0; if (v > 0) a.push({ n: x.n || k, w: v }); }); return a.sort(function (p, q) { return q.w - p.w; }); }
     var wW = woche(function (x) { return x.wo ? x.wo.w : 0; }), wC = woche(function (x) { return x.wo ? x.wo.c : 0; }), wT = woche(function (x) { return x.ds || 0; });
-    if (wW.length || wC.length || wT.length) {
-      h += '<div class="wochenkopf">🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></div><div class="top3reihe">';
+    var al = aufsteigerListe(), lwz = letzteWocheZeile();
+    if (wW.length || wC.length || wT.length || al.length) {
+      var reihe = function (l, f) { return l.slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten diese Woche.</div>'; };
+      var tabs = [];
+      if (al.length) tabs.push(['auf', 'Aufsteiger', al.slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.l) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.l) + '<span class="nm"' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</span><b class="hoch">▲ ' + (x.pv - x.pn) + '</b></div>'; }).join('') + '<div class="leise" style="margin-top:6px">Plätze gutgemacht in der Watchtime-Rangliste</div>']);
+      tabs.push(['w', 'Watchtime', reihe(wW, function (w) { return zahl(w) + ' Std.'; })]);
+      tabs.push(['c', 'Chat', reihe(wC, function (w) { return Number(w).toLocaleString('de-DE'); })]);
+      tabs.push(['t', 'Treue', reihe(wT, function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); }) + '<div class="leise" style="margin-top:6px">Streams am Stück dabei</div>']);
+      h += '<div class="sbox wochekarte nur-schmal"><h3>🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></h3><div class="wtabs">' + tabs.map(function (t, i) { return '<button data-wt="' + t[0] + '"' + (i === 0 ? ' class="an"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>' +
+        tabs.map(function (t, i) { return '<div class="wpan" data-wp="' + t[0] + '"' + (i === 0 ? '' : ' hidden') + '>' + t[2] + '</div>'; }).join('') + lwz + '</div>';
+      h += '<div class="nur-breit"><div class="wochenkopf">🔥 DIESE WOCHE <span class="leise">seit Sonntag</span></div><div class="top3reihe">';
       h += top3('⏱️ WATCHTIME', wW, function (w) { return zahl(w) + ' Std.'; }, 'watchtime', 'Gesamt-Rangliste ›');
       h += top3('💬 CHAT', wC, function (w) { return Number(w).toLocaleString('de-DE'); }, 'chat', 'Gesamt-Rangliste ›');
       h += top3('🔥 TREUE-SERIE', wT, function (w) { return w + (w === 1 ? ' Stream' : ' Streams'); }, '', '');
+      h += '</div>';
     } else {
       h += '<div class="top3reihe">';
       h += top3('⏱️ WATCHTIME', daten.watchtime, function (w) { return zahl(w) + ' Std.'; }, 'watchtime');
@@ -2021,6 +2077,7 @@
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
+    h += wochenAbzeichen(login, sp);
     // Ränge als 2×2-Kacheln (Details unter „Alle Erfolge anzeigen“)
     h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
     GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossKachel(g, sp); });
@@ -2514,7 +2571,6 @@
     if (an) {
       var pu = postUngelesen();
       k.push(['post', '📬', 'Posteingang' + (pu ? ' (' + pu + ')' : ''), pu ? pu + ' neue Nachrichten' : 'Anfragen & Neuigkeiten']);
-      k.push(['profil', '👤', 'Mein Profil', 'Ränge, Erfolge, Abzeichen']);
       k.push(['gestalten', '✏️', 'Profil gestalten', 'Farbe, Titel, Rahmen, Banner']);
       k.push(['bild', '📸', 'Karte als Bild', 'zum Teilen oder Speichern']);
       k.push(['code', '🎟️', 'Code einlösen', 'aus Stream oder Discord']);
@@ -2749,6 +2805,7 @@
     try { zaehlen(reiter); } catch (x) { }
     setTimeout(function () { try { posteingangAktualisieren(); } catch (x) { } }, 0);
     $('unter').textContent = untertitel[reiter] || '';
+    document.body.classList.toggle('kopf-klein', gruppeVon(reiter) !== 'start');
     if (!daten) return;
     var mitMonat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat;
     $('zeitwahl').style.display = mitMonat ? '' : 'none';
