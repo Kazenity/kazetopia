@@ -613,6 +613,12 @@
   .stk.gold img, .stk.gold .stph { border-color: #ffd166; box-shadow: 0 0 12px rgba(255,209,102,.45); }
   .stk i { position: absolute; top: -6px; right: -6px; font-style: normal; font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
   .stk small { display: block; font-size: 10.5px; line-height: 1.25; margin-top: 4px; color: var(--grau); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .stdet { margin-top: 14px; background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 0 12px; }
+  .stdet summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 11px 0; font-size: 12px; letter-spacing: 1.5px; color: var(--rosa); }
+  .stdet summary::-webkit-details-marker { display: none; }
+  .stdet .stsum { flex: 1; letter-spacing: 0; color: var(--hell); font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stdet .stauf { color: var(--grau); transition: transform .2s; } .stdet[open] .stauf { transform: rotate(180deg); }
+  .stdet[open] { padding-bottom: 12px; }
   .stregel { font-size: 11.5px; line-height: 1.45; color: var(--grau); margin-top: 8px; }
   .heftlauf .leise { font-size: 12.5px; }
   .heftlauf { background: var(--bg); border: 1px dashed var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 13px; }
@@ -1436,10 +1442,12 @@
     var hat = Object.keys(sx).sort(function (a, b) { return String(fertig[b] || '').localeCompare(String(fertig[a] || '')); });
     var offen = Object.keys(st).filter(function (k) { return !gleichesSpiel(fertig, k) && !gleichesSpiel(sx, k); });
     if (!hat.length && !offen.length) return '';
-    var h = '<h4>📕 STEMPELHEFT <span class="leise" style="font-weight:600;letter-spacing:0">' + hat.length + (hat.length === 1 ? ' Stempel' : ' Stempel') + ' · ein Stempel pro Spiel</span></h4>';
+    var mini = hat.slice(0, 6).map(function (k) { return sx[k] === 'g' ? '🌟' : '🌸'; }).join('') + (hat.length > 6 ? ' +' + (hat.length - 6) : '');
+    var lauf = offen.length ? stempelLauf(sp, offen[0]) : null;
+    var h = '<details class="stdet"><summary><b>📕 STEMPELHEFT</b><span class="stsum">' + (hat.length ? hat.length + ' Stempel ' + mini : 'noch kein Stempel') + (lauf ? ' · ' + esc(lauf.spiel) + ' ' + lauf.x + '/' + lauf.n : '') + '</span><span class="stauf">▾</span></summary>';
     if (hat.length) h += '<div class="stempelheft">' + hat.map(function (k) { var c = coverFuer(k), g = sx[k] === 'g'; return '<div class="stk' + (g ? ' gold' : '') + '" title="' + esc(k) + (g ? ' · Gold-Stempel' : '') + '">' + (c ? '<img loading="lazy" alt="" src="' + esc(c) + '">' : '<span class="stph">🎮</span>') + '<i>' + (g ? '🌟' : '🌸') + '</i><small>' + esc(k) + '</small></div>'; }).join('') + '</div>';
     offen.forEach(function (k) { var z = stempelLauf(sp, k); if (z) h += '<div class="heftlauf"><b>' + esc(z.spiel) + '</b> <span class="leise">läuft noch</span><div class="leise">' + stempelText(z) + '</div>' + (z.gold ? '<div class="leise">' + z.gold + '</div>' : '') + '</div>'; });
-    return h + '<div class="stregel">🌸 ab 50 % der Streams oder 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt) · vergeben, wenn Kaze das Spiel beendet</div>';
+    return h + '<div class="stregel">🌸 ab 50 % der Streams oder 8 Streams · 🌟 Gold: keinen verpasst (ab 10 Streams 1× fehlen erlaubt) · vergeben, wenn Kaze das Spiel beendet</div></details>';
   }
   function votingBox(kl) {
     var vt = daten.voting || [];
@@ -2013,11 +2021,11 @@
       h += '</div><div class="syminfo" id="syminfo">Tippe auf ein Symbol für Details</div>';
     }
 
-    h += stempelHtml(sp);
     // Ränge als 2×2-Kacheln (Details unter „Alle Erfolge anzeigen“)
     h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
     GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossKachel(g, sp); });
     h += '</div>';
+    h += stempelHtml(sp);
 
     // Erfolge als Kacheln (gleicher Stil wie Ränge, inkl. nächstem Ziel)
     var ek = '';
