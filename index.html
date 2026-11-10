@@ -586,6 +586,7 @@
   .aufp .hoch { color: #7dffb0; font-weight: 800; font-size: 13px; } .aufp .leise { display: block; font-size: 11.5px; }
   .gebkarte { margin-bottom: 12px; }
   .aufkarte { margin-top: 12px; }
+  .thronbox { border-color: rgba(127,231,255,.5); margin-bottom: 12px; } .thronchronik { margin-top: 10px; font-size: 13px; line-height: 1.8; } .thronchronik div { cursor: pointer; }
   .gruss { margin: 14px 0 2px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(120deg, rgba(177,151,252,.18), rgba(255,126,176,.14)); border: 1px solid rgba(177,151,252,.45); font-size: 14px; font-style: italic; line-height: 1.5; }
   .gruss span { display: block; font-style: normal; font-size: 12px; color: var(--grau); margin-top: 4px; font-weight: 700; }
   .edfvor { display: flex; justify-content: center; margin: 22px 0 26px; } .edfvor .rwrap { transform: scale(1.7); }
@@ -1021,6 +1022,7 @@
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
     if (a.einmalig) { var bes = einmalBesitzer(a.id); if (bes && bes !== me) return 'vergeben'; }
+    if (a.thron && a.thronInhaber) { if (a.thronInhaber === me) return 'hat'; if (a.kaufbar === false) return 'geschuetzt'; }
     if (!me) return 'login';
     if (besitzt(me, a.id)) return 'hat';
     var nr = meineBest && meineBest[a.id], st = nr && daten.shop.status ? daten.shop.status[nr] : null;
@@ -1102,13 +1104,14 @@
         hat: '<button class="sbtn hat" data-anlegen>✓ Im Besitz · Anlegen</button>',
         wartet: '<button class="sbtn wartet" disabled>⏳ Wird gebucht …<small>' + (kaufAlt(a.id) ? '☕ Der Shopbetreiber ist gerade einen Kaffee trinken. Komm später wieder! :)' : 'dauert meist 1–2 Min.') + '</small></button><button class="sabbr" data-abbr="' + a.id + '">Abbrechen</button>',
         zuwenig: '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>',
-        kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">Kaufen</button>',
+        kaufen: '<button class="sbtn los" data-kauf="' + a.id + '">' + (a.thron && a.thronInhaber ? '👑 Thron übernehmen' : 'Kaufen') + '</button>',
         fehlt: '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>',
-        vergeben: '<button class="sbtn hat" disabled>👑 Gehört ' + esc(prof(einmalBesitzer(a.id)).n || einmalBesitzer(a.id)) + '</button>'
+        vergeben: '<button class="sbtn hat" disabled>👑 Gehört ' + esc(prof(einmalBesitzer(a.id)).n || einmalBesitzer(a.id)) + '</button>',
+        geschuetzt: '<button class="sbtn hat" disabled>🛡️ Geschützt<small>ablösbar ab ' + (a.thronSchutzBis ? new Date(a.thronSchutzBis).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ', ' + new Date(a.thronSchutzBis).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr' : 'bald') + '</small></button>'
       }[z];
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
       var rab = !vorschau && preisVon(a) !== a.preis, heuteRab = rab && tagesAngebot() && tagesAngebot().id === a.id;
-      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
+      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.thron && !vorschau ? '<span class="sbadge sai">' + (a.thronInhaber ? '👑 König: ' + esc(prof(a.thronInhaber).n || a.thronInhaber) : '👑 Thron ist frei') + '</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
       return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
@@ -1133,7 +1136,7 @@
     }
     h += bereich('⏳ SAISON', 'nur für kurze Zeit', sh.artikel.filter(function (a) { return a.kaufbar !== false && a.saisonBis; }), false);
     TYPEN.forEach(function (t) {
-      h += bereich(t[1], '', sh.artikel.filter(function (a) { return a.kaufbar !== false && !a.auslage && !a.saisonBis && a.id.indexOf(t[0] + '_') === 0; }), false);
+      h += bereich(t[1], '', sh.artikel.filter(function (a) { return (a.kaufbar !== false || a.thron) && !a.auslage && !a.saisonBis && a.id.indexOf(t[0] + '_') === 0; }), false);
     });
     if (!gezeigt) h += '<div class="sfleer">' + (shopF.typ === 'wunsch' ? 'Deine Wunschliste ist leer – tipp bei einem Artikel auf ♡.' : 'Nichts gefunden – ' + (shopF.leisten ? 'für deine Zeni gibt es gerade nichts Neues.' : 'probier einen anderen Filter.')) + '<br><button class="vlink" id="sfreset">Filter zurücksetzen</button></div>';
     var bald = (aus.naechste || []).map(function (id) { return kosArtikel(id); }).filter(function (a) { return a; });
@@ -2645,11 +2648,25 @@
   // 🏛️ Ruhmeshalle
   function wocheText(iso) { var d = new Date(iso + 'T12:00:00'), e = new Date(d.getTime() + 6 * 86400000); function f(x) { return ('0' + x.getDate()).slice(-2) + '.' + ('0' + (x.getMonth() + 1)).slice(-2) + '.'; } return f(d) + '–' + f(e); }
   function monatText(ym) { var p = String(ym).split('-'); return ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'][Number(p[1]) - 1] + ' ' + p[0]; }
+  // 👑 Königs-Chronik: aktueller König + alle bisherigen
+  function thronHtml() {
+    var th = daten.shop && daten.shop.thron, a = kosArtikel('titel_koenig');
+    if (!a) return '';
+    var dat = function (x) { return x ? new Date(x).toLocaleDateString('de-DE') : ''; };
+    var h = '<div class="sbox thronbox"><h3>👑 KÖNIG VON KAZETOPIA</h3>';
+    if (th && th.inhaber) {
+      var schutz = new Date(th.schutzBis) > new Date();
+      h += '<div class="z ruhmp"' + dl(th.inhaber) + '>' + person(th.inhaber, '') + '</div><div class="leise">König seit ' + dat(th.seit) + ' · ' + (schutz ? '🛡️ geschützt bis ' + dat(th.schutzBis) : 'kann abgelöst werden') + ' · Thron kostet jetzt <b>' + zahl(th.preis) + ' Zeni</b></div>';
+      var ch = (th.chronik || []).slice().reverse();
+      if (ch.length) h += '<div class="thronchronik"><b>Frühere Könige</b>' + ch.map(function (x) { return '<div' + dl(x.l) + '>👑 ' + esc(prof(x.l).n || x.l) + ' <span class="leise">' + dat(x.von) + ' – ' + dat(x.bis) + '</span></div>'; }).join('') + '</div>';
+    } else h += '<div class="leise">Der Thron ist noch frei. Wer ihn im Shop für <b>' + zahl(a.preis) + ' Zeni</b> kauft, wird der erste König von Kazetopia.</div>';
+    return h + '<div class="leise" style="margin-top:6px">Nach 7 Tagen kann jeder den Thron übernehmen – jedes Mal 50 % teurer. Wer abgelöst wird, bekommt den Titel „Ehemaliger König“.</div></div>';
+  }
   function ruhmHtml() {
     var r = daten.ruhm || {}, wo = r.wochen || [], mo = r.monate || [];
-    if (!wo.length && !mo.length) return '<div class="liste"><div class="leer">Die Ruhmeshalle füllt sich bald – jede Woche kürt Kaze den Wind der Woche und den Clipper der Woche. 🏛️</div></div>';
+    if (!wo.length && !mo.length) return thronHtml() + '<div class="liste"><div class="leer">Die Ruhmeshalle füllt sich bald – jede Woche kürt Kaze den Wind der Woche und den Clipper der Woche. 🏛️</div></div>';
     function wer(l, zusatz) { return l ? '<div class="z ruhmp"' + dl(l) + '>' + person(l, zusatz) + '</div>' : '<div class="leise">–</div>'; }
-    var h = '<div class="top3reihe ruhmtop">';
+    var h = thronHtml() + '<div class="top3reihe ruhmtop">';
     h += '<div class="sbox"><h3>🌬️ WIND DER WOCHE</h3>' + (wo[0] && wo[0].weekly ? wer(wo[0].weekly) + '<div class="leise">' + wocheText(wo[0].w) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
     var cl = wo.filter(function (x) { return x.clipper; })[0];
     h += '<div class="sbox"><h3>✂️ CLIPPER DER WOCHE</h3>' + (cl ? wer(cl.clipper) + '<div class="leise">' + wocheText(cl.w) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
