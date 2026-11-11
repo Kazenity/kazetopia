@@ -1246,7 +1246,7 @@
     var t = [];
     if (rolle(l)) t.push(ROLLE[rolle(l)][1]);
     kosInventar(l).titel.forEach(function (n) { var nm = kosName('titel_' + n); if (t.indexOf(nm) < 0) t.push(nm); });
-    GROSS.forEach(function (g) { var v = wertVon(sp, g.k); g.leiter.forEach(function (x) { if ((rolle(l) || v >= x[0]) && t.indexOf(x[2]) < 0) t.push(x[2]); }); });
+    GROSS.forEach(function (g) { var v = wertVon(sp, g.k); g.leiter.forEach(function (x) { if ((rolle(l) === 'streamer' || v >= x[0]) && t.indexOf(x[2]) < 0) t.push(x[2]); }); });
     return t;
   }
   function designGueltig(l) {
