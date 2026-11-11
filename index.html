@@ -2731,13 +2731,14 @@
     function wer(l, zusatz) { return l ? '<div class="z ruhmp"' + dl(l) + '>' + person(l, zusatz) + '</div>' : '<div class="leise">–</div>'; }
     var h = thronHtml() + '<div class="top3reihe ruhmtop">';
     h += '<div class="sbox"><h3>🌬️ WIND DER WOCHE</h3>' + (wo[0] && wo[0].weekly ? wer(wo[0].weekly) + '<div class="leise">' + wocheText(wo[0].w) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
-    var cl = wo.filter(function (x) { return x.clipper; })[0];
-    h += '<div class="sbox"><h3>✂️ CLIPPER DER WOCHE</h3>' + (cl ? wer(cl.clipper) + '<div class="leise">' + wocheText(cl.w) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
+    function clipperVon(x) { return String(x.clipper || '').split(/\s*,\s*/).filter(function (n) { return n; }); }   // geteilter Clip: mehrere Namen mit Komma
+    var cl = wo.filter(function (x) { return clipperVon(x).length; })[0];
+    h += '<div class="sbox"><h3>✂️ CLIPPER DER WOCHE</h3>' + (cl ? clipperVon(cl).map(function (n) { return wer(n); }).join('') + '<div class="leise">' + wocheText(cl.w) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
     h += '<div class="sbox"><h3>🌙 MOND DES MONATS</h3>' + (mo[0] ? wer(mo[0].monthly) + '<div class="leise">' + monatText(mo[0].m) + '</div>' : '<div class="leise">noch offen</div>') + '</div>';
     h += '</div>';
     // Wer wurde am öftesten ausgezeichnet?
     var zaehl = {};
-    wo.forEach(function (x) { ['weekly', 'clipper'].forEach(function (k) { if (x[k]) zaehl[x[k]] = (zaehl[x[k]] || 0) + 1; }); });
+    wo.forEach(function (x) { (x.weekly ? [x.weekly] : []).concat(clipperVon(x)).forEach(function (n) { zaehl[n] = (zaehl[n] || 0) + 1; }); });
     mo.forEach(function (x) { if (x.monthly) zaehl[x.monthly] = (zaehl[x.monthly] || 0) + 1; });
     var top = Object.keys(zaehl).sort(function (a, b) { return zaehl[b] - zaehl[a] || a.localeCompare(b); }).slice(0, 5);
     if (top.length) {
@@ -2755,7 +2756,7 @@
       wo.forEach(function (x) {
         h += '<div class="ruhmzeile"><span class="leise">' + wocheText(x.w) + '</span><span class="ruhmwer">' +
           (x.weekly ? '<span' + dl(x.weekly) + ' class="ruhmname">🌬️ ' + bild(x.weekly) + '<b' + fs(x.weekly) + '>' + esc(prof(x.weekly).n || x.weekly) + '</b></span>' : '') +
-          (x.clipper ? '<span' + dl(x.clipper) + ' class="ruhmname">✂️ ' + bild(x.clipper) + '<b' + fs(x.clipper) + '>' + esc(prof(x.clipper).n || x.clipper) + '</b></span>' : '') + '</span></div>';
+          clipperVon(x).map(function (n) { return '<span' + dl(n) + ' class="ruhmname">✂️ ' + bild(n) + '<b' + fs(n) + '>' + esc(prof(n).n || n) + '</b></span>'; }).join('') + '</span></div>';
       });
       h += '</div>';
     }
