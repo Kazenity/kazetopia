@@ -6,6 +6,7 @@
 <title>Kazetopia · Kaze's Community</title>
 <meta name="description" content="Willkommen in Kazetopia! Ranglisten, Top-Clips, Emotes &amp; Kazes Spiele-Bewertungen – schau, wo du stehst.">
 <meta name="theme-color" content="#180a1c">
+<script>try { var kzA = JSON.parse(localStorage.getItem("kz_ansicht") || "{}"); if (kzA && /^(mitternacht|matcha|glut)$/.test(kzA.theme || "")) document.documentElement.className += " t-" + kzA.theme; } catch (e) { }</script>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -35,9 +36,14 @@
     --rosa: #ff9ebf; --rosa2: #c2396f; --lila: #6a2c8c; --hell: #f6ecf6; --grau: #c9b6ce; --dunkel: #280c22;
     --gold: #ffd27a; --silber: #dfe3ef; --bronze: #f0a774;
   }
+  /* 🎨 Themes (Ich → Ansicht) – nur Farben, alles andere bleibt gleich */
+  :root { --glow: rgba(194,57,111,.35); }
+  html.t-mitternacht { --bg: #0b0f22; --flaeche: #161b36; --hover: #1f2647; --rand: #2f3866; --rosa: #9dbcff; --rosa2: #4a5fd0; --lila: #3b3f9a; --hell: #eef1fb; --grau: #b4bddc; --dunkel: #0e1230; --glow: rgba(74,95,208,.38); }
+  html.t-matcha { --bg: #0b1611; --flaeche: #14231b; --hover: #1c2f25; --rand: #2c4637; --rosa: #a6e3b8; --rosa2: #3c9a63; --lila: #2f6b4a; --hell: #eef6f0; --grau: #b8cfc0; --dunkel: #0e1f16; --glow: rgba(60,154,99,.32); }
+  html.t-glut { --bg: #190c08; --flaeche: #29150f; --hover: #351c13; --rand: #52301f; --rosa: #ffb683; --rosa2: #d9542b; --lila: #8c3a1f; --hell: #fbefe7; --grau: #d8bfae; --dunkel: #2a1109; --glow: rgba(217,84,43,.35); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { background: var(--bg); }
-  body { font-family: Poppins, "Segoe UI", sans-serif; color: var(--hell); background: radial-gradient(1200px 500px at 50% -120px, rgba(194,57,111,.35), transparent 70%), var(--bg); min-height: 100vh; }
+  body { font-family: Poppins, "Segoe UI", sans-serif; color: var(--hell); background: radial-gradient(1200px 500px at 50% -120px, var(--glow), transparent 70%), var(--bg); min-height: 100vh; }
   .wrap { max-width: 820px; margin: 0 auto; padding: 32px 16px 48px; position: relative; z-index: 1; }
 
   header { text-align: center; margin-bottom: 26px; position: relative; }
@@ -66,7 +72,7 @@
 
   .podest { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; margin-bottom: 22px; }
   .platz { background: var(--flaeche); border-radius: 16px; padding: 16px 10px 14px; text-align: center; position: relative; min-width: 0; }
-  .platz.p1 { padding-top: 26px; background: linear-gradient(160deg, #c2396f, #5a2562); box-shadow: 0 10px 30px rgba(194,57,111,.35); }
+  .platz.p1 { padding-top: 26px; background: linear-gradient(160deg, var(--rosa2), var(--lila)); box-shadow: 0 10px 30px var(--glow); }
   .platz .m { font-size: 24px; line-height: 1; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); }
   .platz { margin-top: 12px; }
   .platz .n { font-weight: 800; font-size: 15px; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -112,7 +118,7 @@
   .danke .p:last-child { border-bottom: 0; }
   .danke .p i { font-style: normal; color: var(--grau); min-width: 24px; flex: 0 0 auto; }
   .danke-text { text-align: center; color: var(--grau); font-size: 14px; margin-bottom: 14px; }
-  .live { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #c2396f, #5a2562); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; color: var(--hell); text-decoration: none; box-shadow: 0 8px 24px rgba(194,57,111,.3); }
+  .live { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--rosa2), var(--lila)); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; color: var(--hell); text-decoration: none; box-shadow: 0 8px 24px rgba(194,57,111,.3); }
   .eventband { display: block; background: linear-gradient(135deg, #6a2c8c, #c2396f); border: 1px solid rgba(255,158,191,.45); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; color: var(--hell); box-shadow: 0 8px 24px rgba(106,44,140,.3); }
   .eventband b { display: block; font-size: 15px; }
   .eventband span { display: block; font-size: 13px; color: #ffd9e6; margin-top: 3px; white-space: pre-line; }
@@ -354,7 +360,7 @@
   .vz:last-of-type { border-bottom: 0; } .vz img, .vz-ph { width: 30px; height: 40px; border-radius: 5px; object-fit: cover; background: var(--bg); display: inline-flex; align-items: center; justify-content: center; }
   .vz b { margin-left: auto; color: var(--rosa); font-size: 12.5px; white-space: nowrap; } .vz .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .z.nf .nm { white-space: normal; font-weight: 600; font-size: 12.5px; line-height: 1.35; } .z.nf .nm i { font-style: normal; font-weight: 800; } .z.nf .nm span { color: var(--grau); }
-  .onboard { position: relative; background: linear-gradient(135deg, rgba(255,158,191,.18), rgba(145,70,255,.15)); border: 1px solid var(--rosa); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; font-size: 13.5px; }
+  .onboard { position: relative; background: linear-gradient(135deg, var(--glow), rgba(0,0,0,0) 90%); border: 1px solid var(--rosa); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; font-size: 13.5px; }
   .onboard ol { margin: 8px 0 0 18px; padding: 0; line-height: 1.6; } .zu-klein { position: absolute; right: 8px; top: 6px; background: none; border: 0; color: var(--grau); font-size: 20px; cursor: pointer; }
   .reiter button .ri { margin-right: 6px; }
   .unterreiter { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: -12px 0 18px; }
@@ -613,6 +619,12 @@
   .shopneu { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(127,231,255,.12); border: 1px solid rgba(127,231,255,.4); font-size: 13px; }
   .sbadge.neu { background: #7fe7ff; color: #10303a; }
   .offlineband { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255,209,102,.14); border: 1px solid rgba(255,209,102,.45); font-size: 13px; font-weight: 600; text-align: center; }
+  .themewahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 0 14px; border-top: 1px solid var(--rand); }
+  .themewahl button { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--hell); background: var(--bg); border: 2px solid var(--rand); border-radius: 12px; padding: 8px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .themewahl button.an { border-color: var(--rosa); }
+  .themewahl i { display: block; width: 34px; height: 22px; border-radius: 8px; }
+  .fbantw { display: block; margin-top: 6px; padding: 7px 10px; border-left: 3px solid var(--rosa); background: var(--bg); border-radius: 6px; font-size: 12.5px; color: var(--hell); white-space: pre-wrap; }
+  .admfeld { display: block; width: 100%; font-family: inherit; font-size: 14px; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 11px; margin-top: 8px; resize: vertical; }
   .anz { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rand); cursor: pointer; }
   .anz b { display: block; font-size: 14px; } .anz small { color: var(--grau); font-size: 12.5px; }
   .anz input { width: 22px; height: 22px; accent-color: var(--rosa); flex: 0 0 auto; }
@@ -1608,15 +1620,29 @@
   function ansichtAnwenden() {
     var a = ansichtLesen(), r = document.documentElement;
     r.classList.toggle('a-gross', !!a.gross); r.classList.toggle('a-kontrast', !!a.kontrast); r.classList.toggle('a-ruhig', !!a.ruhig);
+    THEMES.forEach(function (t) { r.classList.toggle('t-' + t[0], a.theme === t[0]); });
+    var th = THEMES.filter(function (t) { return t[0] === (a.theme || 'sakura'); })[0] || THEMES[0];
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', th[2]);
   }
+  // [Schlüssel, Name, Hintergrund, Akzent]
+  var THEMES = [['sakura', '🌸 Sakura', '#180a1c', '#ff9ebf'], ['mitternacht', '🌙 Mitternacht', '#0b0f22', '#9dbcff'], ['matcha', '🍵 Matcha', '#0b1611', '#a6e3b8'], ['glut', '🔥 Glut', '#190c08', '#ffb683']];
   function ansichtDialog() {
     var a = ansichtLesen();
     var zeile = function (k, t, u) { return '<label class="anz"><span><b>' + t + '</b><small>' + u + '</small></span><input type="checkbox" data-anz="' + k + '"' + (a[k] ? ' checked' : '') + '></label>'; };
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>⚙️ Ansicht</b><div class="kk">Gilt nur auf diesem Gerät.</div></div></div>' +
+      '<h4>FARBTHEMA</h4><div class="themewahl">' + THEMES.map(function (t) { return '<button data-theme="' + t[0] + '"' + ((a.theme || 'sakura') === t[0] ? ' class="an"' : '') + '><i style="background:linear-gradient(135deg,' + t[2] + ' 45%,' + t[3] + ' 46%)"></i>' + t[1] + '</button>'; }).join('') + '</div>' +
       zeile('gross', 'Größere Schrift', 'alles etwas größer und leichter zu lesen') +
       zeile('kontrast', 'Mehr Kontrast', 'hellere Schrift, deutlichere Ränder') +
       zeile('ruhig', 'Animationen aus', 'keine Bewegungen, kein Jahreszeiten-Effekt') + '</div>';
     karteOeffnen(h);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-theme]'), function (b) {
+      b.onclick = function () {
+        var n = ansichtLesen(); n.theme = b.getAttribute('data-theme'); if (n.theme === 'sakura') delete n.theme;
+        try { localStorage.setItem('kz_ansicht', JSON.stringify(n)); } catch (x) { }
+        ansichtAnwenden(); zaehlen('th' + b.getAttribute('data-theme'));
+        Array.prototype.forEach.call(document.querySelectorAll('[data-theme]'), function (x) { x.classList.toggle('an', x === b); });
+      };
+    });
     Array.prototype.forEach.call(document.querySelectorAll('[data-anz]'), function (c) {
       c.onchange = function () {
         var n = ansichtLesen(); n[c.getAttribute('data-anz')] = c.checked;
@@ -1628,7 +1654,7 @@
   }
   ansichtAnwenden();
   // 💡 Ideen & Feedback: 1× pro Woche, nur Kaze liest es. Hilfreich = 2.500 Zeni, umgesetzt = 25.000 Zeni + Titel „Ideengeber“
-  var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
+  var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], in_arbeit: ['🔧', 'in Bearbeitung · +2.500 Zeni'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
   function feedbackDialog() {
     zaehlen('feedback');
     if (!sitzung) { einloggenFragen(); return; }
@@ -1649,7 +1675,7 @@
     function liste() {
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_feedbacks', { method: 'POST', body: {} }); }).then(function (r) {
         var el = $('fbliste'); if (!el || !(r || []).length) return;
-        el.innerHTML = '<h4>DEINE IDEEN</h4>' + r.map(function (x) { var st = FB_STATUS[x.s] || FB_STATUS.neu; return '<div class="fbalt"><span>' + st[0] + '</span><div>' + esc(x.x) + (x.x.length >= 90 ? ' …' : '') + '<small>' + st[1] + ' · ' + new Date(x.t).toLocaleDateString('de-DE') + '</small></div></div>'; }).join('');
+        el.innerHTML = '<h4>DEINE IDEEN</h4>' + r.map(function (x) { var st = FB_STATUS[x.s] || FB_STATUS.neu; return '<div class="fbalt"><span>' + st[0] + '</span><div>' + esc(x.x) + (x.x.length >= 90 ? ' …' : '') + '<small>' + st[1] + ' · ' + new Date(x.t).toLocaleDateString('de-DE') + '</small>' + (x.a ? '<span class="fbantw">💬 <b>Kaze:</b> ' + esc(x.a) + '</span>' : '') + '</div></div>'; }).join('');
       }).catch(function () { });
     }
     liste();
@@ -2488,23 +2514,36 @@
       $('adm').innerHTML = h;
       rpc('admin_bereiche').then(function (b) {
         var el = $('adm'); if (!el || !(b || []).length) return;
-        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“' };
+        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut' };
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="admz"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
     }).catch(fehler);
     if (tab === 'feedback') rpc('admin_feedback').then(function (f) {
       f = f || [];
       var neu = f.filter(function (x) { return x.s === 'neu'; }).length;
-      $('adm').innerHTML = f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
+      var STNAME = { neu: 'neu', in_arbeit: 'in Bearbeitung', hilfreich: 'hilfreich', umgesetzt: 'umgesetzt', abgelehnt: 'passt nicht' };
+      $('adm').innerHTML = f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
         var st = FB_STATUS[x.s] || FB_STATUS.neu;
-        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
-          '<input class="codefeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Bei „Umgesetzt“: Was ist neu? (erscheint auf der Startseite, optional)" value="' + esc(x.o || '') + '">' +
-          '<div class="admfbk2"><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button></div></div>';
+        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
+          '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="2" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea>' +
+          '<input class="admfeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Nur bei „Umgesetzt“: kurzer Satz für die Startseite (optional)" value="' + esc(x.o || '') + '">' +
+          '<div class="admfbk2"><button class="vlink" data-fbaw="' + x.id + '">💬 Nur Antwort senden</button><button class="vlink" data-fb="' + x.id + '" data-fs="in_arbeit">🔧 In Bearbeitung</button><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button></div></div>';
       }).join('') : '<p class="leise">Noch kein Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.</p>';
+      var alt = {}; f.forEach(function (x) { alt[x.id] = x.a || ''; });
+      // geänderte Antwort mitschicken (vor dem Status), damit nichts verloren geht
+      function antwortSenden(id) {
+        var a = document.querySelector('[data-fba="' + id + '"]'), t = a ? a.value.trim() : '';
+        if (t === (alt[id] || '').trim()) return Promise.resolve();
+        return rpc('admin_feedback_antwort', { p_id: id, p_text: t });
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fbaw]'), function (b) { b.onclick = function () {
+        var id = Number(b.getAttribute('data-fbaw')); b.disabled = true;
+        antwortSenden(id).then(function () { adminOeffnen('feedback'); }).catch(fehler);
+      }; });
       Array.prototype.forEach.call(document.querySelectorAll('[data-fb]'), function (b) { b.onclick = function () {
         var id = Number(b.getAttribute('data-fb')), feld = document.querySelector('[data-fbo="' + id + '"]');
         b.disabled = true;
-        rpc('admin_feedback_setzen', { p_id: id, p_status: b.getAttribute('data-fs'), p_oeffentlich: feld ? feld.value : '' }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
+        antwortSenden(id).then(function () { return rpc('admin_feedback_setzen', { p_id: id, p_status: b.getAttribute('data-fs'), p_oeffentlich: feld ? feld.value : '' }); }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
       }; });
     }).catch(fehler);
     if (tab === 'voting') rpc('admin_vorschlaege').then(function (v) {
@@ -2783,7 +2822,7 @@
       k.push(['feedback', '💡', 'Ideen & Feedback', 'Wünsche für die Seite']);
       k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
     }
-    k.push(['ansicht', '⚙️', 'Ansicht', 'Schrift, Kontrast, Animationen']);
+    k.push(['ansicht', '⚙️', 'Ansicht', 'Farbthema, Schrift, Animationen']);
     if (!istApp()) k.push(['app', '📱', 'Als App', 'auf den Homescreen']);
     k.push(['kalender', '📅', 'Streams im Kalender', 'nie wieder einen verpassen']);
     if (an && sitzung.name === 'kazenity') k.push(['admin', '🛠️', 'Admin', 'nur für dich']);
@@ -2837,6 +2876,9 @@
       });
     }
     (post.feedback || []).forEach(function (f) {
+      var kurz = esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '');
+      if (f.s === 'in_arbeit') e.push({ id: 'fb:' + f.id + ':i', t: f.b, text: '🔧 Kaze arbeitet an deiner Idee „' + kurz + '“ – danke dafür!' });
+      if (f.a && f.at) e.push({ id: 'fb:' + f.id + ':a:' + f.at, t: f.at, text: '💬 Kaze hat auf deine Idee „' + kurz + '“ geantwortet: „' + esc(f.a) + '“' });
       if (f.s === 'hilfreich') e.push({ id: 'fb:' + f.id + ':h', t: f.b, text: '💡 Danke für deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ – sie war hilfreich: <b>+2.500 Zeni</b>' });
       if (f.s === 'umgesetzt') e.push({ id: 'fb:' + f.id + ':u', t: f.b, text: '✅ Deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ wurde umgesetzt: <b>+25.000 Zeni</b>' });
     });
