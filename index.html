@@ -607,7 +607,7 @@
   .fbzeile { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 10px; }
   .fbalt { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rand); font-size: 13px; } .fbalt small { display: block; color: var(--grau); font-size: 11.5px; margin-top: 2px; }
   .fbneu .nm small { display: block; font-size: 11.5px; font-weight: 600; }
-  .fbneu { margin-top: 12px; }
+  .fbneu { margin: 12px 0; position: relative; } .fbweg { position: absolute; top: 8px; right: 10px; background: none; border: 0; color: var(--grau); font-size: 15px; cursor: pointer; padding: 4px 6px; line-height: 1; } .fbweg:hover { color: var(--hell); } .fbneu .z .nm { white-space: normal; overflow: visible; line-height: 1.35; }
   .admfb.neu { border-color: var(--rosa); } .admfbk { display: flex; justify-content: space-between; gap: 8px; } .admfbt { margin: 8px 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
   .admfbk2 { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .rang.tier { background: rgba(177,151,252,.2); border: 1px solid rgba(177,151,252,.55); } .rang.tier.t3 { background: rgba(255,209,102,.18); border-color: rgba(255,209,102,.6); }
@@ -977,7 +977,7 @@
     var ids = (daten && daten.shop && daten.shop.inventar && daten.shop.inventar[l]) || [];
     return ids.indexOf(id) >= 0 || (sitzung && sitzung.name === l && !!sofortBesitz[id]);
   }
-  var DESIGN_REGELN = '<ul class="dregeln"><li>Nur <b>eigene Designs</b> oder selbst erstellte KI-Bilder</li><li><b>Keine</b> bekannten Figuren, Logos, Marken oder echten Personen</li><li>Keine Beleidigungen, keine Links, keine Werbung</li><li>Rahmen: quadratisch, Ring mit transparenter Mitte (PNG) · Banner: Querformat, ideal 1200 × 396</li><li>Eine Überarbeitung ist inklusive</li><li>Kaze prüft innerhalb von 7 Tagen – kein Anspruch auf Freigabe. Wird es abgelehnt, bekommst du deine Zeni komplett zurück.</li></ul>';
+  var DESIGN_REGELN = '<ul class="dregeln"><li>Nur <b>eigene Designs</b> oder selbst erstellte KI-Bilder</li><li><b>Keine</b> bekannten Figuren, Logos, Marken oder echten Personen</li><li>Keine Beleidigungen, keine Links, keine Werbung</li><li>Rahmen: quadratisch, Ring mit transparenter Mitte (PNG) · Banner: Querformat, ideal 1200 × 396</li><li>Eine Überarbeitung ist inklusive</li><li>Kaze prüft innerhalb von 7 Tagen – kein Anspruch auf Freigabe. Wird es abgelehnt, bekommst du deine Zeni komplett zurück.</li><li><b>Mit dem Einreichen bestätigst du:</b> Du hast das Design selbst erstellt oder besitzt alle Rechte daran, und Kaze darf es auf Kazetopia zeigen (auf deiner Profilkarte, in Ranglisten und im Shop-Verlauf).</li><li>Stellt sich später heraus, dass du nicht die Rechte hattest (z. B. fremdes Bild, Beschwerde des Urhebers), wird das Design entfernt – <b>ohne Rückerstattung</b>.</li></ul>';
   function designInfo(id) {
     var a = kosArtikel(id); if (!a) return;
     var hat = sitzung && hatGutschein(sitzung.name, id);
@@ -1240,10 +1240,11 @@
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛍️ ' + typ + ' kaufen</b><div class="kk">' + stf[0] + ' ' + stf[1] + '</div></div></div>' +
       '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(preisVon(a)) + ' Zeni</b>' + (preisVon(a) !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>' +
-      (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als Ticket im Discord. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
+      (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als Ticket im Discord. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p><label class="anz" style="border:0;padding:6px 0"><span><b>Ich habe die Regeln gelesen</b><small>Ich reiche nur ein Design ein, das ich selbst erstellt habe oder an dem ich alle Rechte besitze.</small></span><input type="checkbox" id="kaufregeln"></label>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
       '<div class="edknoepfe"><button class="vtw" id="kaufok">Ja, kaufen</button><button class="vlink" id="kaufab">Abbrechen</button></div><p class="leise" id="kaufinfo"></p></div>';
     karteOeffnen(h);
     $('kaufab').onclick = profilZu;
+    if ($('kaufregeln')) { $('kaufok').disabled = true; $('kaufregeln').onchange = function () { $('kaufok').disabled = !this.checked; }; }
     $('kaufok').onclick = function () {
       this.disabled = true;
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/kaufen', { method: 'POST', body: { p_artikel: id } }); })
@@ -1671,6 +1672,12 @@
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-fbk]')) feedbackDialog(); });
   document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-fbweg]'); if (!b) return;
+    e.stopPropagation(); var k = b.closest('.fbneu');
+    try { localStorage.setItem('kz_fbneu_weg', k.getAttribute('data-neuste') || ''); } catch (x) { }
+    if (k) k.remove();
+  });
+  document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-wt]'); if (!b) return;
     var k = b.closest('.wochekarte'); if (!k) return;
     Array.prototype.forEach.call(k.querySelectorAll('[data-wt]'), function (x) { x.classList.toggle('an', x === b); });
@@ -1715,6 +1722,7 @@
   }
   ansichtAnwenden();
   // 💡 Ideen & Feedback: 1× pro Woche, nur Kaze liest es. Hilfreich = 2.500 Zeni, umgesetzt = 25.000 Zeni + Titel „Ideengeber“
+  var fbAnsicht = 'offen';
   var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], in_arbeit: ['🔧', 'in Bearbeitung · +2.500 Zeni'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
   function feedbackDialog() {
     zaehlen('feedback');
@@ -1749,7 +1757,10 @@
   }
   function fbNeuKarte() {
     if (!fbNeu || !fbNeu.length) return '';
-    return '<div class="sbox fbneu"><h3>✨ NEU DANK EUREM FEEDBACK</h3>' + fbNeu.map(function (x) { return '<div class="z"' + dl(x.l) + '>' + bild(x.l) + '<span class="nm">' + esc(x.x) + '<small class="leise">Idee von ' + esc(prof(x.l).n || x.l) + '</small></span></div>'; }).join('') + '<div class="mehr-link" data-fbk>Eigene Idee einreichen ›</div></div>';
+    var neuste = fbNeu.reduce(function (m, x) { return x.t > m ? x.t : m; }, '');
+    var weg = ''; try { weg = localStorage.getItem('kz_fbneu_weg') || ''; } catch (e) { }
+    if (weg && neuste <= weg) return '';
+    return '<div class="sbox fbneu" data-neuste="' + esc(neuste) + '"><button class="fbweg" data-fbweg aria-label="Ausblenden" title="Ausblenden – kommt wieder, sobald etwas Neues umgesetzt wurde">✕</button><h3>✨ NEU DANK EUREM FEEDBACK</h3>' + fbNeu.map(function (x) { return '<div class="z"' + dl(x.l) + '>' + bild(x.l) + '<span class="nm">' + esc(x.x) + '<small class="leise">Idee von ' + esc(prof(x.l).n || x.l) + '</small></span></div>'; }).join('') + '<div class="mehr-link" data-fbk>Eigene Idee einreichen ›</div></div>';
   }
   function votingBox(kl) {
     var vt = daten.voting || [];
@@ -2589,15 +2600,23 @@
     }).catch(fehler);
     if (tab === 'feedback') rpc('admin_feedback').then(function (f) {
       f = f || [];
-      var neu = f.filter(function (x) { return x.s === 'neu'; }).length;
+      var offen = f.filter(function (x) { return !x.ar; }), archiv = f.filter(function (x) { return x.ar; });
+      var imArchiv = fbAnsicht === 'archiv'; f = imArchiv ? archiv : offen;
+      var neu = offen.filter(function (x) { return x.s === 'neu'; }).length;
+      var fbReiter = '<div class="unterreiter"><button data-fbv="offen"' + (imArchiv ? '' : ' class="aktiv"') + '>📥 Offen (' + offen.length + ')</button><button data-fbv="archiv"' + (imArchiv ? ' class="aktiv"' : '') + '>🗄️ Archiv (' + archiv.length + ')</button></div>';
       var STNAME = { neu: 'neu', in_arbeit: 'in Bearbeitung', hilfreich: 'hilfreich', umgesetzt: 'umgesetzt', abgelehnt: 'passt nicht' };
-      $('adm').innerHTML = f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
+      $('adm').innerHTML = fbReiter + (f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
         var st = FB_STATUS[x.s] || FB_STATUS.neu;
         return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
           '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="2" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea>' +
           '<input class="admfeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Nur bei „Umgesetzt“: kurzer Satz für die Startseite (optional)" value="' + esc(x.o || '') + '">' +
-          '<div class="admfbk2"><button class="vlink" data-fbaw="' + x.id + '">💬 Nur Antwort senden</button><button class="vlink" data-fb="' + x.id + '" data-fs="in_arbeit">🔧 In Bearbeitung</button><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button></div></div>';
-      }).join('') : '<p class="leise">Noch kein Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.</p>';
+          '<div class="admfbk2"><button class="vlink" data-fbaw="' + x.id + '">💬 Nur Antwort senden</button><button class="vlink" data-fb="' + x.id + '" data-fs="in_arbeit">🔧 In Bearbeitung</button><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button>' + (x.ar ? '<button class="vlink" data-fbar="' + x.id + '" data-wert="0">↩ Zurückholen</button>' : '<button class="vlink" data-fbar="' + x.id + '" data-wert="1">☑️ Erledigt → Archiv</button>') + '</div></div>';
+      }).join('') : '<p class="leise">' + (imArchiv ? 'Das Archiv ist leer. Mit „☑️ Erledigt → Archiv“ legst du erledigtes Feedback hier ab.' : 'Kein offenes Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.') + '</p>');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fbv]'), function (b) { b.onclick = function () { fbAnsicht = b.getAttribute('data-fbv'); adminOeffnen('feedback'); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fbar]'), function (b) { b.onclick = function () {
+        var id = Number(b.getAttribute('data-fbar')); b.disabled = true;
+        antwortSenden(id).then(function () { return rpc('admin_feedback_archiv', { p_id: id, p_archiv: b.getAttribute('data-wert') === '1' }); }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
+      }; });
       var alt = {}; f.forEach(function (x) { alt[x.id] = x.a || ''; });
       // geänderte Antwort mitschicken (vor dem Status), damit nichts verloren geht
       function antwortSenden(id) {
