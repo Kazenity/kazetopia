@@ -415,6 +415,16 @@
   .shopunter { font-size: 11px; letter-spacing: .5px; color: var(--grau); font-weight: 600; margin-left: 6px; }
   .sitem { position: relative; } .spreis s { color: var(--grau); font-weight: 600; font-size: 12px; margin-right: 4px; }
   .questkarte { margin-bottom: 14px; }
+  details.questkarte > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  details.questkarte > summary::-webkit-details-marker { display: none; }
+  details.questkarte > summary h3 { margin: 0; }
+  details.questkarte > summary .qsum { font-size: 12.5px; font-weight: 700; color: var(--grau); white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  details.questkarte > summary .qsum::after { content: '▾'; font-size: 14px; color: var(--rosa); transition: transform .2s; }
+  details.questkarte[open] > summary .qsum::after { transform: rotate(180deg); }
+  details.questkarte[open] > summary { margin-bottom: 10px; }
+  .kzeni { position: absolute; left: 0; top: -8px; z-index: 30; height: 36px; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 13px; font-weight: 800; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; padding: 0 12px; cursor: pointer; }
+  .kzeni:hover { background: var(--hover); }
+  @media (max-width: 560px) { .kzeni { top: -18px; height: 34px; font-size: 12px; padding: 0 10px; } }
   .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
   .qe { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
   .qe.qg { border-color: #4d8fe0; }
@@ -619,6 +629,10 @@
   .shopneu { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(127,231,255,.12); border: 1px solid rgba(127,231,255,.4); font-size: 13px; }
   .sbadge.neu { background: #7fe7ff; color: #10303a; }
   .offlineband { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255,209,102,.14); border: 1px solid rgba(255,209,102,.45); font-size: 13px; font-weight: 600; text-align: center; }
+  .dgut { display: flex; align-items: center; justify-content: center; }
+  .svor.bnr.dgut { background: repeating-linear-gradient(135deg, var(--flaeche) 0 12px, var(--hover) 12px 24px); border: 2px dashed var(--rosa); font-weight: 800; color: var(--rosa); }
+  .dring { outline: 3px dashed var(--rosa); outline-offset: 6px; border-radius: 50%; }
+  .dregeln { margin: 6px 0 4px 18px; padding: 0; font-size: 13px; line-height: 1.55; }
   .themewahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 0 14px; border-top: 1px solid var(--rand); }
   .themewahl button { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--hell); background: var(--bg); border: 2px solid var(--rand); border-radius: 12px; padding: 8px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .themewahl button.an { border-color: var(--rosa); }
@@ -710,6 +724,7 @@
 <div class="wrap">
   <header>
     <div class="kopfleiste" id="kopfleiste"></div>
+    <button class="kzeni" id="kzeni" hidden></button>
     <div class="kl">🌸 KAZE · TWITCH</div>
     <h1>Kaze<span>topia</span></h1>
     <p><span id="unter">Wer hat die meisten Zeni?</span><br><a href="https://twitch.tv/kazenity" target="_blank" rel="noopener">twitch.tv/kazenity</a></p>
@@ -953,15 +968,29 @@
     var ids = rolle(l) === 'streamer' ? shopArtikel().map(function (a) { return a.id; }) : ((daten && daten.shop && daten.shop.inventar && daten.shop.inventar[l]) || []).slice();
     if (sitzung && sitzung.name === l) Object.keys(sofortBesitz).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); });
     var r = { rahmen: [], banner: [], titel: [] };
-    ids.forEach(function (id) { var m = String(id).match(/^(rahmen|banner|titel)_([a-z0-9_]+)$/); if (m && kosArtikel(id) && r[m[1]].indexOf(m[2]) < 0) r[m[1]].push(m[2]); });
+    ids.forEach(function (id) { var m = String(id).match(/^(rahmen|banner|titel)_([a-z0-9_]+)$/), a = kosArtikel(id); if (m && a && !a.gutschein && r[m[1]].indexOf(m[2]) < 0) r[m[1]].push(m[2]); });
     return r;
+  }
+  // 🎨 Design-Gutscheine (Rahmen/Banner nach eigenem Entwurf): gekauft = im Inventar, bis Kaze das Design freischaltet
+  function hatGutschein(l, id) {
+    l = String(l || '').toLowerCase();
+    var ids = (daten && daten.shop && daten.shop.inventar && daten.shop.inventar[l]) || [];
+    return ids.indexOf(id) >= 0 || (sitzung && sitzung.name === l && !!sofortBesitz[id]);
+  }
+  var DESIGN_REGELN = '<ul class="dregeln"><li>Nur <b>eigene Designs</b> oder selbst erstellte KI-Bilder</li><li><b>Keine</b> bekannten Figuren, Logos, Marken oder echten Personen</li><li>Keine Beleidigungen, keine Links, keine Werbung</li><li>Rahmen: quadratisch, Ring mit transparenter Mitte (PNG) · Banner: Querformat, ideal 1200 × 396</li><li>Eine Überarbeitung ist inklusive</li><li>Kaze prüft innerhalb von 7 Tagen – kein Anspruch auf Freigabe. Wird es abgelehnt, bekommst du deine Zeni komplett zurück.</li></ul>';
+  function designInfo(id) {
+    var a = kosArtikel(id); if (!a) return;
+    var hat = sitzung && hatGutschein(sitzung.name, id);
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>' + esc(a.name) + '</b><div class="kk">💎 Exklusiv · ' + zahl(a.preis) + ' Zeni</div></div></div>' +
+      (hat ? '<p><b>✅ Du hast den Gutschein.</b> Schick dein Design als <b>Ticket im Discord</b> – Kaze prüft es und schaltet es für dich frei. Danach findest du es unter <b>✏️ Profil gestalten</b>.</p>' : '<p>Mit diesem Gutschein bekommst du einen <b>' + (id.indexOf('banner_') === 0 ? 'Banner' : 'Rahmen') + ' nach deinem eigenen Entwurf</b> – einzigartig und nur für dich.</p><p>So geht\'s: Gutschein kaufen → Design als <b>Ticket im Discord</b> schicken → Kaze prüft und schaltet es frei.</p>') +
+      '<h4>REGELN</h4>' + DESIGN_REGELN + '</div>');
   }
   function einmalBesitzer(id) {   // bei „nur einmal“-Artikeln: wer hat ihn schon (Kaze zählt nicht)
     var inv = (daten && daten.shop && daten.shop.inventar) || {}, r = '';
     Object.keys(inv).forEach(function (l) { if (!r && rolle(l) !== 'streamer' && (inv[l] || []).indexOf(id) >= 0) r = l; });
     return r;
   }
-  function besitzt(l, id) { var m = String(id).match(/^(rahmen|banner|titel)_(.+)$/); return !!m && kosInventar(l)[m[1]].indexOf(m[2]) >= 0; }
+  function besitzt(l, id) { var a = kosArtikel(id); if (a && a.gutschein) return hatGutschein(l, id); var m = String(id).match(/^(rahmen|banner|titel)_(.+)$/); return !!m && kosInventar(l)[m[1]].indexOf(m[2]) >= 0; }
   // Ausgerüstet: was im Profil gewählt ist ('aus' = bewusst nichts); ohne Auswahl wird der erste eigene Artikel getragen
   function kosmetik(l) {
     l = String(l || '').toLowerCase();
@@ -1115,6 +1144,17 @@
       if (shopF.sort === 'stufe') return (STUFEN_REIHE.indexOf(y.stufe) - STUFEN_REIHE.indexOf(x.stufe)) || (preisVon(x) - preisVon(y));
       return preisVon(x) - preisVon(y);
     }
+    function designKarte(a) {
+      var z = shopZustand(a), bn = a.id.indexOf('banner_') === 0;
+      var vor = bn ? '<div class="svor bnr dgut"><span>🎨 Dein Banner</span></div>' : '<div class="svor dgut"><span class="rwrap dring">' + (me ? bild(me, true) : '<span class="av">?</span>') + '</span></div>';
+      var knopf = z === 'hat' ? '<button class="sbtn hat" data-dinfo="' + a.id + '">✓ Gekauft<small>Design per Discord-Ticket schicken</small></button>'
+        : z === 'login' ? '<button class="sbtn" data-login>Kaufen</button>'
+        : z === 'wartet' ? '<button class="sbtn wartet" disabled>⏳ Wird gebucht …</button>'
+        : z === 'kaufen' ? '<button class="sbtn los" data-kauf="' + a.id + '">Gutschein kaufen</button>'
+        : z === 'zuwenig' ? '<button class="sbtn" data-kauf="' + a.id + '">❌ Zu wenig Zeni<small>nochmal versuchen</small></button>'
+        : '<button class="sbtn" disabled>Noch ' + zahl(preisVon(a) - stand) + ' Zeni</button>';
+      return '<div class="sitem st-x dgutk"><span class="sbadge sai">✨ Nur für dich</span>' + vor + '<div class="sname">' + esc(a.name) + '</div><div class="sstufe">💎 Exklusiv · nach deinem Entwurf</div><div class="spreis">' + zahl(a.preis) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-dinfo="' + a.id + '">ℹ️ So geht\'s & Regeln</button></div></div>';
+    }
     function karte(a, typ, vorschau) {
       var stf = STUFE[a.stufe] || STUFE.g, z = shopZustand(a), vor;
       if (typ === 'rahmen') vor = '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(a.id) + '"></span></div>';
@@ -1136,7 +1176,7 @@
       return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
-      liste = liste.filter(function (a) { return passt(a, vorschau); });
+      liste = liste.filter(function (a) { return !a.gutschein && passt(a, vorschau); });
       if (!liste.length) return '';
       var r = '<h3 class="shoph">' + titel + (unter ? ' <span class="shopunter">' + unter + '</span>' : '') + '</h3>';
       TYPEN.forEach(function (t) {
@@ -1155,6 +1195,8 @@
       var tage = aus.bis ? Math.max(1, Math.ceil((new Date(aus.bis + 'T00:00:00') - new Date()) / 86400000)) : 0;
       h += bereich('🔄 WOCHEN-AUSLAGE', tage ? 'wechselt in ' + tage + (tage === 1 ? ' Tag' : ' Tagen') : '', inAuslage, false);
     }
+    var gut = sh.artikel.filter(function (a) { return a.gutschein && a.kaufbar !== false && (shopF.typ === '' || shopF.typ === a.id.split('_')[0]) && (!shopF.stufe || shopF.stufe === 'x'); });
+    if (gut.length && !shopF.leisten) { h += '<h3 class="shoph">🎨 EIGENES DESIGN <span class="shopunter">dein Entwurf, nur für dich</span></h3><div class="shopgrid dgutgrid">' + gut.map(designKarte).join('') + '</div>'; gezeigt += gut.length; }
     h += bereich('⏳ SAISON', 'nur für kurze Zeit', sh.artikel.filter(function (a) { return a.kaufbar !== false && a.saisonBis; }), false);
     TYPEN.forEach(function (t) {
       h += bereich(t[1], '', sh.artikel.filter(function (a) { return (a.kaufbar !== false || a.thron) && !a.auslage && !a.saisonBis && a.id.indexOf(t[0] + '_') === 0; }), false);
@@ -1165,6 +1207,7 @@
     h += '<p class="leise shopinfo">Käufe werden sofort gebucht – rund um die Uhr. Dein Zeni-Stand wird aktualisiert, solange Kazes Stream-Bot läuft. Reichen deine Zeni dann nicht, passiert nichts. Gekaufte Artikel legst du unter <b>✏️ Profil gestalten</b> an.</p>';
     return h;
   }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-dinfo]'); if (!b) return; e.preventDefault(); designInfo(b.getAttribute('data-dinfo')); });
   function shopEvents() {
     if ($('shoplogin')) $('shoplogin').onclick = einloggenFragen;
     if ($('shopcode')) $('shopcode').onclick = function () { codeDialog(''); };
@@ -1197,7 +1240,7 @@
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛍️ ' + typ + ' kaufen</b><div class="kk">' + stf[0] + ' ' + stf[1] + '</div></div></div>' +
       '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(preisVon(a)) + ' Zeni</b>' + (preisVon(a) !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>' +
-      '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>' +
+      (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als Ticket im Discord. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
       '<div class="edknoepfe"><button class="vtw" id="kaufok">Ja, kaufen</button><button class="vlink" id="kaufab">Abbrechen</button></div><p class="leise" id="kaufinfo"></p></div>';
     karteOeffnen(h);
     $('kaufab').onclick = profilZu;
@@ -1207,6 +1250,10 @@
         .then(function (r) {
           sofortBesitz[id] = true; if (meineBest) delete meineBest[id];
           if (r && typeof r.rest === 'number') liveZeni = r.rest;
+          if (a.gutschein) {
+            $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gutschein gekauft!</b><div class="kk">' + esc(a.name) + '</div></div></div><p><b>Nächster Schritt:</b> Schick dein Design als <b>Ticket im Discord</b>. Kaze prüft es und schaltet es für dich frei – du bekommst dann eine Nachricht im Posteingang.</p><h4>REGELN</h4>' + DESIGN_REGELN + '<div class="edknoepfe"><button class="vlink" id="kaufzu">Alles klar</button></div>';
+            $('kaufzu').onclick = profilZu; zeigen(); return;
+          }
           $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gekauft!</b><div class="kk">' + esc(a.name) + ' gehört jetzt dir</div></div></div><p>Leg ' + (typ === 'Titel' ? 'deinen neuen Titel' : 'deinen neuen ' + typ) + ' unter <b>✏️ Profil gestalten</b> an.</p><div class="edknoepfe"><button class="vtw" id="kaufanlegen">Jetzt anlegen</button><button class="vlink" id="kaufzu">Weiter shoppen</button></div>';
           $('kaufanlegen').onclick = function () { designEditor(sitzung.name); };
           $('kaufzu').onclick = profilZu;
@@ -1217,6 +1264,19 @@
   }
   document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('.zumshop'); if (!a) return; e.preventDefault(); profilZu(); geheZu('shop'); });
 
+  // 💰 Zeni-Stand oben links (nicht im Shop – dort steht er schon groß); Klick öffnet den Shop
+  var zeniGeholt = false;
+  function zeniOben() {
+    var b = $('kzeni'); if (!b) return;
+    var me = sitzung && sitzung.name;
+    if (!me || reiter === 'shop' || !daten || !daten.shop) { b.hidden = true; return; }
+    if (!zeniGeholt) { zeniGeholt = true; bestellungenLaden().then(zeniOben); }
+    var z = liveZeni !== null ? liveZeni : ((daten.shop.zeni || {})[me] || 0);
+    b.innerHTML = '💰 ' + zahl(z);
+    b.title = 'Deine Zeni – zum Shop';
+    b.hidden = false;
+    b.onclick = function (e) { e.stopPropagation(); geheZu('shop'); };
+  }
   // ================= Login-Leiste oben rechts =================
   function kopfleiste() {
     var el = $('kopfleiste'); if (!el) return;
@@ -1225,6 +1285,7 @@
         '<button data-k="profil">👤 Mein Profil</button><button data-k="gestalten">✏️ Profil gestalten</button><button data-k="shop">🛍️ Zeni-Shop</button><button data-k="code">🎟️ Code einlösen</button><button data-k="einladen">🤝 Freunde einladen</button><button data-k="app">📱 Als App installieren</button>' + (sitzung.name === 'kazenity' ? '<button data-k="admin">🛠️ Admin</button>' : '') + '<button data-k="voting">🎮 Spiele-Voting</button><button data-k="loeschen" class="weg">🗑️ Meine Daten löschen</button><button data-k="ab">↩️ Abmelden</button></div>';
       $('kchip').onclick = function (e) { e.stopPropagation(); geheZu('ich'); };
       el.insertAdjacentHTML('afterbegin', '<button class="glocke" id="glocke" aria-label="Posteingang">🔔<i id="glzahl"></i></button>');
+      zeniOben();
       $('glocke').onclick = function (e) { e.stopPropagation(); posteingangOeffnen(); };
       posteingangAktualisieren();
       Array.prototype.forEach.call(el.querySelectorAll('[data-k]'), function (b) { b.onclick = function (e) {
@@ -1798,7 +1859,14 @@
     if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
     var l = ich || (sitzung && sitzung.name) || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
-    var h = '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS<span class="qrest"> · neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + '</span></h3>';
+    // kompakt: eine Zeile mit Fortschritt, Details aufklappbar (Zustand wird im Browser gemerkt)
+    var auf = false; try { auf = localStorage.getItem('kz_quest_auf') === '1'; } catch (x) { }
+    var nFertig = 0; (q.liste || []).forEach(function (x, i) { if (f && (f[i] || 0) >= x.ziel) nFertig++; });
+    var sum = [];
+    if (f) sum.push(nFertig + '/' + (q.liste || []).length + ' ✓');
+    if (q.gemeinsam) sum.push('👥 ' + Math.min(100, Math.floor(q.gemeinsam.stand / Math.max(1, q.gemeinsam.ziel) * 100)) + ' %');
+    sum.push(rest <= 1 ? 'neu morgen' : 'neu in ' + rest + ' T.');
+    var h = '<details class="sbox questkarte" id="questkarte"' + (auf ? ' open' : '') + '><summary><h3>🎯 WOCHEN-QUESTS</h3><span class="qsum">' + sum.join(' · ') + '</span></summary>';
     if (q.gemeinsam) {
       var g = q.gemeinsam, gp = Math.min(100, g.stand / Math.max(1, g.ziel) * 100), gf = g.stand >= g.ziel;
       h += '<div class="qe qg' + (gf ? ' fertig' : '') + '"><div class="qkopf"><b>' + (gf ? '✅ ' : '👥 ') + esc(g.text) + '</b><span>' + zahl(Math.min(g.stand, g.ziel)) + ' / ' + zahl(g.ziel) + (g.einheit ? ' ' + esc(g.einheit) : '') + '</span></div><div class="qbar"><i style="width:' + gp + '%"></i></div><div class="qlohn">🎁 ' + esc(g.lohn) + ' für alle, die diese Woche dabei waren' + (gf ? ' · wird am Sonntag ausgezahlt' : '') + '</div></div>';
@@ -1809,8 +1877,9 @@
         (v !== null ? '<div class="qbar"><i style="width:' + pr + '%"></i></div>' : '') + '<div class="qlohn">🎁 ' + esc(x.lohn) + (fertig ? ' · erhalten' : '') + '</div></div>';
     });
     if (!l) h += '<div class="leise qinfo">Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um deinen Fortschritt zu sehen.</div>';
-    return h + '<div class="leise qinfo">Wird während der Streams alle 10 Minuten aktualisiert, Clips einmal am Tag.</div></div>';
+    return h + '<div class="leise qinfo">Neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + ' · wird während der Streams alle 10 Minuten aktualisiert, Clips einmal am Tag.</div></details>';
   }
+  document.addEventListener('toggle', function (e) { if (e.target && e.target.id === 'questkarte') { try { localStorage.setItem('kz_quest_auf', e.target.open ? '1' : '0'); } catch (x) { } } }, true);
   // 🎒 Sammlung auf der Profilkarte (gekaufte und erspielte Artikel)
   function sammlungHtml(l) {
     l = String(l || '').toLowerCase();
@@ -2875,6 +2944,14 @@
         else if (mt[x] && it[x] && new Date(mt[x]) > new Date(it[x])) e.push({ id: 'fo:' + x, t: mt[x], an: x, text: '✅ <b>' + esc(prof(x).n || x) + '</b> hat deine Freundschaftsanfrage angenommen' });
       });
     }
+    // 🎨 Design-Gutscheine und freigeschaltete eigene Designs
+    if (sitzung) {
+      shopArtikel().forEach(function (a) {
+        if (a.gutschein && hatGutschein(sitzung.name, a.id)) e.push({ id: 'dg:' + a.id, t: null, art: 'shop', text: '🎨 Dein Gutschein „' + esc(a.name) + '“ ist bereit – schick dein Design als <b>Ticket im Discord</b>, dann schaltet Kaze es frei.' });
+      });
+      var invE = (daten && daten.shop && daten.shop.inventar && daten.shop.inventar[sitzung.name]) || [];
+      invE.forEach(function (id) { if (/^(rahmen|banner)_eigen_/.test(id) && kosArtikel(id)) e.push({ id: 'de:' + id + ':' + (kosArtikel(id).v || ''), t: null, text: '🎨 Dein eigenes Design <b>' + esc(kosName(id)) + '</b> ist freigeschaltet! Leg es unter <b>✏️ Profil gestalten</b> an.' }); });
+    }
     (post.feedback || []).forEach(function (f) {
       var kurz = esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '');
       if (f.s === 'in_arbeit') e.push({ id: 'fb:' + f.id + ':i', t: f.b, text: '🔧 Kaze arbeitet an deiner Idee „' + kurz + '“ – danke dafür!' });
@@ -3065,6 +3142,7 @@
     ich: 'Dein Profil, Codes, Einladungen & App'
   };
   function zeigen() {
+    setTimeout(zeniOben, 0);
     try { zaehlen(reiter); } catch (x) { }
     setTimeout(function () { try { posteingangAktualisieren(); } catch (x) { } }, 0);
     $('unter').textContent = untertitel[reiter] || '';
