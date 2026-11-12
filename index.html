@@ -982,7 +982,7 @@
     var a = kosArtikel(id); if (!a) return;
     var hat = sitzung && hatGutschein(sitzung.name, id);
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>' + esc(a.name) + '</b><div class="kk">💎 Exklusiv · ' + zahl(a.preis) + ' Zeni</div></div></div>' +
-      (hat ? '<p><b>✅ Du hast den Gutschein.</b> Schick dein Design als <b>Ticket im Discord</b> – Kaze prüft es und schaltet es für dich frei. Danach findest du es unter <b>✏️ Profil gestalten</b>.</p>' : '<p>Mit diesem Gutschein bekommst du einen <b>' + (id.indexOf('banner_') === 0 ? 'Banner' : 'Rahmen') + ' nach deinem eigenen Entwurf</b> – einzigartig und nur für dich.</p><p>So geht\'s: Gutschein kaufen → Design als <b>Ticket im Discord</b> schicken → Kaze prüft und schaltet es frei.</p>') +
+      (hat ? '<p><b>✅ Du hast den Gutschein.</b> Schick dein Design als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener"><b>Ticket in #support</b></a> – Kaze prüft es und schaltet es für dich frei. Danach findest du es unter <b>✏️ Profil gestalten</b>.</p>' : '<p>Mit diesem Gutschein bekommst du einen <b>' + (id.indexOf('banner_') === 0 ? 'Banner' : 'Rahmen') + ' nach deinem eigenen Entwurf</b> – einzigartig und nur für dich.</p><p>So geht\'s: Gutschein kaufen → Design als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener"><b>Ticket in #support</b></a> schicken → Kaze prüft und schaltet es frei.</p>') +
       '<h4>REGELN</h4>' + DESIGN_REGELN + '</div>');
   }
   function einmalBesitzer(id) {   // bei „nur einmal“-Artikeln: wer hat ihn schon (Kaze zählt nicht)
@@ -1240,7 +1240,7 @@
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛍️ ' + typ + ' kaufen</b><div class="kk">' + stf[0] + ' ' + stf[1] + '</div></div></div>' +
       '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(preisVon(a)) + ' Zeni</b>' + (preisVon(a) !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>' +
-      (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als Ticket im Discord. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p><label class="anz" style="border:0;padding:6px 0"><span><b>Ich habe die Regeln gelesen</b><small>Ich reiche nur ein Design ein, das ich selbst erstellt habe oder an dem ich alle Rechte besitze.</small></span><input type="checkbox" id="kaufregeln"></label>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
+      (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener">Ticket in #support</a>. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p><label class="anz" style="border:0;padding:6px 0"><span><b>Ich habe die Regeln gelesen</b><small>Ich reiche nur ein Design ein, das ich selbst erstellt habe oder an dem ich alle Rechte besitze.</small></span><input type="checkbox" id="kaufregeln"></label>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
       '<div class="edknoepfe"><button class="vtw" id="kaufok">Ja, kaufen</button><button class="vlink" id="kaufab">Abbrechen</button></div><p class="leise" id="kaufinfo"></p></div>';
     karteOeffnen(h);
     $('kaufab').onclick = profilZu;
@@ -1252,7 +1252,7 @@
           sofortBesitz[id] = true; if (meineBest) delete meineBest[id];
           if (r && typeof r.rest === 'number') liveZeni = r.rest;
           if (a.gutschein) {
-            $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gutschein gekauft!</b><div class="kk">' + esc(a.name) + '</div></div></div><p><b>Nächster Schritt:</b> Schick dein Design als <b>Ticket im Discord</b>. Kaze prüft es und schaltet es für dich frei – du bekommst dann eine Nachricht im Posteingang.</p><h4>REGELN</h4>' + DESIGN_REGELN + '<div class="edknoepfe"><button class="vlink" id="kaufzu">Alles klar</button></div>';
+            $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gutschein gekauft!</b><div class="kk">' + esc(a.name) + '</div></div></div><p><b>Nächster Schritt:</b> Schick dein Design als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener"><b>Ticket in #support</b></a>. Kaze prüft es und schaltet es für dich frei – du bekommst dann eine Nachricht im Posteingang.</p><h4>REGELN</h4>' + DESIGN_REGELN + '<div class="edknoepfe"><button class="vlink" id="kaufzu">Alles klar</button></div>';
             $('kaufzu').onclick = profilZu; zeigen(); return;
           }
           $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gekauft!</b><div class="kk">' + esc(a.name) + ' gehört jetzt dir</div></div></div><p>Leg ' + (typ === 'Titel' ? 'deinen neuen Titel' : 'deinen neuen ' + typ) + ' unter <b>✏️ Profil gestalten</b> an.</p><div class="edknoepfe"><button class="vtw" id="kaufanlegen">Jetzt anlegen</button><button class="vlink" id="kaufzu">Weiter shoppen</button></div>';
@@ -1969,7 +1969,8 @@
       if (!best || pr > best.pr) best = { g: g, v: v, nx: info.nx, pr: pr };
     });
     var h = '<div class="sbox meinbox"' + dl(l) + '><h3>👤 DEIN BEREICH</h3><div class="mkopf">' + avatarMitRahmen(l) + '<div><b' + fs(l) + '>' + esc(prof(l).n || l) + '</b>' + tTag(l) + '<div class="leise">Profil & Erfolge ›</div></div></div>' +
-      '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div><!--MZ-->';
+      (rolle(l) === 'streamer' ? '<div class="leise" style="margin-top:10px">🎙️ Du bist der Streamer – deshalb stehst du nicht in den Ranglisten.</div><!--MZ-->' :
+      '<div class="plz vier"><div><b>' + platz(daten.zeni) + '</b>Zeni-Platz</div><div><b>' + platz(daten.watchtime) + '</b>Watchtime-Platz</div><div><b>' + platz(daten.chat) + '</b>Chat-Platz</div><div><b>' + (zeni != null ? zahl(zeni) : '–') + '</b>💰 deine Zeni</div></div><!--MZ-->');
     if (best) h += '<div class="mziel">Nächster Rang: ' + best.nx[1] + ' <b>' + esc(best.nx[2]) + '</b> · noch <b>' + best.g.fmt(Math.ceil((best.nx[0] - best.v) * 10) / 10) + '</b><div class="balken"><i style="width:' + best.pr + '%"></i></div></div>';
     if (zeni != null && daten.shop && daten.shop.artikel) {
       var offen = daten.shop.artikel.filter(function (a) { return a.kaufbar !== false && !besitzt(l, a.id); }).sort(function (x, y) { return preisVon(x) - preisVon(y); });
@@ -2966,7 +2967,7 @@
     // 🎨 Design-Gutscheine und freigeschaltete eigene Designs
     if (sitzung) {
       shopArtikel().forEach(function (a) {
-        if (a.gutschein && hatGutschein(sitzung.name, a.id)) e.push({ id: 'dg:' + a.id, t: null, art: 'shop', text: '🎨 Dein Gutschein „' + esc(a.name) + '“ ist bereit – schick dein Design als <b>Ticket im Discord</b>, dann schaltet Kaze es frei.' });
+        if (a.gutschein && hatGutschein(sitzung.name, a.id)) e.push({ id: 'dg:' + a.id, t: null, art: 'shop', text: '🎨 Dein Gutschein „' + esc(a.name) + '“ ist bereit – schick dein Design als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener"><b>Ticket in #support</b></a>, dann schaltet Kaze es frei.' });
       });
       var invE = (daten && daten.shop && daten.shop.inventar && daten.shop.inventar[sitzung.name]) || [];
       invE.forEach(function (id) { if (/^(rahmen|banner)_eigen_/.test(id) && kosArtikel(id)) e.push({ id: 'de:' + id + ':' + (kosArtikel(id).v || ''), t: null, text: '🎨 Dein eigenes Design <b>' + esc(kosName(id)) + '</b> ist freigeschaltet! Leg es unter <b>✏️ Profil gestalten</b> an.' }); });
