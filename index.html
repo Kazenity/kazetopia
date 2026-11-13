@@ -309,6 +309,7 @@
   .rang.rolle { background: rgba(255,255,255,.12); margin-left: 4px; }
   .rwrap { position: relative; display: inline-flex; flex: 0 0 auto; }
   .rwrap .rahmen { position: absolute; left: 50%; top: 50%; width: 162%; height: 162%; transform: translate(-50%, -50%); pointer-events: none; }
+.rwrap .rtint { mix-blend-mode: multiply; }
   .karte .kopf .rwrap .av { border-color: transparent; }
   .kopf.mitbanner { background-size: cover; background-position: right center; min-height: 110px; padding: 18px 14px 18px 22px; }
   .kopf.mitbanner .rwrap { margin: 6px 10px 6px 4px; }
@@ -1062,9 +1063,11 @@
   }
   function filterFuer(kurz, ton) { var a = kosArtikel('rahmen_' + kurz); if (!a || ton === null || ton === undefined) return ''; var d = ((ton - (a.farbton || 0)) % 360 + 360) % 360; return d ? ' style="filter:hue-rotate(' + d + 'deg)"' : ''; }
   function rahmenStil(l, kurz) { return filterFuer(kurz, rahmenFarbe(l, kurz)); }
+  // 💡 Leuchtring: weißer Rahmen, der sich in der Namensfarbe einfärbt (Farbschicht mit Rahmen als Maske, multipliziert)
+  function leuchtTint(l, kurz) { var a = kosArtikel('rahmen_' + kurz); if (!a || !a.leucht) return ''; var c = farbe(l) || '#ff9ebf', u = kosBild('rahmen_' + kurz); return '<span class="rahmen rtint" style="background:' + c + ';-webkit-mask:url(\'' + u + '\') center/100% 100% no-repeat;mask:url(\'' + u + '\') center/100% 100% no-repeat"></span>'; }
   function avatarMitRahmen(l) {
     var k = kosmetik(l), av = bild(l, true);
-    return k.rahmen ? '<span class="rwrap">' + av + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild('rahmen_' + k.rahmen) + '"' + rahmenStil(l, k.rahmen) + '></span>' : av;
+    return k.rahmen ? '<span class="rwrap">' + av + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild('rahmen_' + k.rahmen) + '"' + rahmenStil(l, k.rahmen) + '>' + leuchtTint(l, k.rahmen) + '</span>' : av;
   }
   var BANNER_VERLAUF = 'linear-gradient(180deg, rgba(24,10,28,0) 55%, rgba(24,10,28,.85))';
   function bannerStil(l) {
@@ -1090,7 +1093,7 @@
     var typ = id.split('_')[0], kurz = id.substring(typ.length + 1);
     var rahmen = typ === 'rahmen' ? kurz : k.rahmen, banner = typ === 'banner' ? kurz : k.banner, titel = typ === 'titel' ? a.name : dz.t;
     var av = l ? bild(l, true) : '<span class="av">?</span>';
-    if (rahmen) av = '<span class="rwrap">' + av + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + rahmen) + '"' + (typ === 'rahmen' ? '' : rahmenStil(l, rahmen)) + '></span>';
+    if (rahmen) av = '<span class="rwrap">' + av + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + rahmen) + '"' + (typ === 'rahmen' ? '' : rahmenStil(l, rahmen)) + '>' + leuchtTint(l, rahmen) + '</span>';
     var stil = banner ? ' style="background-image:' + BANNER_VERLAUF + ', url(' + kosBild('banner_' + banner) + ')"' : '';
     var name = l ? (prof(l).n || l) : 'Dein Name';
     var z = shopZustand(a), knopf = '';
