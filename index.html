@@ -583,6 +583,18 @@
   .ichbox .mkopf .av { width: 52px; height: 52px; }
   .ichbox .mkopf b { font-size: 17px; }
   .ichvorteile { line-height: 1.9; padding-left: 4px; list-style: none; margin: 8px 0 14px; }
+  .gehgitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .gehk { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: var(--bg); border: 1px dashed var(--rand); border-radius: 12px; opacity: .7; }
+  .gehk.ja { border-style: solid; border-color: var(--rosa); opacity: 1; } .gehk > span { font-size: 22px; flex: 0 0 auto; }
+  .gehk b { display: block; font-size: 13px; } .gehk small { display: block; font-size: 11.5px; color: var(--grau); line-height: 1.35; }
+  .gehtoast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 200; display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--flaeche); border: 1px solid var(--rosa); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.45); animation: glpop .45s ease-out; transition: opacity .6s, transform .6s; }
+  .gehtoast > span { font-size: 28px; } .gehtoast small { display: block; font-size: 11.5px; color: var(--rosa); font-weight: 700; } .gehtoast b { font-size: 15px; }
+  .gehtoast.weg { opacity: 0; transform: translate(-50%, 12px); }
+  @media (max-width: 700px) { .gehtoast { bottom: calc(92px + env(safe-area-inset-bottom)); width: calc(100% - 40px); box-sizing: border-box; } }
+  .ichgrid > .ichk:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  @media (min-width: 701px) { .ichgrid > .ichk:last-child:nth-child(odd) { grid-column: auto; } .ichgrid > .ichk:last-child:nth-child(3n+1) { grid-column: 1 / -1; } .ichgrid > .ichk:nth-last-child(2):nth-child(3n+1) ~ .ichk:last-child { grid-column: 2 / -1; } }
+  .zeile.blitz { animation: zblitz 1.6s ease-out; } @keyframes zblitz { 0%, 40% { background: rgba(255,158,191,.28); } 100% { background: transparent; } }
+  .ichbar .sprung { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .ichgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
   @media (max-width: 700px) { .ichgrid { grid-template-columns: repeat(2, 1fr); } }
   .ichk { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; font-family: inherit; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 14px; cursor: pointer; min-height: 96px; }
@@ -625,6 +637,11 @@
   .fbneu .nm small { display: block; font-size: 11.5px; font-weight: 600; }
   .fbneu { margin: 12px 0; position: relative; } .fbweg { position: absolute; top: 8px; right: 10px; background: none; border: 0; color: var(--grau); font-size: 15px; cursor: pointer; padding: 4px 6px; line-height: 1; } .fbweg:hover { color: var(--hell); } .fbneu .z .nm { white-space: normal; overflow: visible; line-height: 1.35; }
   .admfb.neu { border-color: var(--rosa); } .admfbk { display: flex; justify-content: space-between; gap: 8px; } .admfbt { margin: 8px 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .mldbox { padding: 6px 14px; margin-bottom: 12px; } .mldz { padding: 8px 0; border-bottom: 1px solid var(--rand); font-size: 13.5px; line-height: 1.45; } .mldz:last-child { border-bottom: 0; }
+  .protkopf { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; } .protkopf .unterreiter { margin: 0; justify-content: flex-start; } .unterreiter.klein button { font-size: 12px; padding: 5px 10px; }
+  .unterreiter button small { opacity: .6; font-weight: 600; }
+  .protliste { padding: 6px 12px; } .protz { display: flex; align-items: flex-start; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--rand); font-size: 13px; line-height: 1.45; }
+  .protz:last-child { border-bottom: 0; } .proti { flex: 0 0 auto; width: 20px; text-align: center; } .prott { flex: 1 1 auto; min-width: 0; } .protw { flex: 0 0 auto; white-space: nowrap; font-size: 11.5px; }
   .admfbk2 { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .rang.tier { background: rgba(177,151,252,.2); border: 1px solid rgba(177,151,252,.55); } .rang.tier.t3 { background: rgba(255,209,102,.18); border-color: rgba(255,209,102,.6); }
   .thronbox { border-color: rgba(127,231,255,.5); margin-bottom: 12px; } .thronchronik { margin-top: 10px; font-size: 13px; line-height: 1.8; } .thronchronik div { cursor: pointer; }
@@ -940,6 +957,10 @@
       : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw tw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
     if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
     var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
+    if (sitzung) {   // Suche oben (Idee von gojynku)
+      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen und vorschlagen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
+      if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
+    }
     h += '<div class="liste">';
     if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
     e.forEach(function (x, i) {
@@ -948,10 +969,6 @@
         '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
     });
     h += '</div>';
-    if (sitzung) {
-      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
-      if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
-    }
     h += '<div class="vhinweis">Jeder hat <b>eine</b> Stimme und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
     return h;
   }
@@ -1447,9 +1464,9 @@
     if (isNaN(r + g + b)) return '';
     // Lesbar auf dunklem Hintergrund (Kontrast ≥ 4,5 nach WCAG). Zu dunkle Farben werden nur heller gemacht –
     // Farbton und Sättigung bleiben erhalten (früher wurde mit Weiß gemischt, dadurch wirkten Farben grau).
-    if (helligkeit(r, g, b) < 0.2) {
+    if (helligkeit(r, g, b) < 0.3) {
       var hsl = zuHsl(r, g, b), L = hsl[2], c = [r, g, b];
-      while (L < 0.97) { L += 0.02; c = vonHsl(hsl[0], hsl[1], L); if (helligkeit(c[0], c[1], c[2]) >= 0.2) break; }
+      while (L < 0.97) { L += 0.02; c = vonHsl(hsl[0], hsl[1], L); if (helligkeit(c[0], c[1], c[2]) >= 0.3) break; }
       r = c[0]; g = c[1]; b = c[2];
     }
     return (farbCache[f] = 'rgb(' + r + ',' + g + ',' + b + ')');
@@ -1723,7 +1740,7 @@
       b.onclick = function () {
         var n = ansichtLesen(); n.theme = b.getAttribute('data-theme'); if (n.theme === 'sakura') delete n.theme;
         try { localStorage.setItem('kz_ansicht', JSON.stringify(n)); } catch (x) { }
-        ansichtAnwenden(); zaehlen('th' + b.getAttribute('data-theme'));
+        ansichtAnwenden(); zaehlen('th' + b.getAttribute('data-theme')); geheimMenge('themes', b.getAttribute('data-theme'), 4, 'chamaeleon');
         Array.prototype.forEach.call(document.querySelectorAll('[data-theme]'), function (x) { x.classList.toggle('an', x === b); });
       };
     });
@@ -1737,8 +1754,8 @@
     });
   }
   ansichtAnwenden();
-  // 💡 Ideen & Feedback: 1× pro Woche, nur Kaze liest es. Hilfreich = 2.500 Zeni, umgesetzt = 25.000 Zeni + Titel „Ideengeber“
-  var fbAnsicht = 'offen';
+  // 💡 Ideen & Feedback: ohne Limit, nur Kaze liest es. Hilfreich = 2.500 (erste der Woche) / 500 (weitere), umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“
+  var fbAnsicht = 'offen', protoFilter = 'alle', protoTage = 7;
   var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], in_arbeit: ['🔧', 'in Bearbeitung · +2.500 Zeni'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
   function feedbackDialog() {
     zaehlen('feedback');
@@ -1746,7 +1763,7 @@
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>💡 Ideen & Feedback</b><div class="kk">Was fehlt dir auf Kazetopia? Was nervt? Was wäre cool?</div></div></div>' +
       '<textarea id="fbtext" class="fbfeld" maxlength="600" placeholder="Beschreib deine Idee möglichst genau – z. B. was du dir wünschst und wofür es gut wäre."></textarea>' +
       '<div class="fbzeile"><span class="leise" id="fbzahl">0 / 600</span><button class="vtw" id="fbsenden" disabled>Abschicken</button></div><p class="leise" id="fbinfo"></p>' +
-      '<p class="leise">💡 Hilfreiche Ideen: <b>2.500 Zeni</b> · ✅ Wird sie umgesetzt: <b>25.000 Zeni</b> + Titel „Ideengeber“. Einmal pro Woche, nur Kaze liest dein Feedback.</p>' +
+      '<p class="leise">💡 Hilfreich: <b>2.500 Zeni</b> für deine erste Idee der Woche, <b>500 Zeni</b> für jede weitere · ✅ Wird sie umgesetzt: immer <b>25.000 Zeni</b> + Titel „Ideengeber“. Nur Kaze liest dein Feedback.</p>' +
       '<div id="fbliste"></div></div>');
     var t = $('fbtext');
     t.oninput = function () { var n = t.value.trim().length; $('fbzahl').textContent = t.value.length + ' / 600'; $('fbsenden').disabled = n < 20; $('fbsenden').textContent = n < 20 ? 'noch ' + (20 - n) + ' Zeichen' : 'Abschicken'; };
@@ -2150,16 +2167,17 @@
     function platzIn(l) { var p = 0; (l || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) p = i + 1; }); return p ? '#' + p : '–'; }
     function mini(l, f) { return (l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>'; }
     var h = '';
-    if (reiter === 'start') { }
+    if (reiter === 'start' || reiter === 'ich') { }   // Start: eigene Karte · Ich: Profil steht schon groß in der Mitte
     else if (ich) {
       var nm = prof(ich).n || ich;
       h += '<div class="sbox"><h3>👤 DU</h3><div class="ich"' + dl(ich) + '>' + bild(ich, true) + '<div><b>' + esc(nm) + '</b><div class="leise">Profil & Erfolge ›</div></div></div>' +
-        '<div class="plz"><div><b>' + platzIn(daten.zeni) + '</b>Zeni</div><div><b>' + platzIn(daten.watchtime) + '</b>Watchtime</div><div><b>' + platzIn(daten.chat) + '</b>Chat</div></div></div>';
+        '<div class="plz"><div data-sprung="zeni" title="Zu meinem Platz">' + '<b>' + platzIn(daten.zeni) + '</b>Zeni</div><div data-sprung="watchtime" title="Zu meinem Platz"><b>' + platzIn(daten.watchtime) + '</b>Watchtime</div><div data-sprung="chat" title="Zu meinem Platz"><b>' + platzIn(daten.chat) + '</b>Chat</div></div></div>';
     } else h += '<div class="sbox"><h3>👤 DU</h3><div class="leise">Klick auf deinen Namen und dann auf <b>⭐ Das bin ich</b> – dann siehst du hier immer deine Plätze.</div></div>';
     if (daten.monat) {
       var mn = (daten.monat.name || 'Monat').toUpperCase();
-      h += '<div class="sbox"><h3>⏱️ WATCHTIME · ' + esc(mn) + '</h3>' + mini(daten.monat.watchtime, function (w) { return zahl(w) + ' Std.'; }) + '</div>';
-      h += '<div class="sbox"><h3>💬 CHAT · ' + esc(mn) + '</h3>' + mini(daten.monat.chat, function (w) { return Number(w).toLocaleString('de-DE'); }) + '</div>';
+      // nicht doppelt: im Watchtime- bzw. Chat-Reiter steht die Liste schon in der Mitte
+      if (reiter !== 'watchtime') h += '<div class="sbox"><h3>⏱️ WATCHTIME · ' + esc(mn) + '</h3>' + mini(daten.monat.watchtime, function (w) { return zahl(w) + ' Std.'; }) + '</div>';
+      if (reiter !== 'chat') h += '<div class="sbox"><h3>💬 CHAT · ' + esc(mn) + '</h3>' + mini(daten.monat.chat, function (w) { return Number(w).toLocaleString('de-DE'); }) + '</div>';
     }
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
     if (cw) h += '<div class="sbox"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + ' · ▶ ' + Number(cw.aufrufe).toLocaleString('de-DE') + '</div></div>';
@@ -2167,6 +2185,23 @@
     $('seite').innerHTML = h;
     $('seite').classList.toggle('frei', reiter === 'start');
     Array.prototype.forEach.call($('seite').querySelectorAll('[data-geh]'), function (b) { b.onclick = function (e) { if (e.target.closest('[data-l]')) return; geheZu(b.getAttribute('data-geh')); }; });
+    Array.prototype.forEach.call($('seite').querySelectorAll('[data-sprung]'), function (b) { b.style.cursor = 'pointer'; b.onclick = function (e) { e.stopPropagation(); zuMirSpringen(b.getAttribute('data-sprung')); }; });
+  }
+  // 📍 Zum eigenen Platz in der Rangliste springen (Idee von gojynku)
+  function zuMirSpringen(r) {
+    if (!ich) return;
+    if (r && r !== reiter) { reiter = r; reiterMarkieren(); }
+    var monat = (reiter === 'watchtime' || reiter === 'chat') && daten.monat && monatsModus;
+    var l = (monat ? daten.monat[reiter] : daten[reiter]) || [], pos = -1;
+    l.forEach(function (x, i) { if (String(x.n).toLowerCase() === ich) pos = i; });
+    if (pos >= 25) alleZeigen = true;
+    $('suche').value = ''; zeigen();
+    setTimeout(function () {
+      var z = pos < 0 ? null : pos < 3 ? $('podest') : document.querySelector('#liste .zeile[data-l="' + ich + '"]');
+      if (!z) return;
+      try { z.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) { z.scrollIntoView(); }
+      if (z.classList.contains('zeile')) { z.classList.remove('blitz'); void z.offsetWidth; z.classList.add('blitz'); }
+    }, 60);
   }
   // „Das bin ich“-Leiste unten
   function ichLeiste(l, monat) {
@@ -2176,7 +2211,7 @@
     var t = '👤 <span>Du: ';
     if (pos < 0) t += '<b>nicht in den Top ' + l.length + '</b>';
     else {
-      t += '<b>Platz ' + (pos + 1) + '</b>';
+      t += '<b class="sprung" title="Zu meinem Platz springen">Platz ' + (pos + 1) + '</b>';
       if (pos > 0) { var d = l[pos - 1].w - l[pos].w; t += ' · ' + (reiter === 'watchtime' ? zahl(Math.max(0.1, Math.ceil(d * 10) / 10)) + ' Std.' : Number(Math.max(1, d)).toLocaleString('de-DE')) + ' bis #' + pos; }
     }
     bar.innerHTML = t + '</span><span class="pf">Profil ›</span>';
@@ -2331,6 +2366,7 @@
 
   function profilZeigen(login) {
     if (!daten) return;
+    if (sitzung && sitzung.name) { if (login === sitzung.name) geheimZaehler('eigen', 25, 'narziss'); else geheimMenge('profile', login, 20, 'neugierig'); }
     var sp = (daten.spieler || {})[login];
     var p = prof(login), name = p.n || login;
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button>';
@@ -2394,6 +2430,7 @@
     });
     if (ek) h += '<h4>🎨 ERFOLGE</h4><div class="kacheln4">' + ek + '</div>';
     h += sammlungHtml(login);
+    h += geheimHtml(login);
 
     // Alle Erfolge (aufklappbar)
     h += '<button class="aufklapp" id="aufklapp">Alle Erfolge anzeigen ▾</button><div id="alle" style="display:none">';
@@ -2503,6 +2540,94 @@
   }
   var SEITE = 'https://kazenity.github.io/kazetopia';
 
+  // 🔒 Geheime Erfolge (Idee von joe3000): 15 versteckte Abzeichen, zuerst nur „???“. Keine Zeni.
+  var GEHEIM = [
+    { id: 'nacht', icon: '🦉', name: 'Nachtschwärmer', text: 'Zwischen Mitternacht und 1 Uhr auf Kazetopia', tipp: 'Die Geisterstunde hat ihre Geheimnisse.' },
+    { id: 'frueh', icon: '🌅', name: 'Frühaufsteher', text: 'Zwischen 5 und 7 Uhr morgens vorbeigeschaut', tipp: 'Der frühe Vogel …' },
+    { id: 'punkt1407', icon: '🎂', name: 'Punkt 14:07', text: 'Genau um 14:07 Uhr auf der Seite – die Uhrzeit von Kazes Kanal-Geburtstag (14.07.)', tipp: 'Ein ganz besonderer Moment des Tages.' },
+    { id: 'pleite', icon: '🪙', name: 'Pleite', text: 'Genau 0 Zeni auf dem Konto', tipp: 'Manchmal ist nichts alles.' },
+    { id: 'stammgast', icon: '🏮', name: 'Stammgast', text: 'An 7 verschiedenen Tagen angemeldet vorbeigeschaut', tipp: 'Treue zahlt sich aus.' },
+    { id: 'pechvogel', icon: '🐈‍⬛', name: 'Pechvogel', text: 'Drei Tage hintereinander am Glücks-Knopf nur 100 Zeni', tipp: 'Aller guten Dinge sind … drei?' },
+    { id: 'logo', icon: '🥚', name: 'Klopf, klopf', text: 'Fünfmal schnell auf den Kazetopia-Schriftzug getippt', tipp: 'Wer oft genug anklopft …' },
+    { id: 'konami', icon: '🎮', name: 'Retro-Gamer', text: 'Den Konami-Code eingegeben: ↑ ↑ ↓ ↓ ← → ← → B A', tipp: '' },
+    { id: 'chamaeleon', icon: '🦎', name: 'Chamäleon', text: 'Alle vier Farbthemen ausprobiert', tipp: 'Jede Farbe steht dir.' },
+    { id: 'neugierig', icon: '🔍', name: 'Neugierig', text: '20 verschiedene Profile angeschaut', tipp: 'Wer viel schaut, sieht viel.' },
+    { id: 'entdecker', icon: '🧭', name: 'Entdecker', text: 'Jeden Hauptbereich der Seite besucht', tipp: 'Kein Winkel bleibt unbesucht.' },
+    { id: 'leseratte', icon: '📜', name: 'Leseratte', text: 'Die Datenschutzerklärung bis zum Ende gelesen', tipp: 'Auch das Kleingedruckte zählt.' },
+    { id: 'narziss', icon: '🪞', name: 'Spieglein, Spieglein', text: 'Das eigene Profil 25-mal geöffnet', tipp: '' },
+    { id: 'app', icon: '📱', name: 'Immer dabei', text: 'Kazetopia als App vom Homescreen geöffnet', tipp: 'Es geht auch ohne Browser.' },
+    { id: 'detektiv', icon: '🕵️', name: 'Detektiv', text: 'In der Rangliste nach dem eigenen Namen gesucht', tipp: '' }
+  ];
+  var geheimHat = {};
+  function geheimAlleLaden() {
+    fetch(SB_URL + '/rest/v1/rpc/geheim_alle', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : {}; }).then(function (r) { geheimHat = r || {}; }).catch(function () { });
+  }
+  geheimAlleLaden();
+  function geheimDa(login, id) { return (geheimHat[login] || []).indexOf(id) >= 0; }
+  function geheimToast(id) {
+    var g = GEHEIM.filter(function (x) { return x.id === id; })[0]; if (!g) return;
+    var t = document.createElement('div'); t.className = 'gehtoast';
+    t.innerHTML = '<span>' + g.icon + '</span><div><small>🔓 Geheimer Erfolg freigeschaltet</small><b>' + esc(g.name) + '</b></div>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('weg'); }, 4500); setTimeout(function () { t.remove(); }, 5200);
+  }
+  function geheimNeu(id) {
+    if (!sitzung || !sitzung.name) return;
+    (geheimHat[sitzung.name] = geheimHat[sitzung.name] || []).push(id);
+    geheimToast(id);
+  }
+  function geheimMelden(id) {
+    if (!sitzung || !sitzung.name || geheimDa(sitzung.name, id)) return;
+    var k = 'kz_geh_' + sitzung.name + '_' + id; try { if (localStorage.getItem(k)) return; } catch (x) { }
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/geheim_melden', { method: 'POST', body: { p_id: id } }); }).then(function (r) {
+      try { localStorage.setItem(k, '1'); } catch (x) { }
+      if (r && r.neu) geheimNeu(id);
+    }).catch(function () { });
+  }
+  function geheimPruefen() {
+    if (!sitzung || !sitzung.name) return;
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/geheim_pruefen', { method: 'POST', body: {} }); }).then(function (r) {
+      (r || []).forEach(function (id, i) { setTimeout(function () { geheimNeu(id); }, i * 1200); });
+    }).catch(function () { });
+    if (istApp()) geheimMelden('app');
+  }
+  setInterval(geheimPruefen, 10 * 60 * 1000);
+  // Zähler im Browser (pro Konto)
+  function geheimMenge(name, wert, ziel, id) {
+    if (!sitzung || !sitzung.name) return;
+    var k = 'kz_gm_' + sitzung.name + '_' + name, m = [];
+    try { m = JSON.parse(localStorage.getItem(k) || '[]'); } catch (x) { m = []; }
+    if (m.indexOf(wert) < 0) { m.push(wert); try { localStorage.setItem(k, JSON.stringify(m)); } catch (x) { } }
+    if (m.length >= ziel) geheimMelden(id);
+  }
+  function geheimZaehler(name, ziel, id) {
+    if (!sitzung || !sitzung.name) return;
+    var k = 'kz_gz_' + sitzung.name + '_' + name, n = 0;
+    try { n = Number(localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, String(n)); } catch (x) { }
+    if (n >= ziel) geheimMelden(id);
+  }
+  // Easter Egg: 5× schnell auf den Schriftzug
+  (function () {
+    var h1 = document.querySelector('h1'), klicks = [];
+    if (h1) h1.addEventListener('click', function () { var t = Date.now(); klicks = klicks.filter(function (x) { return t - x < 3000; }); klicks.push(t); if (klicks.length >= 5) { klicks = []; geheimMelden('logo'); } });
+    var folge = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'], pos = 0;
+    document.addEventListener('keydown', function (e) {
+      var k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      pos = k === folge[pos] ? pos + 1 : (k === folge[0] ? 1 : 0);
+      if (pos === folge.length) { pos = 0; geheimMelden('konami'); }
+    });
+  })();
+  function geheimHtml(login) {
+    var eigen = sitzung && sitzung.name === login, hat = GEHEIM.filter(function (g) { return geheimDa(login, g.id); });
+    if (!eigen && !hat.length) return '';
+    var liste = eigen ? GEHEIM : hat;
+    return '<h4>🔒 GEHEIME ERFOLGE · ' + hat.length + '/' + GEHEIM.length + '</h4><div class="gehgitter">' + liste.map(function (g) {
+      var ja = geheimDa(login, g.id);
+      return ja ? '<div class="gehk ja" title="' + esc(g.text) + '"><span>' + g.icon + '</span><div><b>' + esc(g.name) + '</b><small>' + esc(g.text) + '</small></div></div>'
+        : '<div class="gehk"><span>❓</span><div><b>???</b><small>' + esc(g.tipp || 'Ganz geheim – kein Hinweis.') + '</small></div></div>';
+    }).join('') + '</div>' + (eigen && hat.length < GEHEIM.length ? '<div class="leise" style="margin-top:6px">Was genau man tun muss, verrät erst das Freischalten. Nur Abzeichen, keine Zeni.</div>' : '');
+  }
   // 🤝 Freunde (gegenseitig) und „Hat X Leute gebracht“ – öffentlich nur gegenseitige Freundschaften
   var freunde = { paare: {}, werber: {}, geladen: false, meine: null };
   function oeffentlichLaden() {
@@ -2625,7 +2750,7 @@
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') return;
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['feedback', '💡 Feedback'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -2654,7 +2779,7 @@
       var neu = offen.filter(function (x) { return x.s === 'neu'; }).length;
       var fbReiter = '<div class="unterreiter"><button data-fbv="offen"' + (imArchiv ? '' : ' class="aktiv"') + '>📥 Offen (' + offen.length + ')</button><button data-fbv="archiv"' + (imArchiv ? ' class="aktiv"' : '') + '>🗄️ Archiv (' + archiv.length + ')</button></div>';
       var STNAME = { neu: 'neu', in_arbeit: 'in Bearbeitung', hilfreich: 'hilfreich', umgesetzt: 'umgesetzt', abgelehnt: 'passt nicht' };
-      $('adm').innerHTML = fbReiter + (f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni · ✅ Umgesetzt = 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird immer nur der Unterschied)</p>' + f.map(function (x) {
+      $('adm').innerHTML = fbReiter + (f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni (erste Idee der Woche) bzw. 500 Zeni (jede weitere) · ✅ Umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird nur der Unterschied)</p>' + f.map(function (x) {
         var st = FB_STATUS[x.s] || FB_STATUS.neu;
         return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
           '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="2" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea>' +
@@ -2690,6 +2815,29 @@
         if (a === 'loeschen' && !b.classList.contains('sicher')) { b.classList.add('sicher'); b.textContent = 'Wirklich löschen?'; return; }
         b.disabled = true; rpc('admin_vorschlag', { p_id: Number(b.getAttribute('data-vid')), p_aktion: a }).then(function () { adminOeffnen('voting'); }).catch(fehler);
       }; });
+    }).catch(fehler);
+    if (tab === 'protokoll') rpc('admin_protokoll', { p_tage: protoTage }).then(function (p) {
+      p = p || [];
+      var KAT = [['alle', 'Alle'], ['kauf', '🛍️ Käufe'], ['glueck', '🍀 Glück'], ['freund', '🤝 Freunde'], ['code', '🎟️ Codes'], ['werben', '🌱 Werben'], ['feedback', '💡 Feedback'], ['konto', '👤 Konten']];
+      var zahlen = {}; p.forEach(function (x) { zahlen[x.k] = (zahlen[x.k] || 0) + 1; });
+      function nm(l) { return '<b' + fs(l) + '>' + esc(prof(l).n || l) + '</b>'; }
+      function zeile(x) {
+        var d = x.d || {}, i = '', t = '';
+        if (x.k === 'kauf') { i = '🛍️'; t = nm(x.l) + ' hat <b>' + esc(kosName(d.a)) + '</b> ' + (d.p > 0 ? 'für ' + zahl(d.p) + ' Zeni gekauft' : 'bekommen') + (d.s === 'bezahlt' ? ' <span class="leise">· ⏳ wartet auf den Bot</span>' : d.s === 'offen' ? ' <span class="leise">· offen</span>' : ''); }
+        else if (x.k === 'glueck') { i = '🍀'; t = nm(x.l) + ' hat am Glücks-Knopf <b>' + glueckText(d.g, d.z) + '</b> gewonnen'; }
+        else if (x.k === 'freund') { i = d.a === 'entfernt' ? '💔' : '🤝'; t = nm(x.l) + (d.a === 'entfernt' ? ' hat ' + nm(d.an) + ' als Freund entfernt' : ' hat ' + nm(d.an) + ' als Freund markiert' + (d.g ? ' <span class="leise">· jetzt gegenseitig</span>' : ' <span class="leise">· wartet auf Antwort</span>')); }
+        else if (x.k === 'code') { i = d.c === '__WILLKOMMEN' ? '🎁' : '🎟️'; t = nm(x.l) + (d.c === '__WILLKOMMEN' ? ' hat das Willkommensgeschenk abgeholt' : ' hat den Code <b>' + esc(d.c) + '</b> eingelöst') + (d.z ? ' <span class="leise">· +' + zahl(d.z) + ' Zeni</span>' : '') + (d.a ? ' <span class="leise">· ' + esc(kosName(d.a)) + '</span>' : ''); }
+        else if (x.k === 'werben') { i = '🌱'; t = nm(x.l) + ' hat ' + nm(d.g) + ' eingeladen <span class="leise">· ' + (d.s === 'belohnt' ? '✅ belohnt' : d.s === 'abgelehnt' ? '✖️ abgelehnt' : '⏳ wartet') + '</span>'; }
+        else if (x.k === 'feedback') { i = '💡'; t = nm(x.l) + ' hat Feedback geschickt <span class="leise">· ' + esc(({ neu: 'neu', in_arbeit: 'in Bearbeitung', hilfreich: 'hilfreich', umgesetzt: 'umgesetzt', abgelehnt: 'passt nicht' })[d.s] || d.s) + '</span>'; }
+        else if (x.k === 'konto') { i = '👤'; t = 'Neues Konto: ' + nm(x.l); }
+        return '<div class="protz"><span class="proti">' + i + '</span><span class="prott">' + t + '</span><span class="leise protw">' + wann(x.t) + '</span></div>';
+      }
+      var liste = protoFilter === 'alle' ? p : p.filter(function (x) { return x.k === protoFilter; });
+      $('adm').innerHTML = '<div class="protkopf"><div class="unterreiter">' + KAT.filter(function (k) { return k[0] === 'alle' || zahlen[k[0]]; }).map(function (k) { return '<button data-pf="' + k[0] + '"' + (protoFilter === k[0] ? ' class="aktiv"' : '') + '>' + k[1] + ' <small>' + (k[0] === 'alle' ? p.length : zahlen[k[0]]) + '</small></button>'; }).join('') + '</div>' +
+        '<div class="unterreiter klein">' + [[1, 'Heute'], [7, '7 Tage'], [30, '30 Tage']].map(function (z) { return '<button data-pt="' + z[0] + '"' + (protoTage === z[0] ? ' class="aktiv"' : '') + '>' + z[1] + '</button>'; }).join('') + '</div></div>' +
+        (liste.length ? '<div class="sbox protliste">' + liste.map(zeile).join('') + '</div>' + (p.length >= 500 ? '<p class="leise">Es werden die letzten 500 Ereignisse gezeigt.</p>' : '') : '<p class="leise">In diesem Zeitraum ist nichts passiert.</p>');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pf]'), function (b) { b.onclick = function () { protoFilter = b.getAttribute('data-pf'); adminOeffnen('protokoll'); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pt]'), function (b) { b.onclick = function () { protoTage = Number(b.getAttribute('data-pt')); adminOeffnen('protokoll'); }; });
     }).catch(fehler);
     if (tab === 'codes') rpc('admin_codes').then(function (c) {
       var h = '<div class="sbox"><h3>＋ NEUER CODE</h3><div class="admform"><input id="acode" placeholder="CODE" maxlength="30"><button class="vlink" id="azufall">🎲</button><input id="azeni" type="number" min="0" placeholder="Zeni" value="1000"><input id="amax" type="number" min="1" placeholder="Wie viele Leute (leer = ∞)"><input id="abis" type="date"><label><input type="checkbox" id="alive"> nur live</label><button class="vtw" id="aspeichern">Anlegen</button></div><p class="leise" id="ainfo"></p></div>';
@@ -2780,6 +2928,29 @@
     return true;
   }
   // 🎁 Willkommensgeschenk: einmal pro Konto, Supabase entscheidet (nur wer schon Zeni aus dem Stream hat)
+  // 🔔 Kaze: Pop-up bei neuem Feedback, neuen Spiel-Vorschlägen und großen Glücks-Gewinnen (seit dem letzten „Gesehen“)
+  function adminMeldungen() {
+    if (!sitzung || sitzung.name !== 'kazenity') return;
+    var seit = ''; try { seit = localStorage.getItem('kz_admin_gesehen') || ''; } catch (x) { }
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/admin_meldungen', { method: 'POST', body: { p_seit: seit || null } }); }).then(function (m) {
+      m = m || []; if (!m.length) return;
+      if ($('kartebg').className.indexOf('offen') >= 0) return;   // nichts überdecken – beim nächsten Laden kommt es wieder
+      var neuste = m.reduce(function (a, x) { return x.t > a ? x.t : a; }, '');
+      var fb = m.filter(function (x) { return x.k === 'feedback'; }), vs = m.filter(function (x) { return x.k === 'vorschlag'; }), gl = m.filter(function (x) { return x.k === 'glueck'; });
+      function z(x) {
+        var nm = x.l ? '<b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b>' : 'Jemand';
+        if (x.k === 'feedback') return '<div class="mldz">💡 ' + nm + ': „' + esc(x.x) + (String(x.x).length >= 90 ? ' …' : '') + '“</div>';
+        if (x.k === 'vorschlag') return '<div class="mldz">🎮 ' + nm + ' schlägt <b>' + esc(x.x) + '</b> fürs Voting vor</div>';
+        return '<div class="mldz">🍀 ' + nm + ' hat ' + (x.x === 'jackpot' ? '🎉 den Jackpot (10.000 Zeni)' : glueckText(x.x, 0)) + ' gewonnen' + (x.x === 'vip' ? ' <span class="leise">· VIP in Twitch vergeben</span>' : '') + '</div>';
+      }
+      karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>🔔 Neu seit deinem letzten Besuch</b><div class="kk">' + m.length + (m.length === 1 ? ' Meldung' : ' Meldungen') + '</div></div></div>' +
+        '<div class="sbox mldbox">' + m.slice().reverse().map(z).join('') + '</div>' +
+        '<div class="admfbk2" style="justify-content:center">' + (fb.length ? '<button class="vtw" data-mld="feedback">💡 Zum Feedback</button>' : '') + (vs.length ? '<button class="vtw" data-mld="voting">🗳️ Zum Voting</button>' : '') + (gl.length ? '<button class="vlink" data-mld="start">📊 Übersicht</button>' : '') + '<button class="vlink" data-mld="">✓ Gesehen</button></div>');
+      function gesehen() { try { localStorage.setItem('kz_admin_gesehen', neuste); } catch (x) { } }
+      $('zu').onclick = function () { gesehen(); profilZu(); };
+      Array.prototype.forEach.call(document.querySelectorAll('[data-mld]'), function (b) { b.onclick = function () { gesehen(); var t = b.getAttribute('data-mld'); if (t) adminOeffnen(t); else profilZu(); }; });
+    }).catch(function () { });
+  }
   function willkommenPruefen() {
     if (!sitzung || !sitzung.name) return;
     var key = 'kz_willk_' + sitzung.name, w = '';
@@ -2811,7 +2982,7 @@
   // ℹ️ Übersicht: alle Ränge, Erfolge und Abzeichen
   function uebersicht() {
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>Wie bekomme ich Erfolge?</b><div class="kk">Klick auf einen Namen zeigt dessen Profil. Alles wird automatisch gezählt.</div></div></div>';
-    var sek = GROSS.map(function (g) { return [g.k, g.icon + ' ' + g.titel]; }).concat([['e', '🎨 Erfolge'], ['a', '✨ Abzeichen'], ['v', '🎟️ Events'], ['qu', '🎯 Quests'], ['sh', '🛍️ Shop']]);
+    var sek = GROSS.map(function (g) { return [g.k, g.icon + ' ' + g.titel]; }).concat([['e', '🎨 Erfolge'], ['a', '✨ Abzeichen'], ['ge', '🔒 Geheim'], ['v', '🎟️ Events'], ['qu', '🎯 Quests'], ['sh', '🛍️ Shop']]);
     h += chips(sek);
     GROSS.forEach(function (g, i) {
       h += '<div class="isek" data-sek="' + g.k + '"' + (i ? ' style="display:none"' : '') + '><h4>' + g.icon + ' ' + g.titel.toUpperCase() + ' · ' + g.anime.toUpperCase() + '</h4><div class="un erkl">' + g.text + '</div><div class="tab">';
@@ -2824,7 +2995,7 @@
     });
     h += '</div><div class="isek" data-sek="a" style="display:none"><h4>✨ ABZEICHEN</h4><div class="liste-abz">';
     ABZEICHEN.forEach(function (a) { h += '<div>' + a.icon + ' <b>' + a.name + '</b> – ' + a.text + '</div>'; });
-    h += '</div></div><div class="isek" data-sek="v" style="display:none"><h4>🎟️ EVENTS</h4><div class="liste-abz"><div class="un erkl" style="border:0">Pro Event zählt nur die höchste erreichte Stufe.</div>';
+    h += '</div></div><div class="isek" data-sek="ge" style="display:none"><h4>🔒 GEHEIME ERFOLGE · ' + GEHEIM.length + '</h4><div class="un erkl">Versteckte Abzeichen – was man dafür tun muss, verrät erst das Freischalten. Ein paar Hinweise gibt es trotzdem. Keine Zeni, nur Ehre.</div><div class="liste-abz">' + GEHEIM.map(function (g) { return '<div>❓ <b>???</b> – ' + esc(g.tipp || 'Ganz geheim.') + '</div>'; }).join('') + '</div></div><div class="isek" data-sek="v" style="display:none"><h4>🎟️ EVENTS</h4><div class="liste-abz"><div class="un erkl" style="border:0">Pro Event zählt nur die höchste erreichte Stufe.</div>';
     Object.keys(EVENTS).forEach(function (c) { var e = EVENTS[c]; h += '<div>' + evIcon(c, 20) + ' <b>' + e[1] + '</b> – ' + e[2] + '</div>'; });
     h += '</div></div>';
     h += '<div class="isek" data-sek="qu" style="display:none"><h4>🎯 WOCHEN-QUESTS</h4><div class="liste-abz">' +
@@ -2859,6 +3030,7 @@
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
     try { history.replaceState(null, '', '#datenschutz'); } catch (x) { }
+    var ka = $('karte'); ka.onscroll = function () { if (location.hash === '#datenschutz' && ka.scrollTop + ka.clientHeight >= ka.scrollHeight - 30) { ka.onscroll = null; geheimMelden('leseratte'); } };
   }
   $('dslink').onclick = function (e) { e.preventDefault(); datenschutz(); };
 
@@ -3211,6 +3383,7 @@
   };
   function zeigen() {
     setTimeout(zeniOben, 0);
+    try { geheimMenge('bereiche', gruppeVon(reiter), Object.keys(GRUPPEN).length, 'entdecker'); } catch (x) { }
     try { zaehlen(reiter); } catch (x) { }
     setTimeout(function () { try { posteingangAktualisieren(); } catch (x) { } }, 0);
     $('unter').textContent = untertitel[reiter] || '';
@@ -3278,8 +3451,8 @@
     reiter = b.getAttribute('data-r'); alleZeigen = false;
     reiterMarkieren(); zeigen();
   };
-  $('suche').oninput = zeigen;
-  $('ichbar').onclick = function () { if (ich) profilZeigen(ich); };
+  $('suche').oninput = function () { zeigen(); var q = $('suche').value.trim().toLowerCase(); if (sitzung && sitzung.name && q && (q === sitzung.name || q === String(prof(sitzung.name).n || '').toLowerCase())) geheimMelden('detektiv'); };
+  $('ichbar').onclick = function (e) { if (!ich) return; if (e.target.closest('.sprung')) zuMirSpringen(reiter); else profilZeigen(ich); };
   $('zeitwahl').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; monatsModus = b.getAttribute('data-m') === '1'; zeigen(); };
 
   // Daten direkt aus dem Repo laden (ohne auf den Neubau von GitHub Pages zu warten), sonst die Kopie der Seite
@@ -3301,7 +3474,7 @@
     daten = d;
     plaetzeMerken(d);
     kopfleiste();
-    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); });
+    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); });
     reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d._offline) { var ob = document.createElement('div'); ob.className = 'offlineband'; ob.textContent = '📴 Gerade keine Verbindung – du siehst den letzten Stand vom ' + (d.stand || 'letzten Besuch') + '.'; var hd = document.querySelector('header'); if (hd) hd.parentNode.insertBefore(ob, hd.nextSibling); }
