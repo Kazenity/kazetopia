@@ -657,6 +657,7 @@
   .unterreiter button small { opacity: .6; font-weight: 600; }
   .protliste { padding: 6px 12px; } .protz { display: flex; align-items: flex-start; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--rand); font-size: 13px; line-height: 1.45; }
   .protz:last-child { border-bottom: 0; } .proti { flex: 0 0 auto; width: 20px; text-align: center; } .prott { flex: 1 1 auto; min-width: 0; } .protw { flex: 0 0 auto; white-space: nowrap; font-size: 11.5px; }
+  .eigenidee { margin-bottom: 12px; } .eigenidee b { display: block; margin-bottom: 6px; font-size: 13px; } .admfb.eigene { border-style: dashed; }
   .admfbk2 { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .rang.tier { background: rgba(177,151,252,.2); border: 1px solid rgba(177,151,252,.55); } .rang.tier.t3 { background: rgba(255,209,102,.18); border-color: rgba(255,209,102,.6); }
   .thronbox { border-color: rgba(127,231,255,.5); margin-bottom: 12px; } .thronchronik { margin-top: 10px; font-size: 13px; line-height: 1.8; } .thronchronik div { cursor: pointer; }
@@ -2698,8 +2699,8 @@
     { id: 'frueh', icon: '🌅', name: 'Frühaufsteher', text: 'Zwischen 5 und 7 Uhr morgens vorbeigeschaut', tipp: 'Der frühe Vogel …' },
     { id: 'punkt1407', icon: '🎂', name: 'Punkt 14:07', text: 'Genau um 14:07 Uhr auf der Seite – die Uhrzeit von Kazes Kanal-Geburtstag (14.07.)', tipp: 'Ein ganz besonderer Moment des Tages.' },
     { id: 'pleite', icon: '🪙', name: 'Pleite', text: 'Genau 0 Zeni auf dem Konto', tipp: 'Manchmal ist nichts alles.' },
-    { id: 'stammgast', icon: '🏮', name: 'Stammgast', text: 'An 7 verschiedenen Tagen angemeldet vorbeigeschaut', tipp: 'Treue zahlt sich aus.' },
-    { id: 'pechvogel', icon: '🐈‍⬛', name: 'Pechvogel', text: 'Drei Tage hintereinander am Glücks-Knopf nur 100 Zeni', tipp: 'Aller guten Dinge sind … drei?' },
+    { id: 'stammgast', icon: '🏮', name: 'Treue Seele', text: 'An 7 verschiedenen Tagen angemeldet vorbeigeschaut', tipp: 'Treue zahlt sich aus.' },
+    { id: 'pechvogel', icon: '🐈‍⬛', name: 'Schwarze Katze', text: 'Drei Tage hintereinander am Glücks-Knopf nur 100 Zeni', tipp: 'Aller guten Dinge sind … drei?' },
     { id: 'logo', icon: '🥚', name: 'Klopf, klopf', text: 'Fünfmal schnell auf den Kazetopia-Schriftzug getippt', tipp: 'Wer oft genug anklopft …' },
     { id: 'konami', icon: '🎮', name: 'Retro-Gamer', text: 'Den Konami-Code eingegeben: ↑ ↑ ↓ ↓ ← → ← → B A', tipp: '' },
     { id: 'chamaeleon', icon: '🦎', name: 'Chamäleon', text: 'Alle vier Farbthemen ausprobiert', tipp: 'Jede Farbe steht dir.' },
@@ -2771,15 +2772,19 @@
     });
   })();
   function geheimHtml(login) {
-    var eigen = sitzung && sitzung.name === login, hat = GEHEIM.filter(function (g) { return geheimDa(login, g.id); });
+    // Spoiler-Schutz (Hinweis von joe3000): bei anderen nur die Erfolge aufdecken, die man selbst schon hat
+    var eigen = sitzung && sitzung.name === login, ichSelbst = sitzung && sitzung.name, hat = GEHEIM.filter(function (g) { return geheimDa(login, g.id); });
     if (!eigen && !hat.length) return '';
     var liste = eigen ? GEHEIM : hat;
-    return '<h4>🔒 GEHEIME ERFOLGE · ' + hat.length + '/' + GEHEIM.length + '</h4><div class="gehgitter">' + liste.map(function (g) {
-      var ja = geheimDa(login, g.id);
-      return ja ? '<div class="gehk ja" title="' + esc(g.text) + '"><span>' + g.icon + '</span><div><b>' + esc(g.name) + '</b><small>' + esc(g.text) + '</small></div></div>'
+    function offen(g) { return eigen ? geheimDa(login, g.id) : (ichSelbst && geheimDa(ichSelbst, g.id)); }
+    var verdeckt = eigen ? 0 : hat.filter(function (g) { return !offen(g); }).length;
+    return '<h4>🔒 GEHEIME ERFOLGE · ' + hat.length + '/' + GEHEIM.length + '</h4><div class="gehgitter">' + liste.filter(function (g) { return eigen || offen(g); }).map(function (g) {
+      return (eigen ? geheimDa(login, g.id) : true) ? '<div class="gehk ja" title="' + esc(g.text) + '"><span>' + g.icon + '</span><div><b>' + esc(g.name) + '</b><small>' + esc(g.text) + '</small></div></div>'
         : '<div class="gehk"><span>❓</span><div><b>???</b><small>' + esc(g.tipp || 'Ganz geheim – kein Hinweis.') + '</small></div></div>';
-    }).join('') + '</div>' + (eigen && hat.length < GEHEIM.length ? '<div class="leise" style="margin-top:6px">Was genau man tun muss, verrät erst das Freischalten. Nur Abzeichen, keine Zeni.</div>' : '');
+    }).join('') + (verdeckt ? '<div class="gehk"><span>🔒</span><div><b>' + verdeckt + (verdeckt === 1 ? ' weiterer' : ' weitere') + '</b><small>' + (ichSelbst ? 'Die hast du selbst noch nicht – kein Spoiler 😉' : 'Melde dich an, um zu sehen, welche du auch hast.') + '</small></div></div>' : '') + '</div>' +
+      (eigen && hat.length < GEHEIM.length ? '<div class="leise" style="margin-top:6px">Was genau man tun muss, verrät erst das Freischalten. Nur Abzeichen, keine Zeni.</div>' : '');
   }
+
   // 🤝 Freunde (gegenseitig) und „Hat X Leute gebracht“ – öffentlich nur gegenseitige Freundschaften
   var freunde = { paare: {}, werber: {}, geladen: false, meine: null };
   function oeffentlichLaden() {
@@ -2926,18 +2931,36 @@
     }).catch(fehler);
     if (tab === 'feedback') rpc('admin_feedback').then(function (f) {
       f = f || [];
-      var offen = f.filter(function (x) { return !x.ar; }), archiv = f.filter(function (x) { return x.ar; });
-      var imArchiv = fbAnsicht === 'archiv'; f = imArchiv ? archiv : offen;
-      var neu = offen.filter(function (x) { return x.s === 'neu'; }).length;
-      var fbReiter = '<div class="unterreiter"><button data-fbv="offen"' + (imArchiv ? '' : ' class="aktiv"') + '>📥 Offen (' + offen.length + ')</button><button data-fbv="archiv"' + (imArchiv ? ' class="aktiv"' : '') + '>🗄️ Archiv (' + archiv.length + ')</button></div>';
+      // 📥 Neu = noch nicht bewertet · 🔧 In Arbeit = wird gerade gebaut · 🌱 Ideengarten = gute Idee, vielleicht später (+ eigene Ideen) · 🗄️ Archiv = erledigt
+      var istArchiv = function (x) { return x.ar || x.s === 'umgesetzt' || x.s === 'abgelehnt'; };
+      var offen = f.filter(function (x) { return !istArchiv(x) && x.s === 'neu'; }),
+          arbeit = f.filter(function (x) { return !istArchiv(x) && x.s === 'in_arbeit'; }),
+          garten = f.filter(function (x) { return !istArchiv(x) && x.s === 'hilfreich'; }),
+          archiv = f.filter(istArchiv);
+      if (['offen', 'arbeit', 'garten', 'archiv'].indexOf(fbAnsicht) < 0) fbAnsicht = 'offen';
+      var imArchiv = fbAnsicht === 'archiv', inMerk = fbAnsicht === 'garten', inArbeit = fbAnsicht === 'arbeit';
+      f = imArchiv ? archiv : inMerk ? garten : inArbeit ? arbeit : offen;
+      var neu = offen.length;
+      var fbReiter = '<div class="unterreiter">' + [['offen', '📥 Neu', offen], ['arbeit', '🔧 In Arbeit', arbeit], ['garten', '🌱 Ideengarten', garten], ['archiv', '🗄️ Archiv', archiv]].map(function (r) { return '<button data-fbv="' + r[0] + '"' + (fbAnsicht === r[0] ? ' class="aktiv"' : '') + '>' + r[1] + ' (' + r[2].length + ')</button>'; }).join('') + '</div>' +
+        (inMerk ? '<div class="sbox eigenidee"><b>🌱 Eigene Idee pflanzen</b><textarea class="admfeld" id="eigenidee" maxlength="600" rows="2" placeholder="z. B. Winter-Giveaway mit Zeni-Los (mind. 20 Zeichen)"></textarea><div class="admfbk2"><button class="vtw" id="eigenok">🌱 In den Ideengarten</button><span class="leise" id="eigeninfo"></span></div></div>' : '');
       var STNAME = { neu: 'neu', in_arbeit: 'in Bearbeitung', hilfreich: 'hilfreich', umgesetzt: 'umgesetzt', abgelehnt: 'passt nicht' };
       $('adm').innerHTML = fbReiter + (f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni (erste Idee der Woche) bzw. 500 Zeni (jede weitere) · ✅ Umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird nur der Unterschied)</p>' + f.map(function (x) {
         var st = FB_STATUS[x.s] || FB_STATUS.neu;
-        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + '"><div class="admfbk"><b>' + esc(x.l) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
+        var eigene = x.l === 'kazenity';
+        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + (eigene ? ' eigene' : '') + '"><div class="admfbk"><b>' + (eigene ? '💭 Eigene Idee' : esc(x.l)) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
           '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="2" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea>' +
           '<input class="admfeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Nur bei „Umgesetzt“: kurzer Satz für die Startseite (optional)" value="' + esc(x.o || '') + '">' +
           '<div class="admfbk2"><button class="vlink" data-fbaw="' + x.id + '">💬 Nur Antwort senden</button><button class="vlink" data-fb="' + x.id + '" data-fs="in_arbeit">🔧 In Bearbeitung</button><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button>' + (x.ar ? '<button class="vlink" data-fbar="' + x.id + '" data-wert="0">↩ Zurückholen</button>' : '<button class="vlink" data-fbar="' + x.id + '" data-wert="1">☑️ Erledigt → Archiv</button>') + '</div></div>';
-      }).join('') : '<p class="leise">' + (imArchiv ? 'Das Archiv ist leer. Mit „☑️ Erledigt → Archiv“ legst du erledigtes Feedback hier ab.' : 'Kein offenes Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.') + '</p>');
+      }).join('') : '<p class="leise">' + (imArchiv ? 'Das Archiv ist leer. Umgesetztes und „Passt nicht“ landen automatisch hier.' : inMerk ? 'Der Ideengarten ist leer. Alles, was du auf 💡 Hilfreich setzt, wächst hier – und oben kannst du eigene Ideen pflanzen.' : inArbeit ? 'Gerade wird nichts gebaut. Setz eine Idee auf 🔧 In Bearbeitung, dann steht sie hier.' : 'Kein neues Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.') + '</p>');
+      if ($('eigenok')) $('eigenok').onclick = function () {
+        var t = $('eigenidee').value.trim(), b = this;
+        if (t.length < 20) { $('eigeninfo').textContent = 'Bitte mindestens 20 Zeichen.'; return; }
+        b.disabled = true;
+        rpc('feedback_senden', { p_text: t }).then(function () { return rpc('admin_feedback'); }).then(function (alle) {
+          var meins = (alle || []).filter(function (x) { return x.l === 'kazenity' && x.s === 'neu'; }).sort(function (a, c) { return c.id - a.id; })[0];
+          return meins ? rpc('admin_feedback_setzen', { p_id: meins.id, p_status: 'hilfreich', p_oeffentlich: '' }) : null;
+        }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
+      };
       Array.prototype.forEach.call(document.querySelectorAll('[data-fbv]'), function (b) { b.onclick = function () { fbAnsicht = b.getAttribute('data-fbv'); adminOeffnen('feedback'); }; });
       Array.prototype.forEach.call(document.querySelectorAll('[data-fbar]'), function (b) { b.onclick = function () {
         var id = Number(b.getAttribute('data-fbar')); b.disabled = true;
