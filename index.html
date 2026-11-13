@@ -548,6 +548,22 @@
   .appzu { background: none; border: 0; color: var(--grau); font-size: 20px; cursor: pointer; padding: 0 4px; }
   .appschritte { line-height: 1.9; padding-left: 20px; }
   .mziel a.glanmelden { color: var(--rosa); font-weight: 800; text-decoration: none; }
+  .fbox { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--rand); border-radius: 14px; cursor: pointer; transition: border-color .15s; }
+  .fbox:hover { border-color: var(--rosa); }
+  .fstapel { display: inline-flex; padding-left: 8px; } .fstapel .av { width: 30px; height: 30px; margin-left: -8px; border: 2px solid var(--bg); box-sizing: content-box; }
+  .fstapel .fmehr { font-size: 11px; background: var(--flaeche); color: var(--grau); }
+  .ftext { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; min-width: 0; } .fneu { font-size: 12px; color: var(--rosa); font-weight: 700; }
+  .fpfeil { margin-left: auto; color: var(--grau); font-size: 20px; line-height: 1; }
+  .fwerb { margin: 4px 2px 0; font-size: 12.5px; }
+  .fzurueck { background: none; border: 0; color: var(--rosa); font-weight: 700; font-size: 13px; cursor: pointer; padding: 0 0 10px; }
+  .fziel { margin: 0 0 12px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; font-size: 13px; }
+  .fziel .balken { height: 6px; border-radius: 99px; background: var(--rand); overflow: hidden; } .fziel .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  .fziel small { display: block; color: var(--grau); font-size: 11.5px; margin-top: 4px; } .fziel .balken { margin-top: 8px; }
+  .fgitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .fkarte { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; cursor: pointer; min-width: 0; transition: border-color .15s; }
+  .fkarte:hover { border-color: var(--rosa); } .fkarte .av { width: 36px; height: 36px; }
+  .fkarte div { min-width: 0; } .fkarte b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fkarte small { display: block; font-size: 11.5px; color: var(--grau); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .freunde { margin: 10px 0 4px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; font-size: 13px; }
   .freunde .fz { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .freunde .fp { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
@@ -2497,7 +2513,11 @@
     ]).then(function (r) {
       var p = {};
       (r[0] || []).forEach(function (x) { (p[x[0]] = p[x[0]] || []).push(x[1]); (p[x[1]] = p[x[1]] || []).push(x[0]); });
+      var ersterMal = !freunde.geladen;
       freunde.paare = p; freunde.werber = r[1] || {}; freunde.geladen = true;
+      // Profil schon offen, bevor die Freunde da waren (z. B. direkt über einen Link)? Dann einmal neu zeichnen.
+      var hm = location.hash.match(/^#profil=(.+)$/);
+      if (ersterMal && hm && $('kartebg').className.indexOf('offen') >= 0 && !$('fzurueck')) profilZeigen(decodeURIComponent(hm[1]));
     });
   }
   oeffentlichLaden();
@@ -2512,23 +2532,47 @@
     return ' <button class="ichknopf' + (ich ? ' ja' : '') + '" id="freundknopf" data-an="' + (ich ? '0' : '1') + '">' + (ich && er ? '✓ Freunde' : ich ? '⏳ Anfrage gesendet' : er ? '🤝 Freundschaft annehmen' : '🤝 Als Freund markieren') + '</button>';
   }
   function freundeHtml(login) {
-    var h = '', liste = freunde.paare[login] || [], wb = freunde.werber[login] || 0;
-    if (liste.length || wb) {
-      h += '<div class="freunde">' + (liste.length ? '<div class="fz"><b>🤝 Freunde</b>' + liste.slice(0, 12).map(function (f) { return '<span class="fp"' + dl(f) + '>' + bild(f) + '<i' + fs(f) + '>' + esc(prof(f).n || f) + '</i></span>'; }).join('') + (liste.length > 12 ? '<span class="leise">+' + (liste.length - 12) + '</span>' : '') + '</div>' : '') +
-        (wb ? '<div class="leise">🌱 hat ' + wb + (wb === 1 ? ' Person' : ' Leute') + ' zu Kazetopia gebracht</div>' : '') + '</div>';
+    var h = '', liste = freunde.paare[login] || [], wb = freunde.werber[login] || 0, eigen = sitzung && sitzung.name === login;
+    var offen = eigen && freunde.meine ? freunde.meine.mich.filter(function (x) { return freunde.meine.ich.indexOf(x) < 0; }) : [];
+    if (liste.length || offen.length || eigen) {
+      var stapel = liste.slice(0, 5).map(function (f) { return bild(f); }).join('');
+      h += '<div class="fbox" data-freundeliste="' + esc(login) + '" role="button" tabindex="0">' +
+        (stapel ? '<span class="fstapel">' + stapel + (liste.length > 5 ? '<span class="av fmehr">+' + (liste.length - 5) + '</span>' : '') + '</span>' : '') +
+        '<span class="ftext"><b>🤝 ' + (liste.length ? liste.length + (liste.length === 1 ? ' Freund' : ' Freunde') : 'Noch keine Freunde') + '</b>' +
+        (offen.length ? '<span class="fneu">📨 ' + offen.length + (offen.length === 1 ? ' Anfrage' : ' Anfragen') + '</span>' : '') + '</span><span class="fpfeil">›</span></div>';
     }
-    if (sitzung && sitzung.name !== login && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) < 0)
-      h += '<div class="freunde leise">⏳ Anfrage gesendet – ihr steht als Freunde auf euren Karten, sobald ' + esc(prof(login).n || login) + ' dich auch markiert (auf der eigenen Profilkarte unter „Freundschaftsanfragen“).</div>';
-    if (sitzung && sitzung.name === login && login !== 'kazenity') {
-      var echte = liste.filter(function (f) { return f !== 'kazenity'; }).length, ST = [[3, 'Gesellig'], [8, 'Gut vernetzt'], [15, 'Bekanntes Gesicht']], nx = null;
-      ST.forEach(function (x) { if (!nx && echte < x[0]) nx = x; });
-      h += '<div class="freunde leise">🏷️ ' + (nx ? 'Noch <b>' + (nx[0] - echte) + '</b> gegenseitige' + (nx[0] - echte === 1 ? 'r Freund' : ' Freunde') + ' bis zum Titel „' + nx[1] + '“' : 'Alle Freundes-Titel geschafft – „Bekanntes Gesicht“! 🌸') + ' <span class="leise">(Kaze zählt nicht mit)</span></div>';
-    }
-    if (sitzung && sitzung.name === login && freunde.meine) {
-      var offen = freunde.meine.mich.filter(function (x) { return freunde.meine.ich.indexOf(x) < 0; });
-      if (offen.length) h += '<div class="freunde"><b>📨 Freundschaftsanfragen</b>' + offen.map(function (x) { return '<div class="fanfrage"><span' + dl(x) + '>' + bild(x) + ' <i' + fs(x) + '>' + esc(prof(x).n || x) + '</i></span><button class="vtw" data-fannehmen="' + esc(x) + '">Annehmen</button></div>'; }).join('') + '</div>';
-    }
+    if (wb) h += '<div class="fwerb leise">🌱 hat ' + wb + (wb === 1 ? ' Person' : ' Leute') + ' zu Kazetopia gebracht</div>';
+    if (sitzung && !eigen && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) < 0)
+      h += '<div class="fwerb leise">⏳ Anfrage gesendet – ihr steht als Freunde auf euren Karten, sobald ' + esc(prof(login).n || login) + ' sie annimmt.</div>';
     return h;
+  }
+  // 🤝 Eigenes Fenster mit allen Freunden (aus dem Profil heraus, mit „Zurück“)
+  function freundeFenster(login) {
+    var liste = (freunde.paare[login] || []).slice(), eigen = sitzung && sitzung.name === login, name = prof(login).n || login;
+    liste.sort(function (a, b) { return (((daten.spieler || {})[b] || {}).w || 0) - (((daten.spieler || {})[a] || {}).w || 0); });
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><button class="fzurueck" id="fzurueck">← Zurück zum Profil</button>' +
+      '<div class="kopf"><div><b>🤝 ' + (eigen ? 'Deine Freunde' : 'Freunde von ' + esc(name)) + '</b><div class="kk">Nur gegenseitige Freundschaften · Tippe auf jemanden für sein Profil</div></div></div>';
+    if (eigen && login !== 'kazenity') {
+      var echte = liste.filter(function (f) { return f !== 'kazenity'; }).length, ST = [[3, 'Gesellig'], [8, 'Gut vernetzt'], [15, 'Bekanntes Gesicht']], nx = null, vor = 0;
+      ST.forEach(function (x) { if (!nx && echte < x[0]) nx = x; else if (!nx) vor = x[0]; });
+      h += '<div class="fziel">' + (nx ? '🏷️ Noch <b>' + (nx[0] - echte) + '</b> bis zum Titel „' + nx[1] + '“<div class="balken"><i style="width:' + Math.round(Math.max(0, echte - vor) / (nx[0] - vor) * 100) + '%"></i></div>' : '🏷️ Alle Freundes-Titel geschafft – „Bekanntes Gesicht“ 🌸') + '<small>Kaze zählt nicht mit</small></div>';
+    }
+    if (eigen && freunde.meine) {
+      var offen = freunde.meine.mich.filter(function (x) { return freunde.meine.ich.indexOf(x) < 0; });
+      if (offen.length) h += '<div class="fziel"><b>📨 Freundschaftsanfragen</b>' + offen.map(function (x) { return '<div class="fanfrage"><span' + dl(x) + '>' + bild(x) + ' <i' + fs(x) + '>' + esc(prof(x).n || x) + '</i></span><button class="vtw" data-fannehmen="' + esc(x) + '">Annehmen</button></div>'; }).join('') + '</div>';
+    }
+    h += liste.length ? '<div class="fgitter">' + liste.map(function (f) {
+      var r = leiterInfo(WT, (((daten.spieler || {})[f]) || {}).w || 0, 0).akt;
+      return '<div class="fkarte"' + dl(f) + '>' + bild(f) + '<div><b' + fs(f) + '>' + esc(prof(f).n || f) + '</b><small>' + (rolle(f) === 'streamer' ? '👑 Streamer' : r ? r[1] + ' ' + esc(r[2]) : '🌱 Neu dabei') + '</small></div></div>';
+    }).join('') + '</div>' : '<p class="leise" style="text-align:center;margin:18px 0">' + (eigen ? 'Noch keine Freunde. Öffne das Profil von jemandem und tippe auf „🤝 Als Freund markieren“ – sobald er zurück markiert, steht ihr hier.' : esc(name) + ' hat noch keine gegenseitigen Freunde.') + '</p>';
+    karteOeffnen(h);
+    $('fzurueck').onclick = function () { profilZeigen(login); };
+    Array.prototype.forEach.call($('karte').querySelectorAll('.fkarte[data-l], .fanfrage [data-l]'), function (k) { k.onclick = function () { profilZeigen(k.getAttribute('data-l')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fannehmen]'), function (k) { k.onclick = function (e) {
+      e.stopPropagation(); k.disabled = true; var wer = k.getAttribute('data-fannehmen');
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_setzen', { method: 'POST', body: { p_an: wer, p_an_aus: true } }); })
+        .then(function () { return meineFreundeLaden(); }).then(function () { oeffentlichLaden(); setTimeout(function () { freundeFenster(login); }, 500); });
+    }; });
   }
   function freundeEvents(login) {
     if (sitzung && !freunde.meine) meineFreundeLaden().then(function () { if ($('kartebg').className.indexOf('offen') >= 0 && location.hash === '#profil=' + encodeURIComponent(login)) profilZeigen(login); });
@@ -2539,11 +2583,10 @@
         .then(function () { return meineFreundeLaden(); }).then(function () { oeffentlichLaden(); setTimeout(function () { profilZeigen(login); }, 400); })
         .catch(function (x) { b.textContent = '❌ ' + (/404|PGRST202/.test(x.message) ? 'kommt gleich' : x.message); });
     };
-    Array.prototype.forEach.call(document.querySelectorAll('[data-fannehmen]'), function (k) { k.onclick = function (e) {
-      e.stopPropagation(); k.disabled = true; var wer = k.getAttribute('data-fannehmen');
-      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_setzen', { method: 'POST', body: { p_an: wer, p_an_aus: true } }); })
-        .then(function () { return meineFreundeLaden(); }).then(function () { oeffentlichLaden(); setTimeout(function () { profilZeigen(login); }, 400); });
-    }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-freundeliste]'), function (k) {
+      k.onclick = function (e) { e.stopPropagation(); freundeFenster(login); };
+      k.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); freundeFenster(login); } };
+    });
   }
 
   // 🌱 Zuschauer werben Zuschauer: Link …/kazetopia/?von=NAME
