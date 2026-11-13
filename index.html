@@ -2519,6 +2519,11 @@
     }
     if (sitzung && sitzung.name !== login && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) < 0)
       h += '<div class="freunde leise">⏳ Anfrage gesendet – ihr steht als Freunde auf euren Karten, sobald ' + esc(prof(login).n || login) + ' dich auch markiert (auf der eigenen Profilkarte unter „Freundschaftsanfragen“).</div>';
+    if (sitzung && sitzung.name === login && login !== 'kazenity') {
+      var echte = liste.filter(function (f) { return f !== 'kazenity'; }).length, ST = [[3, 'Gesellig'], [8, 'Gut vernetzt'], [15, 'Bekanntes Gesicht']], nx = null;
+      ST.forEach(function (x) { if (!nx && echte < x[0]) nx = x; });
+      h += '<div class="freunde leise">🏷️ ' + (nx ? 'Noch <b>' + (nx[0] - echte) + '</b> gegenseitige' + (nx[0] - echte === 1 ? 'r Freund' : ' Freunde') + ' bis zum Titel „' + nx[1] + '“' : 'Alle Freundes-Titel geschafft – „Bekanntes Gesicht“! 🌸') + ' <span class="leise">(Kaze zählt nicht mit)</span></div>';
+    }
     if (sitzung && sitzung.name === login && freunde.meine) {
       var offen = freunde.meine.mich.filter(function (x) { return freunde.meine.ich.indexOf(x) < 0; });
       if (offen.length) h += '<div class="freunde"><b>📨 Freundschaftsanfragen</b>' + offen.map(function (x) { return '<div class="fanfrage"><span' + dl(x) + '>' + bild(x) + ' <i' + fs(x) + '>' + esc(prof(x).n || x) + '</i></span><button class="vtw" data-fannehmen="' + esc(x) + '">Annehmen</button></div>'; }).join('') + '</div>';
