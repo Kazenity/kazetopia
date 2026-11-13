@@ -585,10 +585,17 @@
   .ichvorteile { line-height: 1.9; padding-left: 4px; list-style: none; margin: 8px 0 14px; }
   .vldet #vlinhalt { padding-bottom: 12px; } .vlreiter { margin: 2px 0 8px !important; justify-content: flex-start !important; }
   .vlreiter button[disabled] { opacity: .45; cursor: default; }
-  .vlbild { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 10px 6px; }
-  .vlsvg { width: 100%; height: 140px; display: block; } .vlachse { stroke: var(--rand); stroke-width: 1; }
-  .vlachsen { display: flex; justify-content: space-between; font-size: 11px; color: var(--grau); margin-top: 2px; }
-  .vlinfo { font-size: 13px; margin-top: 8px; line-height: 1.5; } .vlpunkt { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .vlbild { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 12px 12px 6px; }
+  .vlflaeche { position: relative; touch-action: pan-y; cursor: crosshair; }
+  .vlsvg { width: 100%; height: 150px; display: block; } .vlgitter { stroke: var(--rand); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+  .vlhilfe { display: none; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grau); opacity: .45; pointer-events: none; }
+  .vlpunkt2 { display: none; position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--hell); box-shadow: 0 0 0 3px var(--rosa); pointer-events: none; }
+  .vltip { display: flex; align-items: baseline; gap: 8px; min-height: 20px; margin: 0 2px 6px; } .vltip b { font-size: 15px; } .vltip small { font-size: 12px; color: var(--grau); }
+  .vlachsen { position: relative; height: 16px; margin-top: 4px; font-size: 11px; color: var(--grau); }
+  .vlachsen span { position: absolute; transform: translateX(-50%); white-space: nowrap; } .vlachsen span:first-child:not(:only-child) { transform: none; } .vlachsen span:last-child:not(:only-child) { transform: translateX(-100%); }
+  .vlachsen.tage span, .vlachsen.tage span:first-child, .vlachsen.tage span:last-child { transform: translateX(-50%); }
+  .vlinfo { font-size: 13px; margin-top: 8px; line-height: 1.5; } .vlplus { color: #5fd38d; font-weight: 700; } .vlminus { color: #ff6b81; font-weight: 700; }
+  .vltrenn { width: 1px; align-self: stretch; background: var(--rand); margin: 2px 4px; }
   .vlhinweis { margin-top: 6px; font-size: 11.5px; }
   .admfeld.warnfeld { border-color: #ff4d6d !important; box-shadow: 0 0 0 2px rgba(255,77,109,.25); }
   .gehgitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
@@ -2424,7 +2431,7 @@
     h += '<h4>🏅 RÄNGE</h4><div class="kacheln4">';
     GROSS.forEach(function (g) { if (wertVon(sp, g.k) > 0) h += grossKachel(g, sp); });
     h += '</div>';
-    h += '<details class="stdet vldet" id="vl"><summary><b>📈 VERLAUF</b><span class="stsum">Zeni, Watchtime, Chat & Platz</span><span class="stauf">▾</span></summary><div id="vlinhalt"></div></details>';
+    h += '<details class="stdet vldet" id="vl"><summary><b>📈 VERLAUF</b><span class="stsum">Entwicklung pro Stream</span><span class="stauf">▾</span></summary><div id="vlinhalt"></div></details>';
     h += stempelHtml(sp);
 
     // Erfolge als Kacheln (gleicher Stil wie Ränge, inkl. nächstem Ziel)
@@ -2551,7 +2558,7 @@
   var SEITE = 'https://kazenity.github.io/kazetopia';
 
   // 📈 Verlauf im Profil (Idee von TheAshborn0): Zeni, Watchtime, Chat und Platz der letzten 7 / 30 / 90 Tage
-  var verlaufDaten = null, verlaufLaedt = null, vlArt = 'z', vlTage = 7;
+  var verlaufDaten = null, verlaufLaedt = null, vlArt = 'z', vlTage = 7, vlPlatz = 'z';
   function verlaufLaden() {
     if (verlaufDaten) return Promise.resolve(verlaufDaten);
     if (!verlaufLaedt) verlaufLaedt = fetch('https://raw.githubusercontent.com/Kazenity/kazetopia/main/verlauf.json?t=' + Math.floor(Date.now() / 600000))
@@ -2559,71 +2566,122 @@
       .catch(function () { verlaufLaedt = null; return null; });
     return verlaufLaedt;
   }
-  // Der Tages-Stand wird kurz nach Mitternacht gemerkt – er zeigt also den Stand am Ende des Vortags
-  function vlDatum(t) { var p = String(t).split('-'); if (p.length !== 3) return t; var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]) - 1); return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.'; }
-  function vlSvg(reihen, opt) {
-    // reihen: [{w: [Werte oder null], farbe, balken}] · opt: {umgedreht}
-    var B = 320, H = 130, L = 6, R = 6, O = 10, U = 18, alle = [];
-    reihen.forEach(function (r) { r.w.forEach(function (v) { if (v != null) alle.push(v); }); });
-    if (!alle.length) return '';
-    var min = Math.min.apply(null, alle), max = Math.max.apply(null, alle), balken = reihen[0].balken;
-    if (balken) min = Math.min(0, min);
-    if (max === min) { max += 1; if (!balken) min -= 1; }
-    var n = reihen[0].w.length, sx = n > 1 ? (B - L - R) / (n - 1) : 0;
-    function y(v) { var f = (v - min) / (max - min); if (opt && opt.umgedreht) f = 1 - f; return O + (1 - f) * (H - O - U); }
-    var s = '<svg class="vlsvg" viewBox="0 0 ' + B + ' ' + H + '" preserveAspectRatio="none" role="img">';
-    s += '<line x1="' + L + '" y1="' + (H - U) + '" x2="' + (B - R) + '" y2="' + (H - U) + '" class="vlachse"/>';
-    reihen.forEach(function (r) {
-      if (balken) {
-        var bw = Math.max(3, Math.min(26, (B - L - R) / n * 0.6));
-        r.w.forEach(function (v, i) { if (v == null) return; var x = n > 1 ? L + i * sx - bw / 2 : B / 2 - bw / 2, top = y(Math.max(v, 0)), unten = y(0); s += '<rect x="' + Math.max(L, Math.min(B - R - bw, x)).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, unten - top).toFixed(1) + '" rx="2" style="fill:' + r.farbe + '"/>'; });
-      } else {
-        var pfad = '', an = false;
-        r.w.forEach(function (v, i) { if (v == null) { an = false; return; } var x = n > 1 ? L + i * sx : B / 2; pfad += (an ? 'L' : 'M') + x.toFixed(1) + ' ' + y(v).toFixed(1) + ' '; an = true; });
-        s += '<path d="' + pfad + '" fill="none" style="stroke:' + r.farbe + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
-        r.w.forEach(function (v, i) { if (v == null) return; var x = n > 1 ? L + i * sx : B / 2; if (i === r.w.length - 1 || n <= 14) s += '<circle cx="' + x.toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (i === r.w.length - 1 ? 3.2 : 2) + '" style="fill:' + r.farbe + '"/>'; });
-      }
-    });
-    return s + '</svg>';
+  var VL_TAGNAME = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  function vlTag(t) { var p = String(t).split('-'); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])); }
+  function vlDatum(t) { var d = vlTag(t); return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.'; }
+  function vlWochentag(t) { return VL_TAGNAME[vlTag(t).getDay()]; }
+  // Diagramm: eine Reihe, Linie oder Balken. Liefert SVG + Positionen (in %) für Tooltip und Beschriftung.
+  function vlDiagramm(w, opt) {
+    var B = 320, H = 130, L = 8, R = 8, O = 12, U = 12, werte = w.filter(function (v) { return v != null; });
+    if (!werte.length) return null;
+    var min = Math.min.apply(null, werte), max = Math.max.apply(null, werte);
+    if (opt.balken) min = 0;
+    if (max === min) { max += opt.balken ? 1 : Math.max(1, Math.abs(max) * 0.05); if (!opt.balken) min -= Math.max(1, Math.abs(min) * 0.05); }
+    var n = w.length, sx = n > 1 ? (B - L - R) / (n - 1) : 0;
+    function x(i) { return n > 1 ? L + i * sx : B / 2; }
+    function y(v) { var f = (v - min) / (max - min); if (opt.umgedreht) f = 1 - f; return O + (1 - f) * (H - O - U); }
+    var s = '<svg class="vlsvg" viewBox="0 0 ' + B + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">';
+    [0, 0.5, 1].forEach(function (f) { var yy = O + f * (H - O - U); s += '<line x1="0" x2="' + B + '" y1="' + yy + '" y2="' + yy + '" class="vlgitter"/>'; });
+    var xs = [], ys = [];
+    if (opt.balken) {
+      var bw = Math.max(3, Math.min(28, (B - L - R) / Math.max(n, 1) * 0.62));
+      w.forEach(function (v, i) {
+        xs.push(x(i) / B * 100); ys.push(v == null ? null : y(v) / H * 100);
+        if (v == null || v <= 0) return;
+        var bx = Math.max(0, Math.min(B - bw, x(i) - bw / 2)), top = y(v), unten = y(0);
+        s += '<rect x="' + bx.toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1.5, unten - top).toFixed(1) + '" rx="2.5" style="fill:' + opt.farbe + '"/>';
+      });
+    } else {
+      var pfad = '', flaeche = '', an = false, erstX = null, letztX = null;
+      w.forEach(function (v, i) {
+        xs.push(x(i) / B * 100); ys.push(v == null ? null : y(v) / H * 100);
+        if (v == null) { an = false; return; }
+        pfad += (an ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' '; an = true;
+        if (erstX === null) erstX = x(i); letztX = x(i);
+      });
+      if (!opt.umgedreht && erstX !== null) flaeche = '<path d="' + pfad + 'L' + letztX.toFixed(1) + ' ' + (H - U) + ' L' + erstX.toFixed(1) + ' ' + (H - U) + ' Z" style="fill:' + opt.farbe + '" opacity=".12"/>';
+      s += flaeche + '<path d="' + pfad + '" fill="none" style="stroke:' + opt.farbe + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+    }
+    s += '</svg>';
+    return { svg: s, xs: xs, ys: ys, max: opt.umgedreht ? min : max, min: opt.umgedreht ? max : min };
   }
   function verlaufZeichnen(login) {
     var box = $('vlinhalt'); if (!box) return;
-    var vd = verlaufDaten, d = vd && vd.u && vd.u[login];
-    if (!d) { box.innerHTML = '<p class="leise" style="margin:4px 0 12px">Noch kein Verlauf – er erscheint, sobald ' + (sitzung && sitzung.name === login ? 'du' : esc(prof(login).n || login)) + ' ein paar Tage im Stream ' + (sitzung && sitzung.name === login ? 'warst' : 'war') + '.</p>'; return; }
-    var tage = vd.tage, ges = tage.length, n = Math.min(vlTage, ges), ab = ges - n, t = tage.slice(ab);
-    function teil(a) { return (d[a] || []).slice(ab); }
-    function diff(a) { var w = teil(a), r = []; for (var i = 0; i < w.length; i++) r.push(i === 0 || w[i] == null || w[i - 1] == null ? null : Math.max(0, Math.round((w[i] - w[i - 1]) * 10) / 10)); return r; }
+    var vd = verlaufDaten, d = vd && vd.u && vd.u[login], eigen = sitzung && sitzung.name === login;
+    if (rolle(login) === 'streamer') { box.innerHTML = '<p class="leise" style="margin:4px 0 12px">🎙️ Kaze ist der Streamer und steht deshalb nicht in den Ranglisten – also auch kein Verlauf.</p>'; return; }
+    if (!d) { box.innerHTML = '<p class="leise" style="margin:4px 0 12px">Noch kein Verlauf – er erscheint, sobald ' + (eigen ? 'du' : esc(prof(login).n || login)) + ' in den letzten Wochen im Stream ' + (eigen ? 'warst' : 'war') + '. Aktualisiert sich einmal am Tag.</p>'; return; }
+    // Ein Punkt pro Stream (Idee von TheAshborn0: „anhand der tatsächlichen Menge der Streams“).
+    // Werte = Stand nach dem Stream (erster Tages-Stand nach dem Stream-Tag), Zuwachs = gegenüber dem Stand davor.
+    var tage = vd.tage, alle = [];
+    (vd.streams || []).forEach(function (sd) {
+      var e = -1, v = -1;
+      for (var i = 0; i < tage.length; i++) { if (tage[i] > sd) { e = i; break; } v = i; }
+      if (e >= 0) alle.push({ datum: sd, e: e, v: v });
+    });
+    if (!vd.streams) tage.forEach(function (td, i) { var x = new Date(vlTag(td).getTime() - 864e5); alle.push({ datum: x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2), e: i, v: i - 1 }); });
+    if (!alle.length) { box.innerHTML = '<p class="leise" style="margin:4px 0 12px">Noch kein Stream im Verlauf – nach dem nächsten Stream geht es los.</p>'; return; }
+    var ges = alle.length, n = Math.min(vlTage, ges), pts = alle.slice(ges - n), t = pts.map(function (q) { return q.datum; });
+    function teil(a) { var w = d[a] || []; return pts.map(function (q) { return w[q.e] == null ? null : w[q.e]; }); }
+    function diff(a) { var w = d[a] || []; return pts.map(function (q) { return q.v < 0 || w[q.e] == null || w[q.v] == null ? null : Math.max(0, Math.round((w[q.e] - w[q.v]) * 10) / 10); }); }
     function erst(w) { for (var i = 0; i < w.length; i++) if (w[i] != null) return w[i]; return null; }
     function letzt(w) { for (var i = w.length - 1; i >= 0; i--) if (w[i] != null) return w[i]; return null; }
-    var ARTEN = [['z', '💰 Zeni'], ['w', '⏱️ Watchtime'], ['c', '💬 Chat'], ['p', '🏅 Platz']];
+    var chatDa = (d.c || []).filter(function (v) { return v != null; }).length >= 2;
+    if (vlArt === 'c' && !chatDa) vlArt = 'z';
+    var ARTEN = [['z', '💰 Zeni'], ['w', '⏱️ Watchtime']].concat(chatDa ? [['c', '💬 Chat']] : []).concat([['p', '🏅 Platz']]);
     var h = '<div class="unterreiter vlreiter">' + ARTEN.map(function (a) { return '<button data-vla="' + a[0] + '"' + (vlArt === a[0] ? ' class="aktiv"' : '') + '>' + a[1] + '</button>'; }).join('') + '</div>';
-    h += '<div class="unterreiter klein vlreiter">' + [7, 30, 90].map(function (z) { var zu = z > 7 && ges < z; return '<button data-vlt="' + z + '"' + (vlTage === z ? ' class="aktiv"' : '') + (zu ? ' disabled title="Sammelt noch Daten"' : '') + '>' + z + ' Tage' + (zu ? ' 🔒' : '') + '</button>'; }).join('') + '</div>';
-    var svg = '', info = '';
+    var leiste = [7, 30, 90].map(function (z) { var zu = z > 7 && ges < z; return '<button data-vlt="' + z + '"' + (vlTage === z ? ' class="aktiv"' : '') + (zu ? ' disabled title="Noch ' + (z - ges) + ' Streams bis zur Freischaltung"' : '') + '>' + z + ' Streams' + (zu ? ' 🔒' : '') + '</button>'; }).join('');
+    if (vlArt === 'p') h += '<div class="unterreiter klein vlreiter"><button data-vlp="z"' + (vlPlatz === 'z' ? ' class="aktiv"' : '') + '>💰 Zeni-Platz</button><button data-vlp="w"' + (vlPlatz === 'w' ? ' class="aktiv"' : '') + '>⏱️ Watchtime-Platz</button></div>';
+    h += '<div class="unterreiter klein vlreiter">' + leiste + '</div>';
+    var reihe, opt, fmt, info = '';
     if (vlArt === 'z') {
-      var z = teil('z'), a = erst(z), b = letzt(z);
-      svg = vlSvg([{ w: z, farbe: 'var(--rosa)' }]);
-      if (b != null) info = '<b>' + zahl(b) + ' Zeni</b>' + (a != null && n > 1 ? ' · ' + (b - a >= 0 ? '+' : '−') + zahl(Math.abs(b - a)) + ' seit ' + vlDatum(t[0]) : '');
+      reihe = teil('z'); opt = { farbe: 'var(--rosa)' }; fmt = function (v) { return zahl(v) + ' Zeni'; };
+      var a = erst(reihe), b = letzt(reihe);
+      if (b != null) info = '<b>' + zahl(b) + ' Zeni</b>' + (a != null && n > 1 ? ' <span class="' + (b >= a ? 'vlplus' : 'vlminus') + '">' + (b >= a ? '+' : '−') + zahl(Math.abs(b - a)) + '</span> seit dem Stream am ' + vlDatum(t[0]) : '');
+      var jetztZ = letzt(d.z || []); if (jetztZ != null && jetztZ !== b) info += ' · aktuell <b>' + zahl(jetztZ) + '</b>';
     } else if (vlArt === 'w') {
-      var wd = diff('w'), summe = 0; wd.forEach(function (v) { if (v) summe += v; });
-      svg = vlSvg([{ w: wd, farbe: 'var(--rosa)', balken: true }]);
-      info = '<b>+' + zahl(Math.round(summe * 10) / 10) + ' Std.</b> in ' + n + ' Tagen · Balken = Stunden pro Tag' + (letzt(teil('w')) != null ? ' · gesamt ' + zahl(letzt(teil('w'))) + ' Std.' : '');
+      reihe = diff('w'); opt = { farbe: 'var(--rosa)', balken: true }; fmt = function (v) { return zahl(v) + ' Std.'; };
+      var summe = 0, tageMit = 0; reihe.forEach(function (v) { if (v) { summe += v; tageMit++; } });
+      info = '<b>+' + zahl(Math.round(summe * 10) / 10) + ' Std.</b> in den letzten ' + n + (n === 1 ? ' Stream' : ' Streams') + ' · bei ' + tageMit + ' von ' + n + ' dabei' + (letzt(teil('w')) != null ? ' · gesamt ' + zahl(letzt(teil('w'))) + ' Std.' : '');
     } else if (vlArt === 'c') {
-      var cd = diff('c'), cs = 0, da = false; cd.forEach(function (v) { if (v != null) { da = true; cs += v; } });
-      if (!da) info = '💬 Der Chat-Verlauf wird seit dem 14.11. gesammelt – nach ein paar Tagen erscheinen hier die Nachrichten pro Tag.';
-      else { svg = vlSvg([{ w: cd, farbe: 'var(--lila)', balken: true }]); info = '<b>+' + zahl(cs) + ' Nachrichten</b> in ' + n + ' Tagen · Balken = Nachrichten pro Tag'; }
+      reihe = diff('c'); opt = { farbe: '#a996ff', balken: true }; fmt = function (v) { return zahl(v) + ' Nachrichten'; };
+      var cs = 0; reihe.forEach(function (v) { if (v) cs += v; });
+      info = '<b>+' + zahl(cs) + ' Nachrichten</b> in den letzten ' + n + (n === 1 ? ' Stream' : ' Streams');
     } else {
-      var zr = teil('zr'), wr = teil('wr');
-      svg = vlSvg([{ w: zr, farbe: 'var(--rosa)' }, { w: wr, farbe: 'var(--lila)' }], { umgedreht: true });
-      var za = erst(zr), zb = letzt(zr), wa = erst(wr), wb = letzt(wr);
-      info = '<span class="vlpunkt" style="background:var(--rosa)"></span>Zeni-Platz ' + (zb != null ? '<b>#' + zb + '</b>' + (za != null && za !== zb ? ' (' + (za > zb ? '▲ ' + (za - zb) : '▼ ' + (zb - za)) + ')' : '') : '–') +
-        ' · <span class="vlpunkt" style="background:var(--lila)"></span>Watchtime-Platz ' + (wb != null ? '<b>#' + wb + '</b>' + (wa != null && wa !== wb ? ' (' + (wa > wb ? '▲ ' + (wa - wb) : '▼ ' + (wb - wa)) + ')' : '') : '–') + ' · oben = besser';
+      reihe = teil(vlPlatz === 'z' ? 'zr' : 'wr'); opt = { farbe: vlPlatz === 'z' ? 'var(--rosa)' : '#a996ff', umgedreht: true }; fmt = function (v) { return '#' + zahl(v); };
+      var pa = erst(reihe), pb = letzt(reihe);
+      info = pb != null ? (vlPlatz === 'z' ? 'Zeni' : 'Watchtime') + '-Platz <b>#' + zahl(pb) + '</b>' + (pa != null && pa !== pb ? ' <span class="' + (pa > pb ? 'vlplus' : 'vlminus') + '">' + (pa > pb ? '▲ ' + zahl(pa - pb) : '▼ ' + zahl(pb - pa)) + '</span> seit dem Stream am ' + vlDatum(t[0]) : '') + ' · oben = besser' : 'In diesem Zeitraum noch kein Platz.';
     }
-    h += svg ? '<div class="vlbild">' + svg + '<div class="vlachsen"><span>' + vlDatum(t[0]) + '</span><span>' + vlDatum(t[t.length - 1]) + '</span></div></div>' : '';
+    var dg = vlDiagramm(reihe, opt);
+    if (dg) {
+      var achse = '';
+      if (n <= 7) achse = t.map(function (x, i) { return '<span style="left:' + dg.xs[i].toFixed(2) + '%">' + vlWochentag(x) + ' ' + vlDatum(x).slice(0, 3) + '</span>'; }).join('');
+      else achse = '<span style="left:' + dg.xs[0] + '%">' + vlDatum(t[0]) + '</span><span style="left:' + dg.xs[n - 1] + '%">' + vlDatum(t[n - 1]) + '</span>';
+      h += '<div class="vlbild" id="vlbild"><div class="vltip" id="vltip"></div><div class="vlflaeche">' + dg.svg +
+        '<div class="vlhilfe" id="vlhilfe"></div><div class="vlpunkt2" id="vlpunkt"></div></div>' +
+        '<div class="vlachsen' + (n <= 7 ? ' tage' : '') + '">' + achse + '</div></div>';
+    } else h += '<p class="leise" style="margin:6px 0">Für diesen Zeitraum gibt es noch keine Werte.</p>';
     h += '<div class="vlinfo">' + info + '</div>';
-    if (ges < 30) h += '<div class="leise vlhinweis">Der Verlauf wird seit dem ' + vlDatum(tage[0]) + ' gesammelt · 30 und 90 Tage schalten sich frei, sobald genug Tage zusammen sind.</div>';
+    h += '<div class="leise vlhinweis">' + (dg ? 'Tippe ins Diagramm für die einzelnen Streams · ' : '') + 'Ein Punkt pro Stream, Stand jeweils nach dem Stream' + (ges < 30 ? ' · gesammelt seit ' + vlDatum(t[0]) : '') + '</div>';
     box.innerHTML = h;
     Array.prototype.forEach.call(box.querySelectorAll('[data-vla]'), function (k) { k.onclick = function (e) { e.preventDefault(); vlArt = k.getAttribute('data-vla'); verlaufZeichnen(login); }; });
     Array.prototype.forEach.call(box.querySelectorAll('[data-vlt]'), function (k) { k.onclick = function (e) { e.preventDefault(); if (k.disabled) return; vlTage = Number(k.getAttribute('data-vlt')); verlaufZeichnen(login); }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-vlp]'), function (k) { k.onclick = function (e) { e.preventDefault(); vlPlatz = k.getAttribute('data-vlp'); verlaufZeichnen(login); }; });
+    if (!dg) return;
+    // Tooltip: nächsten Tag zur Finger-/Mausposition zeigen
+    var fl = box.querySelector('.vlflaeche'), tip = $('vltip'), linie = $('vlhilfe'), punkt = $('vlpunkt');
+    function zeige(clientX) {
+      var r = fl.getBoundingClientRect(), p = (clientX - r.left) / r.width * 100, best = 0;
+      dg.xs.forEach(function (xx, i) { if (Math.abs(xx - p) < Math.abs(dg.xs[best] - p)) best = i; });
+      var v = reihe[best];
+      linie.style.left = dg.xs[best] + '%'; linie.style.display = 'block';
+      if (v != null && dg.ys[best] != null) { punkt.style.left = dg.xs[best] + '%'; punkt.style.top = dg.ys[best] + '%'; punkt.style.display = 'block'; } else punkt.style.display = 'none';
+      tip.innerHTML = '<b>' + (v == null ? 'keine Daten' : opt.balken && !v ? (vlArt === 'w' ? 'nicht dabei' : 'keine Nachrichten') : fmt(v)) + '</b><small>Stream am ' + vlWochentag(t[best]) + ', ' + vlDatum(t[best]) + '</small>';
+    }
+    function weg() { linie.style.display = 'none'; punkt.style.display = 'none'; }
+    fl.addEventListener('pointermove', function (e) { zeige(e.clientX); });
+    fl.addEventListener('pointerdown', function (e) { zeige(e.clientX); });
+    fl.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') weg(); });
+    zeige(fl.getBoundingClientRect().left + fl.getBoundingClientRect().width * dg.xs[n - 1] / 100);   // letzter Tag direkt sichtbar
   }
   function verlaufEvents(login) {
     var det = $('vl'); if (!det) return;
