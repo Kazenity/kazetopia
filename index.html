@@ -299,6 +299,9 @@
   .vneu { display: flex; gap: 8px; margin-top: 10px; } .vneu input { flex: 1; min-width: 0; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 11px 14px; outline: none; }
   .vneu button { font-family: inherit; font-size: 13px; font-weight: 800; color: var(--dunkel); background: var(--rosa); border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; }
   .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
+  .vartreiter { margin: 0 0 8px !important; justify-content: flex-start !important; } .vartreiter button small { opacity: .6; font-weight: 600; }
+  .vart-info { font-size: 13px; color: var(--grau); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; line-height: 1.45; } .vart-info b { color: var(--hell); }
+  .admart { display: inline-block; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; background: var(--hover); color: var(--grau); border: 1px solid var(--rand); } .admart.fun { color: var(--rosa); border-color: var(--rosa); }
   .platz.p1 .n { color: #fff !important; }
   img[src=""] { visibility: hidden; }
   .kopf.design { border-radius: 16px; padding: 14px; margin: -4px -4px 8px; }
@@ -830,7 +833,7 @@
 
   // ================= Login mit Twitch + Spiele-Voting (Supabase) =================
   var SB_URL = 'https://deqkkuzjsieqwvamodzs.supabase.co', SB_KEY = 'sb_publishable_FiNFYUZPeSeaaDYtx69wNQ_nXzLm3Ui';
-  var sitzung = null, vote = { ergebnis: null, meine: null, offen: [], fehler: '', belegt: [], treffer: [], wahl: null, suche: '' }, suchTimer = null;
+  var sitzung = null, vote = { ergebnis: null, ergebnisFun: [], art: 'story', meine: {}, offen: [], fehler: '', belegt: [], treffer: [], wahl: null, suche: '' }, suchTimer = null;
   function sLesen() { try { return JSON.parse(localStorage.getItem('kz_sitzung') || 'null'); } catch (x) { return null; } }
   function sSchreiben(v) { sitzung = v; try { if (v) localStorage.setItem('kz_sitzung', JSON.stringify(v)); else localStorage.removeItem('kz_sitzung'); } catch (x) { } }
   // Rückkehr vom Twitch-Login: Token steht in der Adresse
@@ -894,31 +897,32 @@
     $('vloeschen').onclick = function () {
       this.disabled = true; this.textContent = 'Lösche …';
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/konto_loeschen', { method: 'POST', body: {} }); })
-        .then(function () { sSchreiben(null); vote.meine = null; vote.offen = []; vote.ergebnis = null; profilZu(); zeigen(); kopfleiste(); })
+        .then(function () { sSchreiben(null); vote.meine = {}; vote.offen = []; vote.ergebnis = null; profilZu(); zeigen(); kopfleiste(); })
         .catch(function (e) { $('vloeschen').textContent = 'Fehler: ' + e.message; });
     };
   }
   function einloggen() { location.href = SB_URL + '/auth/v1/authorize?provider=twitch&redirect_to=' + encodeURIComponent(location.origin + location.pathname); }
-  function ausloggen() { setTimeout(kopfleiste, 0); var at = sitzung && sitzung.at; if (at) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + at } }).catch(function () { }); sSchreiben(null); vote.meine = null; vote.offen = []; zeigen(); }
+  function ausloggen() { setTimeout(kopfleiste, 0); var at = sitzung && sitzung.at; if (at) fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + at } }).catch(function () { }); sSchreiben(null); vote.meine = {}; vote.offen = []; zeigen(); }
   function votingLaden() {
     vote.fehler = '';
     return nutzerLaden().then(function (s) {
       var a = Promise.all([
         sbFetch('/rest/v1/ergebnis?select=*').then(function (r) { vote.ergebnis = r || []; }),
+        sbFetch('/rest/v1/ergebnis_fun?select=*').then(function (r) { vote.ergebnisFun = r || []; }).catch(function () { vote.ergebnisFun = []; }),
         sbFetch('/rest/v1/belegt?select=*').then(function (r) { vote.belegt = r || []; }).catch(function () { vote.belegt = []; })
       ]);
       var b = s ? Promise.all([
-        sbFetch('/rest/v1/stimmen?select=vorschlag').then(function (r) { vote.meine = r && r[0] ? r[0].vorschlag : null; }),
-        sbFetch('/rest/v1/vorschlaege?select=id,spiel&freigegeben=eq.false').then(function (r) { vote.offen = r || []; })
+        sbFetch('/rest/v1/stimmen?select=vorschlag,art').then(function (r) { vote.meine = {}; (r || []).forEach(function (x) { vote.meine[x.art || 'story'] = x.vorschlag; }); }),
+        sbFetch('/rest/v1/vorschlaege?select=id,spiel,art&freigegeben=eq.false').then(function (r) { vote.offen = r || []; })
       ]) : Promise.resolve();
       return Promise.all([a, b]);
     }).catch(function (e) { vote.fehler = e.message || 'Voting gerade nicht erreichbar.'; if (!vote.ergebnis) vote.ergebnis = []; });
   }
   function abstimmen(id) {
     if (!sitzung) return einloggenFragen();
-    var weg = vote.meine === id;
-    var p = weg ? sbFetch('/rest/v1/stimmen?nutzer=eq.' + sitzung.id, { method: 'DELETE' })
-      : sbFetch('/rest/v1/stimmen?on_conflict=nutzer', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, geaendert: new Date().toISOString() } });
+    var art = vote.art === 'fun' ? 'fun' : 'story', weg = vote.meine[art] === id;
+    var p = weg ? sbFetch('/rest/v1/stimmen?nutzer=eq.' + sitzung.id + '&art=eq.' + art, { method: 'DELETE' })
+      : sbFetch('/rest/v1/stimmen?on_conflict=nutzer,art', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { nutzer: sitzung.id, vorschlag: id, art: art, geaendert: new Date().toISOString() } });
     sFrisch().then(function () { return p; }).then(votingLaden).then(zeigen).catch(function (e) { vote.fehler = e.message; zeigen(); });
   }
   function normName(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9ß]+/g, ''); }
@@ -964,30 +968,34 @@
   function vorschlagen() {
     var g = vote.wahl;
     if (!g) { vote.fehler = 'Bitte wähl ein Spiel aus der Liste aus.'; zeigen(); return; }
-    sFrisch().then(function () { return sbFetch('/rest/v1/vorschlaege', { method: 'POST', body: { spiel: String(g.name).slice(0, 60), spiel_id: String(g.id), cover: g.cover } }); })
+    sFrisch().then(function () { return sbFetch('/rest/v1/vorschlaege', { method: 'POST', body: { spiel: String(g.name).slice(0, 60), spiel_id: String(g.id), cover: g.cover, art: vote.art === 'fun' ? 'fun' : 'story' } }); })
       .then(function () { vote.wahl = null; vote.suche = ''; }).then(votingLaden).then(zeigen)
       .catch(function (e) { vote.fehler = /3 offene/.test(e.message) ? 'Du hast schon 3 Vorschläge, die auf Freigabe warten.' : /schon vorgeschlagen|duplicate/.test(e.message) ? 'Dieses Spiel wurde schon vorgeschlagen.' : e.message; zeigen(); });
   }
+  var VOTE_ARTEN = [['story', '🎮 Story-Games'], ['fun', '🎉 Zwischendurch']];
   function votingHtml() {
     var h = '';
     if (vote.ergebnis === null) { votingLaden().then(zeigen); return '<div class="liste"><div class="leer">Lade Voting …</div></div>'; }
     if (!(sitzung && sitzung.name)) h += '<div class="vkopf">' + (false ? '<span>Angemeldet als <b>' + esc(prof(sitzung.name).n || sitzung.name) + '</b></span><span class="vknoepfe"><button class="vlink" id="vdel">Meine Daten löschen</button><button class="vlink" id="vlogout">Abmelden</button></span>'
       : '<span>Melde dich mit Twitch an, um abzustimmen oder Spiele vorzuschlagen.</span><button class="vtw tw" id="vlogin">' + '<svg viewBox="0 0 24 24"><path d="M4.3 3 3 6.4v13.1h4.5V22h2.6l2.4-2.5h3.6L21 14.6V3H4.3Zm15 10.8-2.8 2.8H12l-2.4 2.4v-2.4H5.8V4.7h13.5v9.1ZM16.6 8v4.9h-1.7V8h1.7Zm-4.5 0v4.9h-1.7V8h1.7Z"/></svg>Mit Twitch anmelden</button>') + '</div>';
+    var fun = vote.art === 'fun';
+    h += '<div class="unterreiter klein vartreiter">' + VOTE_ARTEN.map(function (a) { var n = (a[0] === 'fun' ? vote.ergebnisFun : vote.ergebnis) || []; return '<button data-vart="' + a[0] + '"' + (vote.art === a[0] ? ' class="aktiv"' : '') + '>' + a[1] + ' <small>' + n.length + '</small></button>'; }).join('') + '</div>';
+    h += '<div class="vart-info">' + (fun ? '🎉 <b>Zwischendurch</b>: kurze Fun-, Indie- und Partyspiele für zwischendurch, zum Beispiel sonntags nach dem Story-Game.' : '🎮 <b>Story-Games</b>: Welches große Abenteuer spielt Kaze als Nächstes?') + '</div>';
     if (vote.fehler) h += '<div class="vfehler">' + esc(vote.fehler) + '</div>';
-    var e = vote.ergebnis || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
+    var e = (fun ? vote.ergebnisFun : vote.ergebnis) || [], max = 1; e.forEach(function (x) { if (x.stimmen > max) max = x.stimmen; });
     if (sitzung) {   // Suche oben (Idee von gojynku)
-      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="Story-Game suchen und vorschlagen …" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
-      if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel); }).join(', ') + '</div>';
+      h += '<div class="vneu"><input id="vinput" maxlength="60" placeholder="' + (fun ? 'Fun-, Indie- oder Partyspiel suchen …' : 'Story-Game suchen und vorschlagen …') + '" autocomplete="off"><button id="vsend" disabled>Vorschlagen</button></div><div id="vtreffer" class="vtreffer"></div>';
+      if (vote.offen.length) h += '<div class="vhinweis">⏳ Wartet auf Freigabe durch Kaze: ' + vote.offen.map(function (o) { return esc(o.spiel) + (o.art === 'fun' ? ' 🎉' : ''); }).join(', ') + '</div>';
     }
     h += '<div class="liste">';
-    if (!e.length) h += '<div class="leer">Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!</div>';
+    if (!e.length) h += '<div class="leer">' + (fun ? 'Noch keine Zwischendurch-Spiele freigegeben – schlag als Erstes eins vor!' : 'Noch keine Vorschläge freigegeben – schlag als Erstes ein Spiel vor!') + '</div>';
     e.forEach(function (x, i) {
-      var meins = vote.meine === x.id;
+      var meins = vote.meine[fun ? 'fun' : 'story'] === x.id;
       h += '<div class="vzeile' + (meins ? ' meins' : '') + (i === 0 && x.stimmen > 0 ? ' erster' : '') + '"><div class="vcov">' + ((sicher(x.cover) || sicher((daten && daten.spielcover || {})[x.spiel_id])) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.cover) || sicher(daten.spielcover[x.spiel_id])) + '">' : '🎮') + '<i>' + (i === 0 && x.stimmen > 0 ? '👑' : '#' + (i + 1)) + '</i></div><div class="vn"><b>' + esc(x.spiel) + '</b><div class="vb"><i style="width:' + Math.max(3, x.stimmen / max * 100) + '%"></i></div><span>' + x.stimmen + (x.stimmen === 1 ? ' Stimme' : ' Stimmen') + (x.von_name ? ' · vorgeschlagen von ' + esc(prof(x.von_name).n || x.von_name) : '') + '</span></div>' +
         '<button class="vbtn' + (meins ? ' an' : '') + '" data-vote="' + x.id + '">' + (meins ? '✓ Deine Stimme' : 'Abstimmen') + '</button></div>';
     });
     h += '</div>';
-    h += '<div class="vhinweis">Jeder hat <b>eine</b> Stimme und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
+    h += '<div class="vhinweis">Jeder hat <b>eine Stimme pro Kategorie</b> (Story-Games und Zwischendurch) und kann sie jederzeit ändern. Vorschläge erscheinen, sobald Kaze sie freigibt.</div>';
     return h;
   }
   function votingEvents() {
@@ -997,6 +1005,7 @@
     if ($('vsend')) $('vsend').onclick = vorschlagen;
     if ($('vinput')) { $('vinput').oninput = function () { $('vsend').disabled = true; suchen(this.value); }; $('vinput').onkeydown = function (e) { if (e.key === 'Enter' && vote.wahl) vorschlagen(); }; }
     Array.prototype.forEach.call(document.querySelectorAll('[data-vote]'), function (b) { b.onclick = function () { abstimmen(Number(b.getAttribute('data-vote'))); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-vart]'), function (b) { b.onclick = function () { var a = b.getAttribute('data-vart'); if (a === vote.art) return; vote.art = a; vote.wahl = null; vote.suche = ''; vote.treffer = []; vote.fehler = ''; zeigen(); }; });
   }
   var $ = function (id) { return document.getElementById(id); };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -3006,7 +3015,7 @@
       try {
       v = Array.isArray(v) ? v : [];
       var offen = v.filter(function (x) { return !x.frei; }).length;
-      $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; return '<div class="admz admv"><div class="admvt"><b>' + esc(x.spiel || '?') + '</b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
+      $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; var fu = x.art === 'fun'; return '<div class="admz admv"><div class="admvt"><b>' + esc(x.spiel || '?') + '<span class="admart' + (fu ? ' fun' : '') + '">' + (fu ? '🎉 Zwischendurch' : '🎮 Story') + '</span></b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="' + (fu ? 'art_story' : 'art_fun') + '" data-vid="' + x.id + '" title="Kategorie ändern">' + (fu ? '→ 🎮' : '→ 🎉') + '</button><button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
       } catch (fx) { fehler(fx); return; }
       Array.prototype.forEach.call(document.querySelectorAll('[data-va]'), function (b) { b.onclick = function () {
         var a = b.getAttribute('data-va');
@@ -3520,7 +3529,7 @@
         $('liste').innerHTML = sw + votingHtml();
         $('spschalter').onclick = function (e) { var b = e.target.closest('button'); if (b) { spieleAnsicht = b.getAttribute('data-s'); zeigen(); } };
         votingEvents();
-        $('hinweis').textContent = 'Community-Voting für das nächste Story-Game';
+        $('hinweis').textContent = vote.art === 'fun' ? 'Community-Voting für Spiele zwischendurch' : 'Community-Voting für das nächste Story-Game';
         return true;
       }
       var sp = daten.spiele || [];
