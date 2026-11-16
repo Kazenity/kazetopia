@@ -576,6 +576,7 @@
   .adminreiter { margin: 4px 0 12px !important; justify-content: flex-start; }
   .admz { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--rand); font-size: 13px; flex-wrap: wrap; }
   .admz b { min-width: 110px; } .admz span { flex: 1; } .admz .admk { flex: none; display: flex; gap: 6px; }
+  .admv .admvt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .admv .admvt b { min-width: 0; } .admv .admvt span { flex: none; }
   .admform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .admform input:not([type=checkbox]) { font-family: inherit; font-size: 13px; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 8px 10px; min-width: 0; flex: 1 1 120px; }
   .admform label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
@@ -861,12 +862,12 @@
   function nutzerLaden() {
     return sFrisch().then(function (s) {
       if (!s) return null;
-      if (s.name && s.id) return s;
+      if (s.name && s.id) { ichAbgleichen(s.name); return s; }
       return sbFetch('/auth/v1/user').then(function (u) {
         var m = (u && u.user_metadata) || {};
         sitzung.id = u.id; sitzung.name = String(m.preferred_username || m.nickname || m.name || m.full_name || m.slug || '').toLowerCase();
         sSchreiben(sitzung);
-        if (sitzung.name && !ich) { ich = sitzung.name; try { localStorage.setItem('kz_ich', ich); } catch (x) { } }
+        if (sitzung.name) ichAbgleichen(sitzung.name);
         return sitzung;
       });
     }).catch(function () { return null; });
@@ -1005,6 +1006,7 @@
     var sp = daten && daten.spieler ? daten.spieler[l] : null;
     return { n: p && p.n ? p.n : (sp && sp.n ? sp.n : n), b: p && p.b ? p.b : '' };
   }
+  function ichAbgleichen(n) { n = String(n || '').toLowerCase(); if (!n || ich === n) return; ich = n; try { localStorage.setItem('kz_ich', n); } catch (x) { } }
   function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
   // ================= Kosmetik & Zeni-Shop =================
   var KOS_BASIS = 'https://raw.githubusercontent.com/Kazenity/kazetopia/main/bilder/kos/';
@@ -2014,7 +2016,7 @@
   }
   // „Dein Bereich“ ganz oben auf Start
   function meineKarte() {
-    var l = ich || (sitzung && sitzung.name) || '';
+    var l = (sitzung && sitzung.name) || ich || '';
     if (!l) return '<div class="sbox meinbox" id="meinleer"><h3>👤 DEIN BEREICH</h3><div class="leise">Melde dich oben rechts mit Twitch an oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b> – dann siehst du hier deine Plätze, deine Zeni und deinen nächsten Rang.</div></div>';
     var sp = (daten.spieler || {})[l] || {};
     function platz(liste) { var p = 0; (liste || []).forEach(function (x, i) { if (String(x.n).toLowerCase() === l) p = i + 1; }); return p ? '#' + p : '–'; }
@@ -2417,7 +2419,7 @@
     h += '<div class="kopf' + (dz.h || bannerStil(login) ? ' design' : '') + (dz.h ? ' bg-' + dz.h : '') + (bannerStil(login) ? ' mitbanner' : '') + '"' + bannerStil(login) + '>' + avatarMitRahmen(login) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz.t ? '<div class="titel">« ' + esc(dz.t) + ' »</div>' : '') +
       (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') + (rolle(login) ? ' <div class="rang rolle">' + ROLLE[rolle(login)][0] + ' ' + ROLLE[rolle(login)][1] + '</div>' : '') + (sp.tier >= 2 ? ' <div class="rang tier t' + sp.tier + '">' + (sp.tier === 3 ? '👑 Tier-3-Sub' : '💜 Tier-2-Sub') + '</div>' : '') +
       '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + (sp.ds ? ' · 🔥 ' + sp.ds + ' am Stück' : '') + '</div>' + rivale(platz, std) +
-      '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button>' + (eigen ? ' <button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + ' <button class="ichknopf" id="teilen">📤 Als Bild teilen</button>' + freundKnopf(login) + '</div></div>';
+      (sitzung && sitzung.name ? '' : '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button>') + (eigen ? ' <button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + ' <button class="ichknopf" id="teilen">📤 Als Bild teilen</button>' + freundKnopf(login) + '</div></div>';
 
     h += freundeHtml(login);
     // Abzeichen (nur freigeschaltete, als Symbole)
@@ -2484,7 +2486,7 @@
     if ($('teilen')) $('teilen').onclick = function () { karteTeilen(login, this); };
     freundeEvents(login);
     verlaufEvents(login);
-    $('ichknopf').onclick = function () {
+    if ($('ichknopf')) $('ichknopf').onclick = function () {
       var l2 = this.getAttribute('data-ich');
       ich = ich === l2 ? '' : l2;
       try { if (ich) localStorage.setItem('kz_ich', ich); else localStorage.removeItem('kz_ich'); } catch (x) { }
@@ -2916,7 +2918,7 @@
 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
-    if (!sitzung || sitzung.name !== 'kazenity') return;
+    if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
     var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
@@ -3001,7 +3003,11 @@
       }; });
     }).catch(fehler);
     if (tab === 'voting') rpc('admin_vorschlaege').then(function (v) {
-      $('adm').innerHTML = (v || []).length ? v.map(function (x) { return '<div class="admz"><b>' + esc(x.spiel) + '</b><span class="leise">' + esc(x.von || '') + (x.frei ? ' · ✅ ' + x.stimmen + ' Stimmen' : ' · ⏳ wartet') + '</span><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
+      try {
+      v = Array.isArray(v) ? v : [];
+      var offen = v.filter(function (x) { return !x.frei; }).length;
+      $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; return '<div class="admz admv"><div class="admvt"><b>' + esc(x.spiel || '?') + '</b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
+      } catch (fx) { fehler(fx); return; }
       Array.prototype.forEach.call(document.querySelectorAll('[data-va]'), function (b) { b.onclick = function () {
         var a = b.getAttribute('data-va');
         if (a === 'loeschen' && !b.classList.contains('sicher')) { b.classList.add('sicher'); b.textContent = 'Wirklich löschen?'; return; }
