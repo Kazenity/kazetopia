@@ -509,6 +509,11 @@
   .sfleer { text-align: center; padding: 26px 10px; color: var(--grau); }
   .sfleer button { margin-top: 10px; }
   .sunten { display: flex; align-items: center; gap: 4px; }
+  .sgeschenk { background: none; border: 0; font-size: 17px; line-height: 1; cursor: pointer; padding: 6px 4px 0; font-family: inherit; opacity: .75; } .sgeschenk:hover { opacity: 1; }
+  .gsvor { display: flex; justify-content: center; margin: 6px 0 10px; } .gsvor .svor.bnr { width: 100%; height: 110px; border-radius: 12px; }
+  .gsliste { display: flex; flex-wrap: wrap; gap: 6px; } .gsf { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13px; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; padding: 4px 12px 4px 4px; cursor: pointer; }
+  .gsf .av, .gsf img { width: 26px; height: 26px; } .gsf small { color: var(--grau); font-size: 11px; } .gsf.an { border-color: var(--rosa); background: var(--hover); } .gsf:disabled { opacity: .45; cursor: default; }
+  .gsregel { font-size: 12px; font-weight: 700; color: #ff8a9e; margin: 8px 0 0; } .gsvon { color: var(--rosa); }
   .swunsch { background: none; border: 0; color: var(--grau); font-size: 19px; line-height: 1; cursor: pointer; padding: 6px 4px 0; font-family: inherit; }
   .swunsch.an, .swunsch:hover { color: #ff5c8a; }
   .sprobe { display: block; width: 100%; background: none; border: 0; color: var(--grau); font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; padding: 7px 0 0; }
@@ -1183,7 +1188,7 @@
       zuletztH += '<h3 class="shoph">🕒 ZULETZT GEKAUFT</h3><div class="zuletzt">';
       zl.forEach(function (x) {
         var min = Math.max(1, Math.round((Date.now() - new Date(x.t).getTime()) / 60000)), wann = min < 60 ? 'vor ' + min + ' Min.' : min < 1440 ? 'vor ' + Math.round(min / 60) + ' Std.' : 'vor ' + Math.round(min / 1440) + ' Tg.';
-        zuletztH += '<div class="zk"' + dl(x.l) + '>' + bild(x.l) + '<span><b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b> · ' + esc(kosName(x.a)) + ' <small>(' + (x.a.indexOf('rahmen_') === 0 ? 'Rahmen' : x.a.indexOf('banner_') === 0 ? 'Banner' : 'Titel') + ')</small>' + '</span><i>' + wann + '</i></div>';
+        zuletztH += '<div class="zk"' + dl(x.l) + '>' + bild(x.l) + '<span><b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b> · ' + esc(kosName(x.a)) + ' <small>(' + (x.a.indexOf('rahmen_') === 0 ? 'Rahmen' : x.a.indexOf('banner_') === 0 ? 'Banner' : 'Titel') + ')</small>' + (x.g ? ' <small class="gsvon">🎁 von ' + esc(prof(x.g).n || x.g) + '</small>' : '') + '</span><i>' + wann + '</i></div>';
       });
       zuletztH += '</div>';
     }
@@ -1237,7 +1242,7 @@
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
       var rab = !vorschau && preisVon(a) !== a.preis, heuteRab = rab && tagesAngebot() && tagesAngebot().id === a.id;
       var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.thron && !vorschau ? '<span class="sbadge sai">' + (a.thronInhaber ? '👑 König: ' + esc(prof(a.thronInhaber).n || a.thronInhaber) : '👑 Thron ist frei') + '</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
-      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + (a.leucht ? ' · 🌈 in deiner Namensfarbe' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button><button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
+      return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + (a.leucht ? ' · 🌈 in deiner Namensfarbe' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button>' + (me && !vorschau && verschenkbar(a) ? '<button class="sgeschenk" data-schenk="' + esc(a.id) + '" title="An einen Freund verschenken" aria-label="Verschenken">🎁</button>' : '') + '<button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
       liste = liste.filter(function (a) { return !a.gutschein && passt(a, vorschau); });
@@ -1283,6 +1288,7 @@
     if ($('sfreset')) $('sfreset').onclick = function () { shopF = { typ: 'rahmen', stufe: '', sort: shopF.sort, leisten: false }; shopFilterSetzen('typ', 'rahmen'); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-probe]'), function (b) { b.onclick = function () { anprobieren(b.getAttribute('data-probe')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-wunsch]'), function (b) { b.onclick = function () { wunschUmschalten(b.getAttribute('data-wunsch')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-schenk]'), function (b) { b.onclick = function () { geschenkDialog(b.getAttribute('data-schenk')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-login]'), function (b) { b.onclick = einloggenFragen; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-anlegen]'), function (b) { b.onclick = function () { designEditor(sitzung.name); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-kauf]'), function (b) { b.onclick = function () { kaufFragen(b.getAttribute('data-kauf')); }; });
@@ -1300,6 +1306,50 @@
     }, 40000);
   }
   var shopPoll = null;
+  // 🎁 Verschenken an Freunde (Idee von TheAshborn0) – Regeln prüft Supabase (Update 32)
+  function verschenkbar(a) { return a && a.kaufbar !== false && !a.thron && !a.einmalig && !a.gutschein && !a.quest && a.stufe !== 'x' && /^(rahmen|banner|titel)_/.test(a.id); }
+  function geschenkPreis(a) { return Math.ceil(preisVon(a) * 1.25 / 100) * 100; }
+  function geschenkDialog(id, gewaehlt) {
+    var a = kosArtikel(id); if (!a || !sitzung || !sitzung.name) return;
+    var m = freunde.meine;
+    if (!m) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><p class="leise">Lade deine Freunde …</p></div>'); meineFreundeLaden().then(function () { geschenkDialog(id, gewaehlt); }); return; }
+    var typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel', pg = geschenkPreis(a);
+    var it = m.ich_t || {}, mt = m.mich_t || {};
+    var liste = (m.ich || []).filter(function (f) { return (m.mich || []).indexOf(f) >= 0; }).map(function (f) {
+      var seit = Math.max(new Date(it[f] || 0).getTime(), new Date(mt[f] || 0).getTime()), ab = seit + 14 * 86400000;
+      return { l: f, ab: ab, frisch: !seit || ab > Date.now(), hat: besitzt(f, id) };
+    }).sort(function (x, y) { return (x.frisch || x.hat ? 1 : 0) - (y.frisch || y.hat ? 1 : 0) || String(prof(x.l).n || x.l).localeCompare(String(prof(y.l).n || y.l)); });
+    var frei = liste.filter(function (x) { return !x.frisch && !x.hat; });
+    if (!gewaehlt && frei.length === 1) gewaehlt = frei[0].l;
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🎁 ' + typ + ' verschenken</b><div class="kk">' + esc(a.name) + '</div></div></div>';
+    if (!liste.length) {
+      h += '<p>Verschenken geht nur an <b>Freunde</b>. Markiert euch gegenseitig als Freund (auf der Profilkarte „🤝 Als Freund markieren“), dann kannst du nach 14 Tagen Geschenke machen.</p><div class="edknoepfe"><button class="vlink" id="gsab">Alles klar</button></div></div>';
+      karteOeffnen(h); $('gsab').onclick = profilZu; return;
+    }
+    h += '<div class="gsvor">' + (typ === 'Rahmen' ? '<span class="rwrap">' + (gewaehlt ? bild(gewaehlt, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" src="' + kosBild(id) + '">' + leuchtTint(gewaehlt || '', id.substring(7)) + '</span>' : typ === 'Banner' ? '<div class="svor bnr" style="background-image:url(' + kosBild(id) + ')"></div>' : '<span class="stitel">„' + esc(a.name) + '“</span>') + '</div>';
+    h += '<h4>AN WEN?</h4><div class="gsliste">' + liste.map(function (x) {
+      var aus = x.frisch || x.hat, grund = x.hat ? 'hat es schon' : x.frisch ? 'ab ' + new Date(x.ab).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : '';
+      return '<button class="gsf' + (gewaehlt === x.l ? ' an' : '') + '" data-gsf="' + esc(x.l) + '"' + (aus ? ' disabled' : '') + '>' + bild(x.l) + '<b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b>' + (grund ? '<small>' + grund + '</small>' : '') + '</button>';
+    }).join('') + '</div>';
+    h += '<p style="font-size:16px;margin:12px 0 4px">' + (gewaehlt ? '<b>' + esc(a.name) + '</b> an <b>' + esc(prof(gewaehlt).n || gewaehlt) + '</b> für <b>' + zahl(pg) + ' Zeni</b>?' : 'Wähl einen Freund aus.') + '</p>';
+    h += '<p class="leise">Geschenke kosten 25 % mehr als der Shoppreis (' + zahl(preisVon(a)) + ' → ' + zahl(pg) + ' Zeni). Du kannst <b>1 Geschenk pro Woche</b> machen, an Freunde ab 14 Tagen Freundschaft mit mindestens 10 Std. Watchtime. Zeni selbst kann man nicht verschenken.</p>';
+    h += '<p class="gsregel">⚠️ Handel gegen echtes Geld ist verboten und führt zum Ausschluss aus Kazetopia.</p>';
+    h += '<div class="edknoepfe"><button class="vtw" id="gsok"' + (gewaehlt ? '' : ' disabled') + '>🎁 Verschenken</button><button class="vlink" id="gsab">Abbrechen</button></div><p class="leise" id="gsinfo"></p></div>';
+    karteOeffnen(h);
+    $('gsab').onclick = profilZu;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-gsf]'), function (b) { b.onclick = function () { geschenkDialog(id, b.getAttribute('data-gsf')); }; });
+    $('gsok').onclick = function () {
+      if (!gewaehlt) return;
+      this.disabled = true; $('gsinfo').textContent = 'Wird verschenkt …';
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/verschenken', { method: 'POST', body: { p_artikel: id, p_an: gewaehlt } }); })
+        .then(function (r) {
+          if (r && typeof r.rest === 'number') liveZeni = r.rest;
+          $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Verschenkt!</b><div class="kk">' + esc(a.name) + ' gehört jetzt ' + esc(prof(gewaehlt).n || gewaehlt) + '</div></div></div><p>' + esc(prof(gewaehlt).n || gewaehlt) + ' bekommt eine Nachricht im Posteingang. Die ' + zahl(r && r.preis || pg) + ' Zeni werden in 1–2 Minuten von deinem Stand abgezogen.</p><div class="edknoepfe"><button class="vlink" id="gszu">Schön!</button></div>';
+          $('gszu').onclick = profilZu; zeigen();
+        })
+        .catch(function (x) { $('gsinfo').textContent = '❌ ' + x.message; $('gsok').disabled = false; });
+    };
+  }
   function kaufFragen(id) {
     var a = kosArtikel(id); if (!a || !sitzung) return;
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
@@ -3369,7 +3419,7 @@
     }; });
   }
   // 📬 Posteingang: Freundschaftsanfragen, angenommene Anfragen, neue Erfolge, Einladungen, Wunsch leistbar, Glücks-Knopf
-  var post = { werbung: null, feedback: null, zeit: 0 };
+  var post = { werbung: null, feedback: null, geschenke: null, zeit: 0 };
   function postGelesen() { try { return JSON.parse(localStorage.getItem('kz_post_' + sitzung.name) || '{}'); } catch (x) { return {}; } }
   function postMerken(g) { try { var k = Object.keys(g); if (k.length > 300) k.slice(0, k.length - 300).forEach(function (x) { delete g[x]; }); localStorage.setItem('kz_post_' + sitzung.name, JSON.stringify(g)); } catch (x) { } }
   function erfolgeFuer(l) {
@@ -3406,6 +3456,10 @@
       if (f.s === 'hilfreich') e.push({ id: 'fb:' + f.id + ':h', t: f.b, text: '💡 Danke für deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ – sie war hilfreich: <b>+2.500 Zeni</b>' });
       if (f.s === 'umgesetzt') e.push({ id: 'fb:' + f.id + ':u', t: f.b, text: '✅ Deine Idee „' + esc(f.x.slice(0, 40)) + (f.x.length > 40 ? '…' : '') + '“ wurde umgesetzt: <b>+25.000 Zeni</b>' });
     });
+    (post.geschenke || []).forEach(function (g) {
+      var ty = String(g.a).indexOf('rahmen_') === 0 ? 'den Rahmen' : String(g.a).indexOf('banner_') === 0 ? 'das Banner' : 'den Titel';
+      e.push({ id: 'gs:' + g.id, t: g.t, art: 'geschenk', an: g.von, text: '🎁 <b>' + esc(prof(g.von).n || g.von) + '</b> hat dir ' + ty + ' <b>' + esc(kosName(g.a)) + '</b> geschenkt!' });
+    });
     (post.werbung || []).forEach(function (w) {
       e.push({ id: 'wk:' + w.l, t: w.t, an: w.l, text: '🌱 <b>' + esc(prof(w.l).n || w.l) + '</b> ist über deinen Einladungslink gekommen' + (w.s === 'wartet' ? ' – nach 5 Std. und 20 Nachrichten bekommst du 10.000 Zeni' : '') });
       if (w.s === 'belohnt') e.push({ id: 'wb:' + w.l, t: w.b || w.t, an: w.l, text: '🎉 <b>' + esc(prof(w.l).n || w.l) + '</b> hat das Ziel erreicht – du bekommst <b>10.000 Zeni</b>' });
@@ -3430,7 +3484,8 @@
     var a = freunde.meine ? Promise.resolve() : meineFreundeLaden();
     var b = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_werbung', { method: 'POST', body: {} }); }).then(function (r) { post.werbung = r || []; }).catch(function () { });
     var c = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_feedbacks', { method: 'POST', body: {} }); }).then(function (r) { post.feedback = r || []; }).catch(function () { });
-    Promise.all([a, b, c]).then(fertig);
+    var d = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_geschenke', { method: 'POST', body: {} }); }).then(function (r) { post.geschenke = r || []; }).catch(function () { });
+    Promise.all([a, b, c, d]).then(fertig);
   }
   function posteingangOeffnen() {
     if (!sitzung) { einloggenFragen(); return; }
@@ -3439,7 +3494,7 @@
     function wann(t) { if (!t) return ''; var d = new Date(t), m = Math.round((Date.now() - d) / 60000); return m < 60 ? 'vor ' + Math.max(1, m) + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }); }
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📬 Posteingang</b><div class="kk">Was es Neues für dich gibt</div></div></div>' +
       (e.length ? e.map(function (x) { return '<div class="posteintrag' + (g[x.id] ? ' gelesen' : '') + '"><button class="pweg" data-pweg="' + esc(x.id) + '" aria-label="Löschen" title="Löschen">×</button><div class="pt">' + x.text + '<span class="leise">' + wann(x.t) + '</span></div>' +
-        (x.art === 'anfrage' ? '<div class="pk"><button class="vtw" data-pa="' + esc(x.an) + '">Annehmen</button><button class="vlink" data-pab="' + esc(x.an) + '">Ablehnen</button></div>' : x.art === 'shop' ? '<div class="pk"><button class="vtw" data-pgeh="shop">Zum Shop</button></div>' : x.art === 'glueck' ? '<div class="pk"><button class="vtw" data-pgeh="start">Drücken</button></div>' : x.an ? '<div class="pk"><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : '') + '</div>'; }).join('')
+        (x.art === 'anfrage' ? '<div class="pk"><button class="vtw" data-pa="' + esc(x.an) + '">Annehmen</button><button class="vlink" data-pab="' + esc(x.an) + '">Ablehnen</button></div>' : x.art === 'shop' ? '<div class="pk"><button class="vtw" data-pgeh="shop">Zum Shop</button></div>' : x.art === 'glueck' ? '<div class="pk"><button class="vtw" data-pgeh="start">Drücken</button></div>' : x.art === 'geschenk' ? '<div class="pk"><button class="vtw" data-panl>Jetzt anlegen</button><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : x.an ? '<div class="pk"><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : '') + '</div>'; }).join('')
         : '<p class="leise">Gerade nichts Neues. Hier landen Freundschaftsanfragen, neue Erfolge und Neuigkeiten zu deinen Einladungen.</p>') + '</div>';
     if (e.length) h = h.replace(/<\/div>$/, '<div class="pallweg"><button class="vlink" id="pallweg">🗑️ Alle löschen</button></div></div>');
     karteOeffnen(h);
@@ -3450,6 +3505,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-pa]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_setzen', { method: 'POST', body: { p_an: b.getAttribute('data-pa'), p_an_aus: true } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pab]'), function (b) { b.onclick = function () { b.disabled = true; sFrisch().then(function () { return sbFetch('/rest/v1/rpc/freund_ablehnen', { method: 'POST', body: { p_von: b.getAttribute('data-pab') } }); }).then(neuLaden).catch(function (x) { b.textContent = '❌'; }); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pgeh]'), function (b) { b.onclick = function () { profilZu(); geheZu(b.getAttribute('data-pgeh')); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-panl]'), function (b) { b.onclick = function () { designEditor(sitzung.name); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pprof]'), function (b) { b.onclick = function () { profilZeigen(b.getAttribute('data-pprof')); }; });
   }
   // Hinweis-Punkte an den Reitern: Start (Glücks-Knopf offen), Shop (Wunsch leistbar), Ich (ungelesener Posteingang)
