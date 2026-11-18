@@ -301,7 +301,7 @@
   .vhinweis { font-size: 12px; color: var(--grau); margin-top: 10px; line-height: 1.5; }
   .vartreiter { margin: 0 0 8px !important; justify-content: flex-start !important; } .vartreiter button small { opacity: .6; font-weight: 600; }
   .vart-info { font-size: 13px; color: var(--grau); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; line-height: 1.45; } .vart-info b { color: var(--hell); }
-  .admart { display: inline-block; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; background: var(--hover); color: var(--grau); border: 1px solid var(--rand); } .admart.fun { color: var(--rosa); border-color: var(--rosa); }
+  .vkat { display: inline-block; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; background: var(--hover); color: var(--grau); border: 1px solid var(--rand); } .vkat.fun { color: var(--rosa); border-color: var(--rosa); }
   .platz.p1 .n { color: #fff !important; }
   img[src=""] { visibility: hidden; }
   .kopf.design { border-radius: 16px; padding: 14px; margin: -4px -4px 8px; }
@@ -584,7 +584,7 @@
   .adminreiter { margin: 4px 0 12px !important; justify-content: flex-start; }
   .admz { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--rand); font-size: 13px; flex-wrap: wrap; }
   .admz b { min-width: 110px; } .admz span { flex: 1; } .admz .admk { flex: none; display: flex; gap: 6px; }
-  .admv .admvt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .admv .admvt b { min-width: 0; } .admv .admvt span { flex: none; }
+  .vozeile .admvt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .vozeile .admvt b { min-width: 0; } .vozeile .admvt span { flex: none; }
   .admform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .admform input:not([type=checkbox]) { font-family: inherit; font-size: 13px; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 8px 10px; min-width: 0; flex: 1 1 120px; }
   .admform label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
@@ -3065,12 +3065,12 @@
       try {
       v = Array.isArray(v) ? v : [];
       var offen = v.filter(function (x) { return !x.frei; }).length;
-      $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; var fu = x.art === 'fun'; return '<div class="admz admv"><div class="admvt"><b>' + esc(x.spiel || '?') + '<span class="admart' + (fu ? ' fun' : '') + '">' + (fu ? '🎉 Zwischendurch' : '🎮 Story') + '</span></b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="admk">' + (x.frei ? '<button class="vlink" data-va="sperren" data-vid="' + x.id + '">Zurück</button>' : '<button class="vtw" data-va="frei" data-vid="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-va="' + (fu ? 'art_story' : 'art_fun') + '" data-vid="' + x.id + '" title="Kategorie ändern">' + (fu ? '→ 🎮' : '→ 🎉') + '</button><button class="vlink" data-va="loeschen" data-vid="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
+      $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; var fu = x.art === 'fun'; return '<div class="admz vozeile"><div class="admvt"><b>' + esc(x.spiel || '?') + '<span class="vkat' + (fu ? ' fun' : '') + '">' + (fu ? '🎉 Zwischendurch' : '🎮 Story') + '</span></b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="admk">' + (x.frei ? '<button class="vlink" data-vakt="sperren" data-vnr="' + x.id + '">Zurück</button>' : '<button class="vtw" data-vakt="frei" data-vnr="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-vakt="' + (fu ? 'art_story' : 'art_fun') + '" data-vnr="' + x.id + '" title="Kategorie ändern">' + (fu ? '→ 🎮' : '→ 🎉') + '</button><button class="vlink" data-vakt="loeschen" data-vnr="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
       } catch (fx) { fehler(fx); return; }
-      Array.prototype.forEach.call(document.querySelectorAll('[data-va]'), function (b) { b.onclick = function () {
-        var a = b.getAttribute('data-va');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-vakt]'), function (b) { b.onclick = function () {
+        var a = b.getAttribute('data-vakt');
         if (a === 'loeschen' && !b.classList.contains('sicher')) { b.classList.add('sicher'); b.textContent = 'Wirklich löschen?'; return; }
-        b.disabled = true; rpc('admin_vorschlag', { p_id: Number(b.getAttribute('data-vid')), p_aktion: a }).then(function () { adminOeffnen('voting'); }).catch(fehler);
+        b.disabled = true; rpc('admin_vorschlag', { p_id: Number(b.getAttribute('data-vnr')), p_aktion: a }).then(function () { adminOeffnen('voting'); }).catch(fehler);
       }; });
     }).catch(fehler);
     if (tab === 'protokoll') rpc('admin_protokoll', { p_tage: protoTage }).then(function (p) {
