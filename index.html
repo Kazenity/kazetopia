@@ -3071,14 +3071,6 @@
       var offen = v.filter(function (x) { return !x.frei; }).length;
       $('adm').innerHTML = v.length ? '<p class="leise" style="margin:0 0 6px">' + (offen ? '⏳ <b>' + offen + '</b> ' + (offen === 1 ? 'Vorschlag wartet' : 'Vorschläge warten') + ' auf Freigabe · ' : '') + v.length + ' insgesamt</p>' + v.map(function (x) { var st = Number(x.stimmen) || 0; var fu = x.art === 'fun'; return '<div class="kzzeile vozeile"><div class="kztext"><b>' + esc(x.spiel || '?') + '<span class="vkat' + (fu ? ' fun' : '') + '">' + (fu ? '🎉 Zwischendurch' : '🎮 Story') + '</span></b><span class="leise">von ' + esc(x.von || '–') + (x.frei ? ' · ✅ ' + st + (st === 1 ? ' Stimme' : ' Stimmen') : ' · ⏳ wartet auf Freigabe') + '</span></div><span class="kzknoepfe">' + (x.frei ? '<button class="vlink" data-vakt="sperren" data-vnr="' + x.id + '">Zurück</button>' : '<button class="vtw" data-vakt="frei" data-vnr="' + x.id + '">Freigeben</button>') + '<button class="vlink" data-vakt="' + (fu ? 'art_story' : 'art_fun') + '" data-vnr="' + x.id + '" title="Kategorie ändern">' + (fu ? '→ 🎮' : '→ 🎉') + '</button><button class="vlink" data-vakt="loeschen" data-vnr="' + x.id + '">Löschen</button></span></div>'; }).join('') : '<p class="leise">Keine Vorschläge.</p>';
       } catch (fx) { fehler(fx); return; }
-      setTimeout(function () {   // 🔎 vorübergehende Diagnose fürs iPhone
-        try {
-          var ad = $('adm'), rs = ad.querySelectorAll('.kzzeile'), r0 = rs[0], cs = r0 ? getComputedStyle(r0) : null;
-          var info = '🔎 ' + rs.length + ' Zeilen · Zeile1 h=' + (r0 ? Math.round(r0.getBoundingClientRect().height) : '-') + (cs ? ' · ' + cs.display + '/' + cs.visibility + '/' + cs.opacity : '') +
-            ' · Liste h=' + Math.round(ad.getBoundingClientRect().height) + ' · Kinder=' + ad.children.length + ' · html=' + ad.innerHTML.length + ' · ' + navigator.userAgent.replace(/^.*?(OS [\d_]+|Version\/[\d.]+).*$/, '$1');
-          var p = document.createElement('p'); p.className = 'leise'; p.style.cssText = 'font-size:11px;margin:0 0 6px;color:#ffd27a'; p.textContent = info; ad.insertBefore(p, ad.firstChild);
-        } catch (dx) { var q = document.createElement('p'); q.textContent = '🔎 Fehler: ' + dx.message; $('adm').insertBefore(q, $('adm').firstChild); }
-      }, 400);
       Array.prototype.forEach.call(document.querySelectorAll('[data-vakt]'), function (b) { b.onclick = function () {
         var a = b.getAttribute('data-vakt');
         if (a === 'loeschen' && !b.classList.contains('sicher')) { b.classList.add('sicher'); b.textContent = 'Wirklich löschen?'; return; }
