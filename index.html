@@ -434,6 +434,7 @@
   .qe.qg { border-color: #4d8fe0; }
   .qe.qf { border-color: #e0a84d; } .qe.qf .qbar i { background: linear-gradient(90deg, #d08a3a, #ffc46f); }
   .qfreund { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-top: 6px; color: var(--grau); } .qfreund .av, .qfreund img { width: 22px; height: 22px; }
+  .kwoche { margin-bottom: 14px; }
   .kwoche .kwz { font-size: 13.5px; padding: 6px 0; border-top: 1px solid var(--rand); } .kwoche .kwz:first-of-type { border-top: 0; }
   .qe.fertig { border-color: #3fae6a; }
   .qkopf { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
@@ -1966,6 +1967,8 @@
   function coverFuer(name) {
     var n = String(name || '').toLowerCase().trim(), c = '';
     (daten.spiele || []).forEach(function (x) { if (!c && String(x.n || '').toLowerCase().trim() === n) c = sicher(x.b); });
+    // Spiele aus dem Streamplan (z. B. neue Releases, die noch nicht bewertet sind)
+    ((daten.streamplan && daten.streamplan.termine) || []).forEach(function (t) { if (!c && t.cover && String(t.spiel || '').toLowerCase().trim() === n) c = sicher(t.cover); });
     return c;
   }
   function planKarte() {
@@ -1973,6 +1976,7 @@
     if (!live && (!sp || !tt.length)) return '';
     var jetzt = Date.now(), naechster = tt.filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
     var spiel = live ? daten.live.spiel : (naechster ? naechster.t.spiel : ''), cov = coverFuer(spiel);
+    if (!cov && live) { var heuteT = tt.filter(function (x) { return x.d.toDateString() === new Date().toDateString(); })[0]; if (heuteT) cov = sicher(heuteT.t.cover) || coverFuer(heuteT.t.spiel); }
     var h = '<div class="sbox plankarte' + (live ? ' istlive' : '') + '">' + (cov ? '<div class="pbg" style="background-image:url(' + esc(cov) + ')"></div>' : '') +
       '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" loading="lazy" src="' + esc(cov) + '" onerror="this.style.visibility=\'hidden\'">' : '<span class="pcover ph">🎮</span>') +
       '<div class="ptext"><h3>' + (live ? '🔴 LIVE' : '⏳ NÄCHSTER STREAM') + '</h3><div class="cd" id="countdown">' + countdownText() + '</div>' +
@@ -2004,8 +2008,6 @@
     if (geschenke.length) z.push('🎁 <b>' + geschenke.length + '</b> ' + (geschenke.length === 1 ? 'Geschenk' : 'Geschenke') + ' unter Freunden');
     if (q.erledigtN) z.push('🎯 <b>' + q.erledigtN + '</b> Wochen-Quests geschafft');
     if (q.freund && q.freund.duos) z.push('🤝 <b>' + q.freund.duos + '</b> ' + (q.freund.duos === 1 ? 'Freundes-Duo hat' : 'Freundes-Duos haben') + ' ihre Quest geschafft');
-    var al = aufsteigerListe();
-    if (al.length) z.push('🚀 Aufsteiger: <b' + fs(al[0].l) + '>' + esc(prof(al[0].l).n || al[0].l) + '</b> (▲ ' + (al[0].pv - al[0].pn) + ' Plätze)');
     var cw = daten.clips && (daten.clips.wocheTop || [])[0];
     if (cw) z.push('🎬 Clip der Woche: <b>' + esc(cw.titel || 'Clip') + '</b>');
     if (z.length < 2) return '';
@@ -2031,11 +2033,12 @@
       h += '<div class="qe qg' + (gf ? ' fertig' : '') + '"><div class="qkopf"><b>' + (gf ? '✅ ' : '👥 ') + esc(g.text) + '</b><span>' + zahl(Math.min(g.stand, g.ziel)) + ' / ' + zahl(g.ziel) + (g.einheit ? ' ' + esc(g.einheit) : '') + '</span></div><div class="qbar"><i style="width:' + gp + '%"></i></div><div class="qlohn">🎁 ' + esc(g.lohn) + ' für alle, die diese Woche dabei waren' + (gf ? ' · wird am Sonntag ausgezahlt' : '') + '</div></div>';
     }
     if (fq) {
-      var fv = fs0 ? fs0.v : (l ? 0 : null), fpv = fs0 && fs0.mit ? fs0.pv : 0, fz = Math.max(1, fq.ziel);
+      var eigenW = l ? Math.round((((daten.spieler || {})[l] || {}).wo || {}).w * 10 || 0) / 10 : 0;
+      var fv = fs0 ? fs0.v : (l ? eigenW : null), fpv = fs0 && fs0.mit ? fs0.pv : 0, fz = Math.max(1, fq.ziel);
       h += '<div class="qe qf' + (fFertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fFertig ? '✅ ' : '🤝 ') + esc(fq.text) + '</b>' + (fv !== null ? '<span>' + zahl(Math.min(fv, fq.ziel)) + ' / ' + zahl(fq.ziel) + (fq.einheit ? ' ' + esc(fq.einheit) : '') + '</span>' : '') + '</div>' +
         (fv !== null ? '<div class="qbar"><i style="width:' + Math.min(100, fv / fz * 100) + '%"></i></div>' : '') +
         (fs0 && fs0.mit ? '<div class="qfreund">' + bild(fs0.mit) + '<span>mit <b' + fs(fs0.mit) + '>' + esc(prof(fs0.mit).n || fs0.mit) + '</b> · ' + zahl(Math.min(fpv, fq.ziel)) + ' / ' + zahl(fq.ziel) + (fq.einheit ? ' ' + esc(fq.einheit) : '') + '</span></div>'
-          : l ? '<div class="leise qfreund">Markiert euch gegenseitig als Freund (Profilkarte → 🤝), dann zählt euer Fortschritt zusammen.</div>' : '') +
+          : l && rolle(l) !== 'streamer' ? '<div class="leise qfreund">Dir fehlt noch ein Freund: Markiert euch <b>gegenseitig</b> als Freund (Profilkarte → 🤝). Deine Watchtime zählt schon, sobald dein Freund auch ' + zahl(fq.ziel) + ' ' + esc(fq.einheit || 'Std.') + ' hat, gibt es die Belohnung.</div>' : '') +
         '<div class="qlohn">🎁 ' + esc(fq.lohn) + (fFertig ? ' · erhalten' : ' · für euch beide') + '</div></div>';
     }
     (q.liste || []).forEach(function (x, i) {
@@ -2807,7 +2810,7 @@
   var GEHEIM = [
     { id: 'nacht', icon: '🦉', name: 'Nachtschwärmer', text: 'Zwischen Mitternacht und 1 Uhr auf Kazetopia', tipp: 'Die Geisterstunde hat ihre Geheimnisse.' },
     { id: 'frueh', icon: '🌅', name: 'Frühaufsteher', text: 'Zwischen 5 und 7 Uhr morgens vorbeigeschaut', tipp: 'Der frühe Vogel …' },
-    { id: 'punkt1407', icon: '🎂', name: 'Punkt 14:07', text: 'Genau um 14:07 Uhr auf der Seite – die Uhrzeit von Kazes Kanal-Geburtstag (14.07.)', tipp: 'Ein ganz besonderer Moment des Tages.' },
+    { id: 'punkt1407', icon: '🎂', name: 'Sika Day', text: 'Genau um 14:07 Uhr auf der Seite – die Uhrzeit von Sikas Geburtstag (14.07.)', tipp: 'Ein ganz besonderer Moment des Tages.' },
     { id: 'pleite', icon: '🪙', name: 'Pleite', text: 'Genau 0 Zeni auf dem Konto', tipp: 'Manchmal ist nichts alles.' },
     { id: 'stammgast', icon: '🏮', name: 'Treue Seele', text: 'An 7 verschiedenen Tagen angemeldet vorbeigeschaut', tipp: 'Treue zahlt sich aus.' },
     { id: 'pechvogel', icon: '🐈‍⬛', name: 'Schwarze Katze', text: 'Drei Tage hintereinander am Glücks-Knopf nur 100 Zeni', tipp: 'Aller guten Dinge sind … drei?' },
