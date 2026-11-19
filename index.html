@@ -432,6 +432,9 @@
   .questkarte .qrest { color: var(--grau); letter-spacing: .05em; font-weight: 700; }
   .qe { background: var(--bg); border: 1px solid var(--rand); border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
   .qe.qg { border-color: #4d8fe0; }
+  .qe.qf { border-color: #e0a84d; } .qe.qf .qbar i { background: linear-gradient(90deg, #d08a3a, #ffc46f); }
+  .qfreund { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-top: 6px; color: var(--grau); } .qfreund .av, .qfreund img { width: 22px; height: 22px; }
+  .kwoche .kwz { font-size: 13.5px; padding: 6px 0; border-top: 1px solid var(--rand); } .kwoche .kwz:first-of-type { border-top: 0; }
   .qe.fertig { border-color: #3fae6a; }
   .qkopf { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
   .qkopf span { font-size: 12px; color: var(--grau); font-weight: 700; white-space: nowrap; }
@@ -1894,12 +1897,15 @@
     function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
     h += gebKarte();
     h += besuchKarte();
+    // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
+    var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
+    if (planOben) h += planKarte();
     h += glueckKarte();
-    h += fbNeuKarte();
-    h += planKarte();
-    h += appKarte();
-    if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += questKarte();
+    h += fbNeuKarte();
+    if (!planOben) h += planKarte();
+    if (!(neu && !ich && !sitzung)) h += meineKarte();
+    h += kazetopiaWocheKarte();
     h += '<div class="startgrid">';
     var ev = neuFreigeschaltet();
     function nfZeile(e) { return '<div class="z nf"' + dl(e.l) + '>' + bild(e.l) + '<span class="nm"><i' + fs(e.l) + '>' + esc(prof(e.l).n || e.l) + '</i> ' + e.t + '</span></div>'; }
@@ -1934,7 +1940,9 @@
     }
     var cw = daten.clips && ((daten.clips.wocheTop || [])[0] || (daten.clips.monat || [])[0]);
     h += '</div>';
+    var appH = appKarte();
     if (cw) h += '<div class="sbox nur-schmal topclip"><h3>🎬 TOP-CLIP</h3><a class="clip" href="' + esc(cw.url) + '" target="_blank" rel="noopener"><img loading="lazy" alt="" src="' + esc(sicher(cw.bild)) + '"><span>' + esc(cw.titel) + '</span></a><div class="leise">von ' + esc(prof(cw.von).n) + '</div></div>';
+    h += appH;
     return h;
   }
   // ⏳ Countdown & Streamplan
@@ -1985,23 +1993,50 @@
   setInterval(function () { var c = $('countdown'); if (c && daten) c.innerHTML = countdownText(); }, 30000);
 
   // 🎯 Wochen-Quests
+  // 📰 Diese Woche in Kazetopia (Idee von joe3000): kompakter Rückblick seit Sonntag
+  function kazetopiaWocheKarte() {
+    if (!daten) return '';
+    var jetzt = new Date(), so = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate() - jetzt.getDay()).getTime();
+    var sh = daten.shop || {}, kaeufe = (sh.letzte || []).filter(function (x) { return new Date(x.t).getTime() >= so && kosArtikel(x.a); });
+    var geschenke = kaeufe.filter(function (x) { return x.g; }), gekauft = kaeufe.filter(function (x) { return !x.g; });
+    var q = daten.quests || {}, z = [];
+    if (gekauft.length) z.push('🛍️ <b>' + gekauft.length + '</b> ' + (gekauft.length === 1 ? 'Kauf' : 'Käufe') + ' im Shop · zuletzt <b>' + esc(kosName(gekauft[0].a)) + '</b>');
+    if (geschenke.length) z.push('🎁 <b>' + geschenke.length + '</b> ' + (geschenke.length === 1 ? 'Geschenk' : 'Geschenke') + ' unter Freunden');
+    if (q.erledigtN) z.push('🎯 <b>' + q.erledigtN + '</b> Wochen-Quests geschafft');
+    if (q.freund && q.freund.duos) z.push('🤝 <b>' + q.freund.duos + '</b> ' + (q.freund.duos === 1 ? 'Freundes-Duo hat' : 'Freundes-Duos haben') + ' ihre Quest geschafft');
+    var al = aufsteigerListe();
+    if (al.length) z.push('🚀 Aufsteiger: <b' + fs(al[0].l) + '>' + esc(prof(al[0].l).n || al[0].l) + '</b> (▲ ' + (al[0].pv - al[0].pn) + ' Plätze)');
+    var cw = daten.clips && (daten.clips.wocheTop || [])[0];
+    if (cw) z.push('🎬 Clip der Woche: <b>' + esc(cw.titel || 'Clip') + '</b>');
+    if (z.length < 2) return '';
+    return '<div class="sbox kwoche"><h3>📰 DIESE WOCHE IN KAZETOPIA <span class="leise">seit Sonntag</span></h3>' + z.map(function (x) { return '<div class="kwz">' + x + '</div>'; }).join('') + '</div>';
+  }
   function questKarte() {
     var q = daten.quests; if (!q) return '';
     function tag(d) { var x = new Date(d + 'T00:00:00'); return WTAG[x.getDay()] + ', ' + x.getDate() + '.' + (x.getMonth() + 1) + '.'; }
     if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
-    var l = ich || (sitzung && sitzung.name) || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
+    var l = (sitzung && sitzung.name) || ich || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
+    var fq = q.freund, fs0 = fq && l ? (fq.stand || {})[l] : null, fFertig = !!(fs0 && fs0.mit && fs0.v >= fq.ziel && fs0.pv >= fq.ziel);
     // kompakt: eine Zeile mit Fortschritt, Details aufklappbar (Zustand wird im Browser gemerkt)
     var auf = false; try { auf = localStorage.getItem('kz_quest_auf') === '1'; } catch (x) { }
     var nFertig = 0; (q.liste || []).forEach(function (x, i) { if (f && (f[i] || 0) >= x.ziel) nFertig++; });
     var sum = [];
-    if (f) sum.push(nFertig + '/' + (q.liste || []).length + ' ✓');
+    if (f) sum.push((nFertig + (fFertig ? 1 : 0)) + '/' + ((q.liste || []).length + (fq ? 1 : 0)) + ' ✓');
     if (q.gemeinsam) sum.push('👥 ' + Math.min(100, Math.floor(q.gemeinsam.stand / Math.max(1, q.gemeinsam.ziel) * 100)) + ' %');
     sum.push(rest <= 1 ? 'neu morgen' : 'neu in ' + rest + ' T.');
     var h = '<details class="sbox questkarte" id="questkarte"' + (auf ? ' open' : '') + '><summary><h3>🎯 WOCHEN-QUESTS</h3><span class="qsum">' + sum.join(' · ') + '</span></summary>';
     if (q.gemeinsam) {
       var g = q.gemeinsam, gp = Math.min(100, g.stand / Math.max(1, g.ziel) * 100), gf = g.stand >= g.ziel;
       h += '<div class="qe qg' + (gf ? ' fertig' : '') + '"><div class="qkopf"><b>' + (gf ? '✅ ' : '👥 ') + esc(g.text) + '</b><span>' + zahl(Math.min(g.stand, g.ziel)) + ' / ' + zahl(g.ziel) + (g.einheit ? ' ' + esc(g.einheit) : '') + '</span></div><div class="qbar"><i style="width:' + gp + '%"></i></div><div class="qlohn">🎁 ' + esc(g.lohn) + ' für alle, die diese Woche dabei waren' + (gf ? ' · wird am Sonntag ausgezahlt' : '') + '</div></div>';
+    }
+    if (fq) {
+      var fv = fs0 ? fs0.v : (l ? 0 : null), fpv = fs0 && fs0.mit ? fs0.pv : 0, fz = Math.max(1, fq.ziel);
+      h += '<div class="qe qf' + (fFertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fFertig ? '✅ ' : '🤝 ') + esc(fq.text) + '</b>' + (fv !== null ? '<span>' + zahl(Math.min(fv, fq.ziel)) + ' / ' + zahl(fq.ziel) + (fq.einheit ? ' ' + esc(fq.einheit) : '') + '</span>' : '') + '</div>' +
+        (fv !== null ? '<div class="qbar"><i style="width:' + Math.min(100, fv / fz * 100) + '%"></i></div>' : '') +
+        (fs0 && fs0.mit ? '<div class="qfreund">' + bild(fs0.mit) + '<span>mit <b' + fs(fs0.mit) + '>' + esc(prof(fs0.mit).n || fs0.mit) + '</b> · ' + zahl(Math.min(fpv, fq.ziel)) + ' / ' + zahl(fq.ziel) + (fq.einheit ? ' ' + esc(fq.einheit) : '') + '</span></div>'
+          : l ? '<div class="leise qfreund">Markiert euch gegenseitig als Freund (Profilkarte → 🤝), dann zählt euer Fortschritt zusammen.</div>' : '') +
+        '<div class="qlohn">🎁 ' + esc(fq.lohn) + (fFertig ? ' · erhalten' : ' · für euch beide') + '</div></div>';
     }
     (q.liste || []).forEach(function (x, i) {
       var v = f ? (f[i] || 0) : null, fertig = v !== null && v >= x.ziel, pr = v !== null ? Math.min(100, v / Math.max(1, x.ziel) * 100) : 0;
