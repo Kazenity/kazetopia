@@ -1902,9 +1902,9 @@
     if (planOben) h += planKarte();
     h += glueckKarte();
     h += questKarte();
-    h += fbNeuKarte();
     if (!planOben) h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
+    h += fbNeuKarte();
     h += kazetopiaWocheKarte();
     h += '<div class="startgrid">';
     var ev = neuFreigeschaltet();
