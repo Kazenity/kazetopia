@@ -437,6 +437,17 @@
   .kwoche { margin-bottom: 14px; }
 
   .umf, .umfstart { margin-bottom: 14px; }
+  .wkk .wktage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 6px; }
+  .wkk .wktag { border: 1px solid var(--rand); border-radius: 12px; padding: 8px; text-align: center; font-size: 12px; color: var(--grau); }
+  .wkk .wktag b { display: block; font-size: 16px; color: var(--hell); }
+  .wkk .wktag.ok { border-color: var(--rosa); background: rgba(255, 120, 170, .08); }
+  .wkk .wktag.heute { box-shadow: 0 0 0 2px rgba(255, 120, 170, .35) inset; }
+  .wkk .balken { height: 7px; border-radius: 99px; background: var(--rand); margin: 6px 0 4px; overflow: hidden; }
+  .wkk .balken i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--rosa2), var(--rosa)); }
+  .wkk.geschafft { border-color: var(--gold); }
+  .admplan .apz { display: grid; grid-template-columns: 1.2fr .8fr 1.4fr 1.2fr auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .admplan .apz input { min-width: 0; }
+  @media (max-width: 560px) { .admplan .apz { grid-template-columns: 1fr 1fr; } .admplan .apz .apspiel, .admplan .apz .apinfo { grid-column: span 1; } }
   .umffrage { font-size: 17px; font-weight: 800; color: var(--hell); margin: 2px 0 10px; line-height: 1.3; }
   .umfopt { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
   .umfk { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 10px; border-radius: 14px; border: 1px solid var(--rand); background: var(--bg); color: var(--hell); font-family: inherit; font-size: 14px; cursor: pointer; text-align: center; }
@@ -1942,6 +1953,7 @@
     h += gebKarte();
     h += besuchKarte();
     h += umfrageKarte();
+    h += wkKarte();
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
     if (planOben) h += planKarte();
@@ -1992,8 +2004,24 @@
   }
   // ⏳ Countdown & Streamplan
   var WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  // 📅 Streamplan: der Stand aus Supabase (am Handy im Admin-Bereich änderbar) hat Vorrang vor daten.json
+  var spServer = null, spJson = '';
+  function planQuelle() {
+    var alt = daten && daten.streamplan;
+    if (!spServer || !spServer.daten) return alt;
+    var d = spServer.daten, cov = {};
+    ((alt && alt.termine) || []).forEach(function (t) { if (t.cover) cov[String(t.spiel || '').toLowerCase().trim()] = t.cover; });
+    return { woche: d.woche || '', community: d.community || '', termine: (d.termine || []).map(function (t) { var o = { datum: t.datum, zeit: t.zeit, spiel: t.spiel, info: t.info || '' }, c = cov[String(t.spiel || '').toLowerCase().trim()]; if (c) o.cover = c; return o; }) };
+  }
+  function planLaden() {
+    return sbFetch('/rest/v1/rpc/streamplan_laden', { method: 'POST', body: {} }).then(function (r) {
+      var j = JSON.stringify(r || null); spServer = r || null;
+      if (j !== spJson) { spJson = j; if (daten && reiter === 'start') zeigen(); }
+    }).catch(function () { });
+  }
+  planLaden(); setInterval(planLaden, 120000);
   function planTermine() {
-    var sp = daten && daten.streamplan; if (!sp || !sp.termine) return [];
+    var sp = daten && planQuelle(); if (!sp || !sp.termine) return [];
     return sp.termine.map(function (t) { var d = new Date(t.datum + 'T' + t.zeit + ':00'); return { t: t, d: d }; }).filter(function (x) { return !isNaN(x.d); }).sort(function (a, b) { return a.d - b.d; });
   }
   function countdownText() {
@@ -2012,11 +2040,11 @@
     var n = String(name || '').toLowerCase().trim(), c = '';
     (daten.spiele || []).forEach(function (x) { if (!c && String(x.n || '').toLowerCase().trim() === n) c = sicher(x.b); });
     // Spiele aus dem Streamplan (z. B. neue Releases, die noch nicht bewertet sind)
-    ((daten.streamplan && daten.streamplan.termine) || []).forEach(function (t) { if (!c && t.cover && String(t.spiel || '').toLowerCase().trim() === n) c = sicher(t.cover); });
+    ((planQuelle() && planQuelle().termine) || []).forEach(function (t) { if (!c && t.cover && String(t.spiel || '').toLowerCase().trim() === n) c = sicher(t.cover); });
     return c;
   }
   function planKarte() {
-    var sp = daten.streamplan, tt = planTermine(), live = daten.live && daten.live.an;
+    var sp = planQuelle(), tt = planTermine(), live = daten.live && daten.live.an;
     if (!live && (!sp || !tt.length)) return '';
     var jetzt = Date.now(), naechster = tt.filter(function (x) { return x.d.getTime() > jetzt - 15 * 60000; })[0];
     var spiel = live ? daten.live.spiel : (naechster ? naechster.t.spiel : ''), cov = coverFuer(spiel);
@@ -2106,7 +2134,9 @@
     // Von den Mangaka-Stufen nur die höchste zeigen (die niedrigeren bleiben im Besitz, damit ein angelegter Titel gültig bleibt)
     var mgBest = '', mgN = 0;
     inv.titel.forEach(function (x) { var a = kosArtikel('titel_' + x); if (a && a.design && a.design > mgN) { mgN = a.design; mgBest = x; } });
-    inv.titel.forEach(function (x) { var a = kosArtikel('titel_' + x); if (a && a.design && x !== mgBest) return; h += '<div class="sam ti"><b>„' + esc(kosName('titel_' + x)) + '“</b><span>' + (a && a.design ? '🎨 Design-Event' : a && a.quest ? '🎯 Quest' : '🏷️ Titel') + '</span></div>'; });
+    var wkN = 0, wkBest = null;
+    inv.titel.forEach(function (x) { var a = kosArtikel('titel_' + x), n = a && a.wk ? a.wk : (x === 'wk1' ? 1 : 0); if (n > wkN) { wkN = n; wkBest = x; } });
+    inv.titel.forEach(function (x) { var a = kosArtikel('titel_' + x); if (a && a.design && x !== mgBest) return; if (/^wk\d+$/.test(x) && x !== wkBest) return; h += '<div class="sam ti"><b>„' + esc(kosName('titel_' + x)) + '“</b><span>' + (a && a.design ? '🎨 Design-Event' : /^wk\d+$/.test(x) ? '⚔️ Wochenende' : a && a.quest ? '🎯 Quest' : '🏷️ Titel') + '</span></div>'; });
     return h + '</div>';
   }
   // 📅 Streams als Kalenderdatei (.ics) – alles im Browser, keine Daten gehen raus
@@ -2153,6 +2183,21 @@
     if (jetzt.sa > (alt.sa || 0)) m.push('🎒 ' + (jetzt.sa - (alt.sa || 0)) + ' neue' + (jetzt.sa - (alt.sa || 0) === 1 ? 'r Artikel' : ' Artikel') + ' in deiner Sammlung');
     if (jetzt.z !== null && alt.z !== null && alt.z !== undefined && jetzt.z > alt.z) m.push('💰 +' + zahl(jetzt.z - alt.z) + ' Zeni');
     if (m.length) besuchInfo = m;
+  }
+  // ⚔️ Wochenendkrieger: Fr, Sa & So je mind. 30 Min. + zusammen 10 Std. → Titel (nur an Wochenenden mit drei Streams)
+  function wkKarte() {
+    var w = daten && daten.wochenende; if (!w || !w.fr) return '';
+    var l = (sitzung && sitzung.name) || ich || '', m = (w.p && w.p[l]) || [0, 0, 0], tagMin = w.tagMin || 30, ges = w.gesamtMin || 600;
+    var sum = m[0] + m[1] + m[2], tageOk = m.filter(function (x) { return x >= tagMin; }).length, ok = tageOk === 3 && sum >= ges;
+    var fr = new Date(w.fr + 'T12:00:00'), NAMEN = ['Fr', 'Sa', 'So'];
+    function std(min) { return min >= 60 ? (Math.round(min / 6) / 10).toString().replace('.', ',') + ' Std.' : min + ' Min.'; }
+    var h = '<div class="sbox wkk' + (ok ? ' geschafft' : '') + '"><h3>⚔️ WOCHENENDKRIEGER <span class="leise">' + ('0' + fr.getDate()).slice(-2) + '.' + ('0' + (fr.getMonth() + 1)).slice(-2) + '. – ' + ('0' + new Date(fr.getTime() + 2 * 864e5).getDate()).slice(-2) + '.</span></h3>' +
+      '<div class="leise">Schau an <b>allen drei Tagen</b> mindestens ' + tagMin + ' Min. und insgesamt <b>' + Math.round(ges / 60) + ' Std.</b> zu – dann gibt\'s am Montag den Titel „Wochenendkrieger“. Wer es öfter schafft, bekommt ✦2, ✦3 …</div>';
+    if (!l) return h + '<div class="leise" style="margin-top:8px">Melde dich an oder tipp bei deinem Namen auf ⭐ Das bin ich, um deinen Fortschritt zu sehen.</div></div>';
+    h += '<div class="wktage">' + NAMEN.map(function (n, i) { return '<div class="wktag' + (m[i] >= tagMin ? ' ok' : '') + (i === w.tag ? ' heute' : '') + '"><b>' + (m[i] >= tagMin ? '✅' : i < w.tag ? '✖️' : '⏳') + '</b>' + n + ' · ' + std(m[i]) + '</div>'; }).join('') + '</div>' +
+      '<div class="balken"><i style="width:' + Math.min(100, Math.round(sum / ges * 100)) + '%"></i></div>' +
+      '<div class="leise">' + (ok ? '🎉 Geschafft! Der Titel kommt am Montag.' : tageOk < w.tag && m.slice(0, w.tag).some(function (x) { return x < tagMin; }) ? 'Ein Tag fehlt dir schon – nächstes Mal klappt\'s! Gesamt: ' + std(sum) : 'Gesamt: <b>' + std(sum) + '</b> von ' + Math.round(ges / 60) + ' Std. · Stand vom letzten Upload') + '</div>';
+    return h + '</div>';
   }
   function besuchKarte() {
     besuchPruefen();
@@ -3128,7 +3173,7 @@
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -3150,6 +3195,38 @@
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="kzzeile"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
     }).catch(fehler);
+    if (tab === 'plan') {
+      var pq = planQuelle() || { woche: '', community: '', termine: [] };
+      var reihen = (pq.termine || []).slice().sort(function (a, b) { return (a.datum + a.zeit).localeCompare(b.datum + b.zeit); });
+      var spieleVor = {}; reihen.forEach(function (t) { spieleVor[t.spiel] = 1; }); (daten.spiele || []).slice(0, 30).forEach(function (x) { if (x.n) spieleVor[x.n] = 1; });
+      var zeile = function (t) { t = t || {}; return '<div class="apz"><input class="admfeld" type="date" data-ap="datum" value="' + esc(t.datum || '') + '"><input class="admfeld" type="time" data-ap="zeit" value="' + esc(t.zeit || '19:00') + '"><input class="admfeld apspiel" data-ap="spiel" maxlength="60" list="apspiele" placeholder="Spiel" value="' + esc(t.spiel || '') + '"><input class="admfeld apinfo" data-ap="info" maxlength="40" placeholder="Info (optional)" value="' + esc(t.info || '') + '"><button class="vlink" data-apweg="1" aria-label="Termin löschen">✕</button></div>'; };
+      $('adm').innerHTML = '<div class="sbox admplan"><h3>📅 STREAMPLAN</h3><p class="leise">Gilt sofort auf der Website. Die Kommandozentrale übernimmt es beim nächsten Upload des Bots.</p>' +
+        '<input class="admfeld" id="apwoche" maxlength="40" placeholder="Woche, z. B. 23. – 29. November" value="' + esc(pq.woche || '') + '">' +
+        '<div id="apliste" style="margin-top:8px">' + (reihen.length ? reihen.map(zeile).join('') : zeile()) + '</div>' +
+        '<datalist id="apspiele">' + Object.keys(spieleVor).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+        '<div class="admfbk2"><button class="vlink" id="apneu">＋ Termin</button></div>' +
+        '<input class="admfeld" id="apcomm" maxlength="40" placeholder="Community Games danach ab (optional), z. B. 22:00" value="' + esc(pq.community || '') + '">' +
+        '<div class="admfbk2"><button class="vtw" id="apspeichern">💾 Speichern</button><span class="leise" id="apinfo"></span></div></div>';
+      var weg = function () { Array.prototype.forEach.call(document.querySelectorAll('[data-apweg]'), function (b) { b.onclick = function () { b.parentNode.remove(); }; }); };
+      weg();
+      $('apneu').onclick = function () { $('apliste').insertAdjacentHTML('beforeend', zeile()); weg(); };
+      $('apspeichern').onclick = function () {
+        var b = this, termine = [], fehlt = false;
+        Array.prototype.forEach.call(document.querySelectorAll('#apliste .apz'), function (z) {
+          var v = function (k) { var e = z.querySelector('[data-ap="' + k + '"]'); return e ? e.value.trim() : ''; };
+          var t = { datum: v('datum'), zeit: v('zeit'), spiel: v('spiel'), info: v('info') };
+          if (!t.datum && !t.spiel) return;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(t.datum) || !/^\d{2}:\d{2}$/.test(t.zeit) || !t.spiel) { fehlt = true; return; }
+          termine.push(t);
+        });
+        if (fehlt) { $('apinfo').textContent = 'Bitte bei jedem Termin Datum, Uhrzeit und Spiel ausfüllen.'; return; }
+        termine.sort(function (a, c) { return (a.datum + a.zeit).localeCompare(c.datum + c.zeit); });
+        b.disabled = true; $('apinfo').textContent = 'Speichere …';
+        rpc('admin_streamplan_speichern', { p_daten: { woche: $('apwoche').value.trim(), community: $('apcomm').value.trim(), termine: termine } })
+          .then(function () { return planLaden(); }).then(function () { $('apinfo').textContent = '✓ Gespeichert'; b.disabled = false; })
+          .catch(function (x) { b.disabled = false; $('apinfo').textContent = '❌ ' + (/404|PGRST202/.test(x.message) ? 'Supabase-Update 36 fehlt noch.' : x.message); });
+      };
+    }
     if (tab === 'feedback') rpc('admin_feedback').then(function (f) {
       f = f || [];
       // 📥 Neu = noch nicht bewertet · 🔧 In Arbeit = wird gerade gebaut · 🌱 Ideengarten = gute Idee, vielleicht später (+ eigene Ideen) · 🗄️ Archiv = erledigt
