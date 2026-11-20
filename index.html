@@ -452,6 +452,8 @@
   .umfknopf { display: inline-block; margin-top: 8px; font-weight: 800; color: var(--rosa); font-size: 13px; }
   .umfalt summary { cursor: pointer; font-size: 13px; color: var(--grau); font-weight: 700; margin: 4px 0 10px; }
   .umfneu .suche { margin-bottom: 8px; }
+  .umfbild { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--grau); font-weight: 700; cursor: pointer; padding: 6px 12px; border: 1px dashed var(--rand); border-radius: 10px; margin-bottom: 10px; min-height: 34px; } .umfbild:hover { border-color: var(--rosa); color: var(--hell); }
+  .umfbild img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-left: auto; }
   .umfopt-zeile { display: grid; grid-template-columns: 1fr auto; column-gap: 6px; margin-bottom: 4px; } .umfopt-zeile [data-uob] { grid-column: 1 / -1; font-size: 12.5px; padding: 7px 12px; }
   .umffl { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; } .umffl input[type=color] { width: 36px; height: 32px; border: 0; background: none; padding: 0; cursor: pointer; }
   .umfcheck { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 8px 0; }
@@ -3213,12 +3215,12 @@
       function pad(n) { return (n < 10 ? '0' : '') + n; }
       var d0 = new Date(Date.now() + 2 * 86400000); d0.setMinutes(0, 0, 0);
       var vor = d0.getFullYear() + '-' + pad(d0.getMonth() + 1) + '-' + pad(d0.getDate()) + 'T' + pad(d0.getHours()) + ':00';
-      function zeile(i) { return '<div class="umfopt-zeile"><input class="suche" data-uot maxlength="40" placeholder="Antwort ' + (i + 1) + '"><label class="umffl" title="Farbkreis anzeigen"><input type="checkbox" data-uofc><input type="color" data-uof value="#ff9ebf"></label><input class="suche" data-uob maxlength="200" placeholder="Bild (optional), z. B. bilder/umfrage/pink.png"></div>'; }
+      function zeile(i) { return '<div class="umfopt-zeile"><input class="suche" data-uot maxlength="40" placeholder="Antwort ' + (i + 1) + '"><label class="umffl" title="Farbkreis anzeigen"><input type="checkbox" data-uofc><input type="color" data-uof value="#ff9ebf"></label><label class="umfbild"><input type="file" accept="image/png,image/jpeg,image/webp" data-uobf hidden><span data-uobt>🖼️ Bild hochladen (optional)</span><img data-uobv alt="" hidden></label><input type="hidden" data-uob></div>'; }
       var h = '<div class="sbox umfneu"><h3>➕ NEUE UMFRAGE</h3><input class="suche" id="umfF" maxlength="120" placeholder="Frage, z. B. Welche Haarfarbe soll ich mir färben lassen?">' +
         '<div id="umfOpts">' + zeile(0) + zeile(1) + '</div><button class="vlink" id="umfPlus">+ Antwort</button>' +
         '<div class="umfzeile">⏰ Ende <input type="datetime-local" id="umfEnde" value="' + vor + '"></div>' +
         '<label class="umfcheck"><input type="checkbox" id="umfWt"> Nur Zuschauer ab 10 Std. Watchtime</label>' +
-        '<p class="leise">Kästchen neben einer Antwort = Farbkreis anzeigen (z. B. für Haarfarben). Abstimmen können alle, die mit Twitch angemeldet sind. Das Ergebnis sehen die Zuschauer erst am Ende – du siehst den Zwischenstand unten.</p>' +
+        '<p class="leise">Kästchen neben einer Antwort = Farbkreis anzeigen (z. B. für Haarfarben). Bilder werden beim Hochladen automatisch verkleinert. Abstimmen können alle, die mit Twitch angemeldet sind. Das Ergebnis sehen die Zuschauer erst am Ende – du siehst den Zwischenstand unten.</p>' +
         '<div class="edknoepfe"><button class="vtw" id="umfOk">🗳️ Umfrage starten</button></div><p class="leise" id="umfInfo"></p></div>';
       h += (l || []).map(function (u) {
         var e = u.ergebnis || [], sum = 0; e.forEach(function (n) { sum += n; });
@@ -3227,6 +3229,31 @@
           '<div class="kzknoepfe">' + (u.vorbei ? '' : '<button class="vlink" data-uakt="beenden" data-uid="' + u.id + '">⏹ Jetzt beenden</button>') + '<button class="vlink" data-uakt="loeschen" data-uid="' + u.id + '">🗑 Löschen</button></div></div>';
       }).join('');
       $('adm').innerHTML = h;
+      $('umfOpts').addEventListener('change', function (e) {
+        var inp = e.target; if (!inp || !inp.matches || !inp.matches('[data-uobf]')) return;
+        var z = inp.closest('.umfopt-zeile'), fl = inp.files && inp.files[0], t = z.querySelector('[data-uobt]'); if (!fl) return;
+        t.textContent = 'Bild wird verkleinert …';
+        var img = new Image(), url = URL.createObjectURL(fl);
+        img.onload = function () {
+          var du = '', gr = [420, 320, 240, 180];
+          for (var k = 0; k < gr.length; k++) {
+            var fak = Math.min(1, gr[k] / Math.max(img.width, img.height)), c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(img.width * fak)); c.height = Math.max(1, Math.round(img.height * fak));
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            du = c.toDataURL('image/webp', 0.85);
+            if (du.indexOf('data:image/webp') !== 0) du = c.toDataURL('image/jpeg', 0.85);
+            if (du.length <= 190000) break;
+            du = '';
+          }
+          URL.revokeObjectURL(url);
+          if (!du) { t.textContent = '❌ Bild zu groß – bitte ein kleineres nehmen'; return; }
+          z.querySelector('[data-uob]').value = du;
+          var v = z.querySelector('[data-uobv]'); v.src = du; v.hidden = false;
+          t.textContent = '✓ Bild gewählt – antippen zum Ändern';
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); t.textContent = '❌ Bild konnte nicht gelesen werden'; };
+        img.src = url;
+      });
       $('umfPlus').onclick = function () { var n = document.querySelectorAll('#umfOpts .umfopt-zeile').length; if (n >= 8) { $('umfInfo').textContent = 'Höchstens 8 Antworten.'; return; } $('umfOpts').insertAdjacentHTML('beforeend', zeile(n)); };
       $('umfOk').onclick = function () {
         var opts = Array.prototype.map.call(document.querySelectorAll('#umfOpts .umfopt-zeile'), function (z) {
