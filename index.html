@@ -435,6 +435,28 @@
   .qe.qf { border-color: #e0a84d; } .qe.qf .qbar i { background: linear-gradient(90deg, #d08a3a, #ffc46f); }
   .qfreund { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-top: 6px; color: var(--grau); } .qfreund .av, .qfreund img { width: 22px; height: 22px; }
   .kwoche { margin-bottom: 14px; }
+
+  .umf, .umfstart { margin-bottom: 14px; }
+  .umffrage { font-size: 17px; font-weight: 800; color: var(--hell); margin: 2px 0 10px; line-height: 1.3; }
+  .umfopt { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .umfk { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 10px; border-radius: 14px; border: 1px solid var(--rand); background: var(--bg); color: var(--hell); font-family: inherit; font-size: 14px; cursor: pointer; text-align: center; }
+  .umfk:hover { border-color: var(--rosa); } .umfk.an { border-color: var(--rosa); background: var(--glow); box-shadow: inset 0 0 0 1px var(--rosa); }
+  .umfk:disabled { cursor: default; opacity: 1; } .umfk.sieg { border-color: #ffd166; box-shadow: inset 0 0 0 1px #ffd166; }
+  .umfk small { font-size: 11.5px; color: var(--grau); font-weight: 700; }
+  .umfk img { width: 100%; max-height: 130px; object-fit: cover; border-radius: 10px; }
+  .umffarbe { width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); }
+  .umfpunkt { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .umfbalken { display: block; width: 100%; height: 6px; border-radius: 3px; background: var(--rand); overflow: hidden; } .umfbalken i { display: block; height: 100%; background: var(--rosa); }
+  .umffuss { margin-top: 10px; }
+  .umfstart { border-color: var(--rosa); background: linear-gradient(135deg, rgba(255,120,170,.12), var(--flaeche)); }
+  .umfknopf { display: inline-block; margin-top: 8px; font-weight: 800; color: var(--rosa); font-size: 13px; }
+  .umfalt summary { cursor: pointer; font-size: 13px; color: var(--grau); font-weight: 700; margin: 4px 0 10px; }
+  .umfneu .suche { margin-bottom: 8px; }
+  .umfopt-zeile { display: grid; grid-template-columns: 1fr auto; column-gap: 6px; margin-bottom: 4px; } .umfopt-zeile [data-uob] { grid-column: 1 / -1; font-size: 12.5px; padding: 7px 12px; }
+  .umffl { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; } .umffl input[type=color] { width: 36px; height: 32px; border: 0; background: none; padding: 0; cursor: pointer; }
+  .umfcheck { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 8px 0; }
+  .umfzeile { font-size: 13px; margin-top: 8px; } .umfzeile input { font-family: inherit; background: var(--bg); color: var(--hell); border: 1px solid var(--rand); border-radius: 10px; padding: 7px 10px; margin-left: 6px; color-scheme: dark; }
+  .umfst { display: grid; grid-template-columns: minmax(80px, 34%) 1fr auto; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; }
   .kwoche .kwz { font-size: 13.5px; padding: 6px 0; border-top: 1px solid var(--rand); } .kwoche .kwz:first-of-type { border-top: 0; }
   .qe.fertig { border-color: #3fae6a; }
   .qkopf { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
@@ -1917,6 +1939,7 @@
     function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
     h += gebKarte();
     h += besuchKarte();
+    h += umfrageKarte();
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
     if (planOben) h += planKarte();
@@ -2935,6 +2958,66 @@
     });
   }
   oeffentlichLaden();
+
+  // 🗳️ Umfragen: Kaze stellt die Frage im Admin-Bereich, angemeldete Zuschauer stimmen ab, Ergebnis erst am Ende
+  var umf = null, umfJson = '';
+  function umfragenLaden() {
+    return (sitzung ? sFrisch() : Promise.resolve()).then(function () { return sbFetch('/rest/v1/rpc/umfragen', { method: 'POST', body: {} }); }).then(function (r) {
+      var j = JSON.stringify(r || []); umf = r || [];
+      if (j !== umfJson) { umfJson = j; if (daten && (reiter === 'start' || reiter === 'spiele')) zeigen(); }
+    }).catch(function () { if (umf === null) umf = []; });
+  }
+  umfragenLaden();
+  function umfVorbei(u) { return !!u.vorbei || new Date(u.ende).getTime() <= Date.now(); }
+  function umfRest(t) {
+    var ms = new Date(t).getTime() - Date.now(); if (!(ms > 0)) return 'beendet';
+    var m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+    return 'noch ' + (d ? d + (d === 1 ? ' Tag ' : ' Tage ') + h + ' Std.' : h ? h + ' Std. ' + (m % 60) + ' Min.' : Math.max(1, m % 60) + ' Min.');
+  }
+  function umfrageHtml(u) {
+    var vorbei = umfVorbei(u), erg = u.ergebnis || [], sum = 0, max = 0;
+    erg.forEach(function (n) { sum += n; if (n > max) max = n; });
+    var h = '<div class="sbox umf"><h3>🗳️ ABSTIMMUNG <span class="leise">· ' + (vorbei ? 'beendet' : umfRest(u.ende)) + '</span></h3><div class="umffrage">' + esc(u.frage) + '</div><div class="umfopt">';
+    h += (u.optionen || []).map(function (o, i) {
+      var an = u.meine === i, n = erg[i] || 0, pct = vorbei && sum ? Math.round(n / sum * 100) : 0, sieg = vorbei && sum > 0 && n === max;
+      var bi = sicher(o.b), vis = bi ? '<img alt="" loading="lazy" src="' + esc(bi) + '">' : (/^#[0-9a-fA-F]{6}$/.test(o.f || '') ? '<span class="umffarbe" style="background:' + o.f + '"></span>' : '');
+      return '<button class="umfk' + (an ? ' an' : '') + (sieg ? ' sieg' : '') + '"' + (vorbei ? ' disabled' : ' data-uwahl="' + u.id + ':' + i + '"') + '>' + vis + '<b>' + (sieg ? '👑 ' : '') + esc(o.t) + '</b>' +
+        (vorbei ? '<span class="umfbalken"><i style="width:' + pct + '%"></i></span><small>' + pct + ' % · ' + n + (n === 1 ? ' Stimme' : ' Stimmen') + (an ? ' · deine Wahl' : '') + '</small>' : an ? '<small>✓ deine Stimme</small>' : '') + '</button>';
+    }).join('') + '</div>';
+    var g = u.gesamt || 0;
+    h += '<div class="leise umffuss">' + (vorbei ? (sum ? sum + (sum === 1 ? ' Stimme' : ' Stimmen') + ' insgesamt' : 'Keine Stimmen abgegeben') :
+      (u.meine != null ? '✓ Du hast abgestimmt – bis zum Ende kannst du noch wechseln.' : sitzung ? 'Tipp auf deine Antwort.' : 'Melde dich mit Twitch an, um abzustimmen.') + ' Das Ergebnis gibt\'s am Ende · bisher ' + g + (g === 1 ? ' Stimme' : ' Stimmen') + (u.nur_wt ? ' · nur ab 10 Std. Watchtime' : '')) + '</div><p class="leise" id="umfinfo' + u.id + '"></p></div>';
+    return h;
+  }
+  function umfragenHtml() {
+    var l = umf || [], lauf = l.filter(function (u) { return !umfVorbei(u); }), alt = l.filter(umfVorbei).slice(0, 5);
+    var h = lauf.map(umfrageHtml).join('');
+    if (alt.length) h += lauf.length ? '<details class="umfalt"><summary>🗂️ Beendete Umfragen (' + alt.length + ')</summary>' + alt.map(umfrageHtml).join('') + '</details>' : alt.map(umfrageHtml).join('');
+    return h;
+  }
+  function umfrageKarte() {
+    var l = umf || [], lauf = l.filter(function (u) { return !umfVorbei(u); });
+    if (lauf.length) {
+      var u = lauf[0];
+      return '<div class="sbox umfstart klick" data-geh="spiele"><h3>🗳️ ABSTIMMUNG LÄUFT <span class="leise">· ' + umfRest(u.ende) + '</span></h3><div class="umffrage">' + esc(u.frage) + '</div><div class="leise">' + (u.meine != null ? '✓ Du hast schon abgestimmt' : 'Deine Stimme zählt – das Ergebnis gibt\'s am Ende') + (lauf.length > 1 ? ' · +' + (lauf.length - 1) + ' weitere' : '') + '</div><span class="umfknopf">' + (u.meine != null ? 'Ansehen ›' : 'Jetzt abstimmen ›') + '</span></div>';
+    }
+    var z = l.filter(function (u) { return umfVorbei(u) && Date.now() - new Date(u.ende).getTime() < 2 * 86400000 && (u.ergebnis || []).some(function (n) { return n > 0; }); })[0];
+    if (!z) return '';
+    var e = z.ergebnis, sum = 0, mi = 0; e.forEach(function (n, i) { sum += n; if (n > e[mi]) mi = i; });
+    return '<div class="sbox umfstart klick" data-geh="spiele"><h3>🗳️ ERGEBNIS DER ABSTIMMUNG</h3><div class="umffrage">' + esc(z.frage) + '</div><div>👑 <b>' + esc((z.optionen[mi] || {}).t || '') + '</b> <span class="leise">mit ' + Math.round(e[mi] / sum * 100) + ' % · ' + sum + ' Stimmen</span></div><span class="umfknopf">Alle Ergebnisse ›</span></div>';
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('[data-uwahl]') : null; if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!sitzung || !sitzung.name) { einloggenFragen(); return; }
+    var p = b.getAttribute('data-uwahl').split(':'), id = Number(p[0]), w = Number(p[1]), info = $('umfinfo' + id);
+    var alle = document.querySelectorAll('[data-uwahl^="' + id + ':"]');
+    Array.prototype.forEach.call(alle, function (x) { x.disabled = true; });
+    if (info) info.textContent = 'Wird gespeichert …';
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/umfrage_stimmen', { method: 'POST', body: { p_id: id, p_wahl: w } }); })
+      .then(function () { (umf || []).forEach(function (u) { if (u.id === id) { if (u.meine == null) u.gesamt = (u.gesamt || 0) + 1; u.meine = w; } }); umfJson = JSON.stringify(umf); try { zaehlen('umfrage'); } catch (x) { } zeigen(); })
+      .catch(function (x) { if (info) info.textContent = '❌ ' + x.message; Array.prototype.forEach.call(alle, function (y) { y.disabled = false; }); });
+  }, true);
   function meineFreundeLaden() {
     if (!sitzung) return Promise.resolve(null);
     return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_freunde', { method: 'POST', body: {} }); }).then(function (r) { freunde.meine = r || { ich: [], mich: [] }; return freunde.meine; }).catch(function () { return null; });
@@ -3043,7 +3126,7 @@
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['voting', '🗳️ Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -3126,6 +3209,46 @@
         antwortSenden(id).then(function () { return rpc('admin_feedback_setzen', { p_id: id, p_status: b.getAttribute('data-fs'), p_oeffentlich: feld ? feld.value : '' }); }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
       }; });
     }).catch(fehler);
+    if (tab === 'umfragen') rpc('admin_umfragen').then(function (l) {
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      var d0 = new Date(Date.now() + 2 * 86400000); d0.setMinutes(0, 0, 0);
+      var vor = d0.getFullYear() + '-' + pad(d0.getMonth() + 1) + '-' + pad(d0.getDate()) + 'T' + pad(d0.getHours()) + ':00';
+      function zeile(i) { return '<div class="umfopt-zeile"><input class="suche" data-uot maxlength="40" placeholder="Antwort ' + (i + 1) + '"><label class="umffl" title="Farbkreis anzeigen"><input type="checkbox" data-uofc><input type="color" data-uof value="#ff9ebf"></label><input class="suche" data-uob maxlength="200" placeholder="Bild (optional), z. B. bilder/umfrage/pink.png"></div>'; }
+      var h = '<div class="sbox umfneu"><h3>➕ NEUE UMFRAGE</h3><input class="suche" id="umfF" maxlength="120" placeholder="Frage, z. B. Welche Haarfarbe soll ich mir färben lassen?">' +
+        '<div id="umfOpts">' + zeile(0) + zeile(1) + '</div><button class="vlink" id="umfPlus">+ Antwort</button>' +
+        '<div class="umfzeile">⏰ Ende <input type="datetime-local" id="umfEnde" value="' + vor + '"></div>' +
+        '<label class="umfcheck"><input type="checkbox" id="umfWt"> Nur Zuschauer ab 10 Std. Watchtime</label>' +
+        '<p class="leise">Kästchen neben einer Antwort = Farbkreis anzeigen (z. B. für Haarfarben). Abstimmen können alle, die mit Twitch angemeldet sind. Das Ergebnis sehen die Zuschauer erst am Ende – du siehst den Zwischenstand unten.</p>' +
+        '<div class="edknoepfe"><button class="vtw" id="umfOk">🗳️ Umfrage starten</button></div><p class="leise" id="umfInfo"></p></div>';
+      h += (l || []).map(function (u) {
+        var e = u.ergebnis || [], sum = 0; e.forEach(function (n) { sum += n; });
+        return '<div class="sbox"><div class="kzzeile"><b>' + esc(u.frage) + '</b><span class="leise">' + (u.vorbei ? 'beendet' : umfRest(u.ende)) + ' · ' + sum + (sum === 1 ? ' Stimme' : ' Stimmen') + (u.nur_wt ? ' · ab 10 Std.' : '') + '</span></div>' +
+          (u.optionen || []).map(function (o, i) { var n = e[i] || 0, pct = sum ? Math.round(n / sum * 100) : 0; return '<div class="umfst"><span>' + (/^#[0-9a-fA-F]{6}$/.test(o.f || '') ? '<span class="umfpunkt" style="background:' + o.f + '"></span>' : '') + esc(o.t) + '</span><span class="umfbalken"><i style="width:' + pct + '%"></i></span><b>' + n + '</b></div>'; }).join('') +
+          '<div class="kzknoepfe">' + (u.vorbei ? '' : '<button class="vlink" data-uakt="beenden" data-uid="' + u.id + '">⏹ Jetzt beenden</button>') + '<button class="vlink" data-uakt="loeschen" data-uid="' + u.id + '">🗑 Löschen</button></div></div>';
+      }).join('');
+      $('adm').innerHTML = h;
+      $('umfPlus').onclick = function () { var n = document.querySelectorAll('#umfOpts .umfopt-zeile').length; if (n >= 8) { $('umfInfo').textContent = 'Höchstens 8 Antworten.'; return; } $('umfOpts').insertAdjacentHTML('beforeend', zeile(n)); };
+      $('umfOk').onclick = function () {
+        var opts = Array.prototype.map.call(document.querySelectorAll('#umfOpts .umfopt-zeile'), function (z) {
+          return { t: z.querySelector('[data-uot]').value.trim(), f: z.querySelector('[data-uofc]').checked ? z.querySelector('[data-uof]').value : '', b: z.querySelector('[data-uob]').value.trim() };
+        }).filter(function (o) { return o.t; });
+        var fr = $('umfF').value.trim(), en = new Date($('umfEnde').value);
+        if (fr.length < 3) { $('umfInfo').textContent = '❌ Bitte eine Frage eingeben.'; return; }
+        if (opts.length < 2) { $('umfInfo').textContent = '❌ Mindestens 2 Antworten.'; return; }
+        if (isNaN(en) || en.getTime() <= Date.now()) { $('umfInfo').textContent = '❌ Das Ende muss in der Zukunft liegen.'; return; }
+        this.disabled = true; $('umfInfo').textContent = 'Wird gestartet …';
+        rpc('admin_umfrage_speichern', { p_frage: fr, p_optionen: opts, p_ende: en.toISOString(), p_nur_wt: $('umfWt').checked })
+          .then(function () { umfragenLaden(); adminOeffnen('umfragen'); })
+          .catch(function (x) { $('umfInfo').textContent = '❌ ' + x.message; $('umfOk').disabled = false; });
+      };
+      Array.prototype.forEach.call(document.querySelectorAll('[data-uakt]'), function (b) {
+        b.onclick = function () {
+          if (b.getAttribute('data-sicher') !== '1') { b.setAttribute('data-sicher', '1'); b.textContent = b.getAttribute('data-uakt') === 'loeschen' ? '🗑 Wirklich löschen?' : '⏹ Wirklich beenden?'; return; }
+          b.disabled = true;
+          rpc('admin_umfrage_aktion', { p_id: Number(b.getAttribute('data-uid')), p_aktion: b.getAttribute('data-uakt') }).then(function () { umfragenLaden(); adminOeffnen('umfragen'); }).catch(fehler);
+        };
+      });
+    }).catch(function (x) { var el = $('adm'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202/.test(x.message) ? 'Supabase-Update 34 fehlt noch.' : x.message) + '</p>'; });
     if (tab === 'voting') rpc('admin_vorschlaege').then(function (v) {
       try {
       v = Array.isArray(v) ? v : [];
@@ -3347,7 +3470,7 @@
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Ansichts-Einstellungen, eine Kopie der öffentlichen Ranglisten-Daten (damit die Seite auch ohne Verbindung etwas zeigt), deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Watch-Streak und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Feedback, das du über „Ideen & Feedback“ schickst, wird mit deinem Twitch-Namen auf unserem Supabase-Server gespeichert und nur von Kaze gelesen; wird eine Idee umgesetzt, kann Kaze sie kurz auf der Startseite mit deinem Namen nennen. Löschst du dein Konto, wird auch dein Feedback gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Löschst du dein Konto, werden Freundschaften, offene Einladungen und deine Wunschliste mitgelöscht. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Stimmst du bei einer Umfrage ab, speichern wir deine Wahl mit deinem Twitch-Namen, bis die Umfrage gelöscht wird; öffentlich gezeigt wird nur das Gesamtergebnis. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Löschst du dein Konto, werden Freundschaften, offene Einladungen, deine Wunschliste und deine Umfrage-Stimmen mitgelöscht. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
@@ -3550,7 +3673,7 @@
     var b = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_werbung', { method: 'POST', body: {} }); }).then(function (r) { post.werbung = r || []; }).catch(function () { });
     var c = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_feedbacks', { method: 'POST', body: {} }); }).then(function (r) { post.feedback = r || []; }).catch(function () { });
     var d = sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_geschenke', { method: 'POST', body: {} }); }).then(function (r) { post.geschenke = r || []; }).catch(function () { });
-    var w = wuenscheLaden();
+    var w = wuenscheLaden(); umfragenLaden();
     Promise.all([a, b, c, d, w]).then(fertig);
   }
   function posteingangOeffnen() {
@@ -3645,10 +3768,10 @@
       return true;
     }
     if (reiter === 'spiele') {
-      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>✨ Abstimmen</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Kazes Bewertungen</button></div>';
+      var sw = '<div class="schalter" id="spschalter"><button data-s="voting"' + (spieleAnsicht === 'voting' ? ' class="aktiv"' : '') + '>🗳️ Abstimmungen</button><button data-s="liste"' + (spieleAnsicht === 'liste' ? ' class="aktiv"' : '') + '>⭐ Kazes Bewertungen</button></div>';
       if (spieleAnsicht === 'voting') {
         $('liste').className = '';
-        $('liste').innerHTML = sw + votingHtml();
+        $('liste').innerHTML = sw + umfragenHtml() + votingHtml();
         $('spschalter').onclick = function (e) { var b = e.target.closest('button'); if (b) { spieleAnsicht = b.getAttribute('data-s'); zeigen(); } };
         votingEvents();
         $('hinweis').textContent = vote.art === 'fun' ? 'Community-Voting für Spiele zwischendurch' : 'Community-Voting für das nächste Story-Game';
