@@ -1953,7 +1953,6 @@
     h += gebKarte();
     h += besuchKarte();
     h += umfrageKarte();
-    h += wkKarte();
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
     if (planOben) h += planKarte();
