@@ -661,6 +661,19 @@
   .gehtoast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 200; display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--flaeche); border: 1px solid var(--rosa); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.45); animation: glpop .45s ease-out; transition: opacity .6s, transform .6s; }
   .gehtoast > span { font-size: 28px; } .gehtoast small { display: block; font-size: 11.5px; color: var(--rosa); font-weight: 700; } .gehtoast b { font-size: 15px; }
   .gehtoast.weg { opacity: 0; transform: translate(-50%, 12px); }
+  .gehtoast { max-width: calc(100vw - 24px); box-sizing: border-box; } .gehtoast b { white-space: normal; }
+  .kserie { font-size: 11.5px; font-weight: 800; color: #ffb36b; margin-left: -2px; }
+  .tresorbox { text-align: center; padding: 10px 0 4px; }
+  .tresorbox .tzahl { font-size: 34px; font-weight: 900; color: var(--hell); line-height: 1.1; }
+  .tresorbox .tunter { font-size: 12.5px; color: var(--grau); margin-top: 4px; }
+  .tresorbox .tzins { font-size: 54px; font-weight: 900; color: var(--gold, #f0c060); line-height: 1; margin: 8px 0; transition: transform .2s; }
+  .tresorbox .tzins.dreht { animation: tzdreh .12s linear infinite; }
+  .tresorbox .tzins.jackpot { color: #ff7ad9; text-shadow: 0 0 18px rgba(255,122,217,.6); }
+  @keyframes tzdreh { 0% { transform: translateY(-3px); } 50% { transform: translateY(3px); } 100% { transform: translateY(-3px); } }
+  .tresorinfo { font-size: 12px; color: var(--grau); line-height: 1.5; margin-top: 10px; }
+  .pushart { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--rand); font-size: 13.5px; }
+  .pushart small { display: block; color: var(--grau); font-size: 11.5px; }
+  .pushart input { width: 20px; height: 20px; accent-color: var(--rosa); flex: 0 0 auto; }
   @media (max-width: 700px) { .gehtoast { bottom: calc(92px + env(safe-area-inset-bottom)); width: calc(100% - 40px); box-sizing: border-box; } }
   .ichgrid > .ichk:last-child:nth-child(odd) { grid-column: 1 / -1; }
   @media (min-width: 701px) { .ichgrid > .ichk:last-child:nth-child(odd) { grid-column: auto; } .ichgrid > .ichk:last-child:nth-child(3n+1) { grid-column: 1 / -1; } .ichgrid > .ichk:nth-last-child(2):nth-child(3n+1) ~ .ichk:last-child { grid-column: 2 / -1; } }
@@ -1460,7 +1473,7 @@
   function kopfleiste() {
     var el = $('kopfleiste'); if (!el) return;
     if (sitzung && sitzung.name) {
-      el.innerHTML = '<button class="kchip" id="kchip">' + bild(sitzung.name) + '<span class="knm">' + esc(prof(sitzung.name).n || sitzung.name) + '</span></button><div class="kmenue" id="kmenue">' +
+      el.innerHTML = '<button class="kchip" id="kchip">' + bild(sitzung.name) + '<span class="knm">' + esc(prof(sitzung.name).n || sitzung.name) + '</span>' + (serieStand && serieStand.tage >= 2 ? '<span class="kserie" title="Besuchs-Serie: ' + serieStand.tage + ' Tage in Folge">🔥' + serieStand.tage + '</span>' : '') + '</button><div class="kmenue" id="kmenue">' +
         '<button data-k="profil">👤 Mein Profil</button><button data-k="gestalten">✏️ Profil gestalten</button><button data-k="shop">🛍️ Zeni-Shop</button><button data-k="code">🎟️ Code einlösen</button><button data-k="einladen">🤝 Freunde einladen</button><button data-k="app">📱 Als App installieren</button>' + (sitzung.name === 'kazenity' ? '<button data-k="admin">🛠️ Admin</button>' : '') + '<button data-k="voting">🎮 Spiele-Voting</button><button data-k="loeschen" class="weg">🗑️ Meine Daten löschen</button><button data-k="ab">↩️ Abmelden</button></div>';
       $('kchip').onclick = function (e) { e.stopPropagation(); geheZu('ich'); };
       el.insertAdjacentHTML('afterbegin', '<button class="glocke" id="glocke" aria-label="Posteingang">🔔<i id="glzahl"></i></button>');
@@ -2952,6 +2965,179 @@
     if (istApp()) geheimMelden('app');
   }
   setInterval(geheimPruefen, 10 * 60 * 1000);
+  setInterval(function () { serieBesuch(); }, 10 * 60 * 1000);   // falls die Seite über Mitternacht offen bleibt
+
+  // 🔥 Besuchs-Serie: 1× am Tag angemeldet vorbeischauen. Tag 1 = 60 Zeni, jeden Tag +10, ab Tag 25 fest 300.
+  //    Ein verpasster Tag pro Woche wird verziehen. Meilensteine 7 / 30 / 100 / 365 Tage mit Bonus + Titel.
+  var serieStand = null;
+  var SERIE_ZIELE = [[7, 1000, 'Stammgast'], [30, 5000, 'Dauergast'], [100, 40000, 'Unzertrennlich'], [365, 150000, 'Teil des Inventars']];
+  function serieBesuch() {
+    if (!sitzung || !sitzung.name || sitzung.name === 'kazenity') return;
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/serie_besuch', { method: 'POST', body: {} }); }).then(function (r) {
+      if (!r || !r.ok) return;
+      serieStand = r;
+      if (typeof r.rest === 'number') { liveZeni = r.rest; zeniOben(); }
+      if (r.neu) serieToast(r);
+      kopfleiste(); if (reiter === 'ich') zeigen();
+    }).catch(function () { });
+  }
+  function serieToast(r) {
+    var t = document.createElement('div'); t.className = 'gehtoast';
+    var extra = r.bonus ? ' · <b>+' + zahl(r.bonus) + '</b> Bonus' + (r.titel ? ' + Titel „' + esc(kosName(r.titel) || '') + '“' : '') : '';
+    t.innerHTML = '<span>🔥</span><div><small>Besuchs-Serie' + (r.geschuetzt ? ' · 🛡️ Serienschutz hat einen Tag gerettet' : '') + '</small><b>Tag ' + r.tage + ' · +' + zahl(r.zeni) + ' Zeni' + extra + '</b></div>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('weg'); }, r.bonus ? 7000 : 4500); setTimeout(function () { t.remove(); }, r.bonus ? 7700 : 5200);
+  }
+  function serieZeile() {
+    var s = serieStand; if (!s || !s.tage) return '';
+    var naechst = SERIE_ZIELE.filter(function (z) { return z[0] > s.tage; })[0];
+    return '<div class="leise">🔥 ' + s.tage + (s.tage === 1 ? ' Tag' : ' Tage') + ' Serie' + (naechst ? ' · noch ' + (naechst[0] - s.tage) + ' bis „' + naechst[2] + '“' : '') + (s.beste > s.tage ? ' · Rekord ' + s.beste : '') + '</div>';
+  }
+
+  // 🔐 Zeni-Tresor: bis 100.000 Zeni für 7 Tage einschließen, Zins (1–6 %) wird erst beim Abholen gezogen.
+  //    Früher abholen geht, kostet aber den Zins und 5 % Gebühr.
+  var tresorDaten = null;
+  function tresorKurz() {
+    var a = tresorDaten && tresorDaten.aktiv;
+    if (!a) return 'bis 100.000 Zeni einschließen';
+    if (a.bereit || new Date(a.faellig) <= new Date()) return '✨ Bereit zum Abholen!';
+    return zahl(a.betrag) + ' Zeni · ' + tresorRest(a.faellig);
+  }
+  function tresorRest(t) {
+    var ms = new Date(t).getTime() - Date.now(); if (ms <= 0) return 'fertig';
+    var h = Math.floor(ms / 3600000), d = Math.floor(h / 24);
+    return d >= 1 ? 'noch ' + d + (d === 1 ? ' Tag ' : ' Tage ') + (h % 24) + ' Std.' : 'noch ' + Math.max(1, h) + ' Std. ' + Math.floor((ms % 3600000) / 60000) + ' Min.';
+  }
+  function tresorLaden() {
+    return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/tresor_stand', { method: 'POST', body: {} }); }).then(function (r) { if (r && r.ok) { tresorDaten = r; if (typeof r.zeni === 'number') liveZeni = r.zeni; } return r; });
+  }
+  function tresorDialog() {
+    zaehlen('tresor');
+    if (!sitzung) { einloggenFragen(); return; }
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🔐 Zeni-Tresor</b><div class="kk">Schließ Zeni für 7 Tage ein – beim Abholen gibt es einen Überraschungs-Zins.</div></div></div><div id="tresorinh"><p class="leise">Lade …</p></div></div>');
+    tresorLaden().then(tresorZeigen).catch(function (x) { var el = $('tresorinh'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202/.test(x.message) ? 'Der Tresor ist noch nicht freigeschaltet.' : x.message) + '</p>'; });
+  }
+  var TRESOR_INFO = '<div class="tresorinfo">🎲 Zins beim Abholen: 1 % (25 %) · 2 % (35 %) · 3 % (25 %) · 4 % (12 %) · 🌟 6 % (3 %)<br>📦 1.000 bis 100.000 Zeni · ein Tresor gleichzeitig · nach 7 Tagen selbst abholen<br>⚠️ Früher rausholen: kein Zins und 5 % Gebühr</div>';
+  function tresorZeigen() {
+    var el = $('tresorinh'); if (!el || !tresorDaten) return;
+    var d = tresorDaten, a = d.aktiv, z = d.zuletzt, h = '';
+    if (!a) {
+      var max = Math.min(100000, Math.max(0, d.zeni || 0));
+      h = '<div class="tresorbox"><div class="tunter">Du hast <b>' + zahl(d.zeni || 0) + ' Zeni</b></div></div>' +
+        '<input class="codefeld" id="trbetrag" type="number" inputmode="numeric" min="1000" max="100000" step="1000" placeholder="Betrag (1.000 – 100.000)" value="' + (max >= 1000 ? Math.min(max, 10000) : '') + '">' +
+        '<div class="edknoepfe"><button class="vlink" id="trmax">Maximum</button><button class="vtw" id="trein">🔐 Einschließen</button></div><p class="leise" id="trinfo"></p>' +
+        (z ? '<p class="leise">Zuletzt: ' + zahl(z.betrag) + ' Zeni · ' + (z.status === 'frueh' ? 'früher abgeholt (' + zahl(z.auszahlung) + ' zurück)' : z.zins + ' % Zins (+' + zahl(z.auszahlung - z.betrag) + ')') + '</p>' : '') + TRESOR_INFO;
+      el.innerHTML = h;
+      $('trmax').onclick = function () { $('trbetrag').value = Math.floor(max / 100) * 100; };
+      $('trein').onclick = function () {
+        var b = Math.floor(Number($('trbetrag').value) || 0), k = this;
+        if (b < 1000 || b > 100000) { $('trinfo').textContent = 'Bitte zwischen 1.000 und 100.000 Zeni.'; return; }
+        if (b > (d.zeni || 0)) { $('trinfo').textContent = 'So viele Zeni hast du nicht.'; return; }
+        k.disabled = true; $('trinfo').textContent = 'Schließe ein …';
+        sFrisch().then(function () { return sbFetch('/rest/v1/rpc/tresor_einzahlen', { method: 'POST', body: { p_betrag: b } }); })
+          .then(function (r) { if (r && typeof r.rest === 'number') liveZeni = r.rest; zeniOben(); return tresorLaden(); }).then(function () { tresorZeigen(); if (reiter === 'ich') zeigen(); })
+          .catch(function (x) { k.disabled = false; $('trinfo').textContent = '❌ ' + x.message; });
+      };
+      return;
+    }
+    var bereit = a.bereit || new Date(a.faellig) <= new Date();
+    h = '<div class="tresorbox"><div class="tunter">Im Tresor</div><div class="tzahl">' + zahl(a.betrag) + ' Zeni</div><div class="tunter">' +
+      (bereit ? '✨ Fertig – hol dir deinen Zins!' : 'Fertig am ' + new Date(a.faellig).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr · ' + tresorRest(a.faellig)) + '</div><div class="tzins" id="trzins" hidden></div></div>' +
+      (bereit ? '<div class="edknoepfe"><button class="vtw" id="trab">🎲 Abholen</button></div>' : '<div class="edknoepfe"><button class="vlink" id="trfrueh">Früher abholen (−5 %, kein Zins)</button></div>') +
+      '<p class="leise" id="trinfo"></p>' + TRESOR_INFO;
+    el.innerHTML = h;
+    if ($('trab')) $('trab').onclick = function () {
+      var k = this; k.disabled = true; $('trinfo').textContent = '';
+      var zs = $('trzins'); zs.hidden = false; zs.classList.add('dreht');
+      var werte = [1, 2, 3, 4, 6], i = 0, iv = setInterval(function () { zs.textContent = werte[i++ % werte.length] + ' %'; }, 90);
+      var start = Date.now();
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/tresor_abholen', { method: 'POST', body: { p_frueh: false } }); }).then(function (r) {
+        setTimeout(function () {
+          clearInterval(iv); zs.classList.remove('dreht'); zs.textContent = r.zins + ' %'; if (r.zins >= 6) zs.classList.add('jackpot');
+          if (typeof r.rest === 'number') liveZeni = r.rest; zeniOben();
+          $('trinfo').innerHTML = (r.zins >= 6 ? '🌟 <b>JACKPOT-WOCHE!</b> ' : r.zins >= 4 ? '🎉 Starke Woche! ' : '') + '<b>+' + zahl(r.gewinn) + ' Zeni</b> Zins · ' + zahl(r.auszahlung) + ' Zeni sind zurück auf deinem Konto.';
+          k.textContent = 'Schließen'; k.disabled = false; k.onclick = function () { tresorLaden().then(tresorZeigen); if (reiter === 'ich') zeigen(); };
+        }, Math.max(0, 1800 - (Date.now() - start)));
+      }).catch(function (x) { clearInterval(iv); zs.hidden = true; k.disabled = false; $('trinfo').textContent = '❌ ' + x.message; });
+    };
+    if ($('trfrueh')) $('trfrueh').onclick = function () {
+      var k = this;
+      if (!k.dataset.sicher) { k.dataset.sicher = '1'; k.textContent = 'Sicher? Du bekommst ' + zahl(Math.floor(a.betrag * 0.95)) + ' Zeni zurück – nochmal tippen'; return; }
+      k.disabled = true;
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/tresor_abholen', { method: 'POST', body: { p_frueh: true } }); })
+        .then(function (r) { if (r && typeof r.rest === 'number') liveZeni = r.rest; zeniOben(); return tresorLaden(); }).then(function () { tresorZeigen(); if (reiter === 'ich') zeigen(); })
+        .catch(function (x) { k.disabled = false; $('trinfo').textContent = '❌ ' + x.message; });
+    };
+  }
+
+  // 🔔 Push-Benachrichtigungen (Web Push). Am iPhone nur, wenn Kazetopia als App auf dem Homescreen liegt.
+  var PUSH_KEY = 'BDE6Tp1ZIo33qNAwFEwQYuafGL6g3BfDq0DbWffiihSndubHBvU7fwj9pZZatrag44h3xG8feD1Rt6TVwGVT41U';
+  var PUSH_ARTEN = [['live', '🔴 Kaze ist live', 'sobald der Stream startet'], ['update', '📢 Neu auf Kazetopia', 'wenn es neue Funktionen gibt'],
+                    ['tresor', '🔐 Tresor bereit', 'wenn deine 7 Tage um sind'], ['serie', '🔥 Serie in Gefahr', 'um 20 Uhr, wenn du heute noch nicht da warst'],
+                    ['glueck', '🍀 Glücks-Knopf bereit', 'mittags, wenn du ihn noch nicht gedrückt hast']];
+  var pushAbo = null, pushArten = null;
+  function pushMoeglich() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol === 'https:'; }
+  function istIos() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function pushKurz() { return pushAbo ? '✅ aktiv' : pushMoeglich() ? 'Live, Tresor & mehr' : istIos() && !istApp() ? 'erst als App installieren' : 'hier nicht möglich'; }
+  function b64zuBytes(b) { var p = '='.repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, '+').replace(/_/g, '/')), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
+  function pushPruefen() {
+    if (!pushMoeglich() || !sitzung) return Promise.resolve();
+    return navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      pushAbo = sub || null;
+      if (!sub) return;
+      return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_meine', { method: 'POST', body: { p_endpoint: sub.endpoint } }); }).then(function (r) {
+        pushArten = r && r.arten ? r.arten : null;
+        if (!pushArten) return pushSpeichern(['live', 'update']);   // Abo im Browser, aber nicht (mehr) bei uns → neu eintragen
+      });
+    }).catch(function () { });
+  }
+  function pushSpeichern(arten) {
+    var j = pushAbo.toJSON();
+    return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_speichern', { method: 'POST', body: { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_arten: arten } }); })
+      .then(function (r) { pushArten = r && r.arten ? r.arten : arten; return r; });
+  }
+  function pushDialog() {
+    zaehlen('push');
+    if (!sitzung) { einloggenFragen(); return; }
+    var kopf = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🔔 Benachrichtigungen</b><div class="kk">Kazetopia meldet sich bei dir – nur mit dem, was du hier einschaltest.</div></div></div>';
+    if (!pushMoeglich()) {
+      karteOeffnen(kopf + (istIos() && !istApp()
+        ? '<p>Am iPhone gehen Benachrichtigungen nur, wenn Kazetopia als <b>App auf deinem Homescreen</b> liegt (Apple erlaubt es im normalen Safari-Tab nicht).</p><p class="leise">So geht\'s: unten auf <b>Teilen</b> tippen → <b>Zum Home-Bildschirm</b> → Kazetopia vom Homescreen öffnen → hier aktivieren.</p><div class="edknoepfe"><button class="vtw" id="puapp">📱 Als App installieren</button></div>'
+        : '<p class="leise">Dein Browser unterstützt leider keine Benachrichtigungen.</p>') + '</div>');
+      if ($('puapp')) $('puapp').onclick = appInstallieren;
+      return;
+    }
+    if (Notification.permission === 'denied') { karteOeffnen(kopf + '<p class="leise">Du hast Benachrichtigungen für Kazetopia im Browser blockiert. Erlaube sie in den Browser- bzw. Handy-Einstellungen für diese Seite, dann kannst du sie hier aktivieren.</p></div>'); return; }
+    if (!pushAbo) {
+      karteOeffnen(kopf + '<p>Du bekommst zum Start: <b>🔴 Live</b> und <b>📢 Neu auf Kazetopia</b>. Danach kannst du alles einzeln an- und ausschalten.</p><div class="edknoepfe"><button class="vtw" id="puan">🔔 Aktivieren</button></div><p class="leise" id="puinfo"></p><p class="leise">Gespeichert wird nur eine technische Geräteadresse mit deinem Twitch-Namen. Abschalten geht jederzeit – Details in der <a href="#datenschutz" id="puds">Datenschutzerklärung</a>.</p></div>');
+      $('puds').onclick = function (e) { e.preventDefault(); datenschutz(); };
+      $('puan').onclick = function () {
+        var k = this; k.disabled = true; $('puinfo').textContent = 'Bitte im Browser erlauben …';
+        Notification.requestPermission().then(function (p) {
+          if (p !== 'granted') throw new Error('Nicht erlaubt – ohne Erlaubnis im Browser geht es nicht.');
+          return navigator.serviceWorker.ready;
+        }).then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64zuBytes(PUSH_KEY) }); })
+          .then(function (sub) { pushAbo = sub; return pushSpeichern(['live', 'update']); })
+          .then(function () { pushDialog(); if (reiter === 'ich') zeigen(); })
+          .catch(function (x) { k.disabled = false; $('puinfo').textContent = '❌ ' + (/404|PGRST202/.test(x.message) ? 'Benachrichtigungen sind noch nicht freigeschaltet.' : x.message); });
+      };
+      return;
+    }
+    var an = pushArten || ['live', 'update'];
+    karteOeffnen(kopf + '<p class="leise">✅ Auf diesem Gerät aktiv. Was willst du bekommen?</p>' +
+      PUSH_ARTEN.map(function (a) { return '<label class="pushart"><span>' + a[1] + '<small>' + a[2] + '</small></span><input type="checkbox" data-pa="' + a[0] + '"' + (an.indexOf(a[0]) >= 0 ? ' checked' : '') + '></label>'; }).join('') +
+      '<div class="edknoepfe"><button class="vtw" id="pusp">Speichern</button><button class="vlink" id="puaus">🔕 Ganz abschalten</button></div><p class="leise" id="puinfo"></p></div>');
+    $('pusp').onclick = function () {
+      var arten = Array.prototype.filter.call(document.querySelectorAll('[data-pa]'), function (c) { return c.checked; }).map(function (c) { return c.getAttribute('data-pa'); }), k = this;
+      k.disabled = true;
+      pushSpeichern(arten).then(function () { k.disabled = false; $('puinfo').textContent = '✓ Gespeichert'; }).catch(function (x) { k.disabled = false; $('puinfo').textContent = '❌ ' + x.message; });
+    };
+    $('puaus').onclick = function () {
+      var ep = pushAbo.endpoint, k = this; k.disabled = true;
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_entfernen', { method: 'POST', body: { p_endpoint: ep } }); }).catch(function () { })
+        .then(function () { return pushAbo.unsubscribe(); }).then(function () { pushAbo = null; pushArten = null; pushDialog(); if (reiter === 'ich') zeigen(); });
+    };
+  }
   // Zähler im Browser (pro Konto)
   function geheimMenge(name, wert, ziel, id) {
     if (!sitzung || !sitzung.name) return;
@@ -3177,7 +3363,7 @@
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -3198,6 +3384,21 @@
         var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut' };
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="kzzeile"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
+    }).catch(fehler);
+    if (tab === 'push') rpc('admin_push_info').then(function (p) {
+      var A = { live: '🔴 Live', update: '📢 Update', tresor: '🔐 Tresor', serie: '🔥 Serie', glueck: '🍀 Glück' };
+      $('adm').innerHTML = '<div class="sbox"><div class="plz vier"><div><b>' + zahl(p.leute) + '</b>Leute</div><div><b>' + zahl(p.geraete) + '</b>Geräte</div><div><b>' + zahl((p.arten || {}).live || 0) + '</b>🔴 Live an</div><div><b>' + zahl((p.arten || {}).update || 0) + '</b>📢 Update an</div></div></div>' +
+        '<div class="sbox"><h3>📢 NEU AUF KAZETOPIA</h3><p class="leise">Geht an alle mit „📢 Neu auf Kazetopia“. Höchstens ein Update-Push pro Tag – nur für echte Neuigkeiten.</p>' +
+        '<textarea class="admfeld" id="pushtext" maxlength="120" rows="2" placeholder="z. B. 🔐 Neu: der Zeni-Tresor – schließ Zeni ein und hol dir Zins!"></textarea><div class="admfbk2"><button class="vtw" id="pushsend">📢 Senden</button><span class="leise" id="pushinfo"></span></div></div>' +
+        '<div class="sbox"><h3>📜 ZULETZT GESENDET</h3>' + ((p.letzte || []).map(function (x) { return '<div class="kzzeile"><b>' + (A[x.art] || x.art) + '</b><span>' + esc(x.text) + '</span><span class="leise">' + wann(x.t) + (x.ok ? '' : ' ⏳') + '</span></div>'; }).join('') || '<p class="leise">Noch nichts.</p>') + '<p class="leise">🔐 Tresor, 🔥 Serie und 🍀 Glück gehen automatisch an die, die es eingeschaltet haben. Live geht automatisch beim Streamstart.</p></div>';
+      $('pushsend').onclick = function () {
+        var t = $('pushtext').value.trim(), b = this;
+        if (t.length < 5) { $('pushinfo').textContent = 'Bitte einen Text eingeben.'; return; }
+        if (!b.dataset.sicher) { b.dataset.sicher = '1'; b.textContent = 'Wirklich an alle senden?'; return; }
+        b.disabled = true;
+        rpc('admin_push_update', { p_text: t }).then(function (r) { $('pushinfo').textContent = '✓ Geht an ' + r.empfaenger + ' Geräte raus'; setTimeout(function () { adminOeffnen('push'); }, 2500); })
+          .catch(function (x) { b.disabled = false; $('pushinfo').textContent = '❌ ' + x.message; });
+      };
     }).catch(fehler);
     if (tab === 'plan') {
       var pq = planQuelle() || { woche: '', community: '', termine: [] };
@@ -3578,7 +3779,8 @@
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Ansichts-Einstellungen, eine Kopie der öffentlichen Ranglisten-Daten (damit die Seite auch ohne Verbindung etwas zeigt), deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Watch-Streak und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Feedback, das du über „Ideen & Feedback“ schickst, wird mit deinem Twitch-Namen auf unserem Supabase-Server gespeichert und nur von Kaze gelesen; wird eine Idee umgesetzt, kann Kaze sie kurz auf der Startseite mit deinem Namen nennen. Löschst du dein Konto, wird auch dein Feedback gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Stimmst du bei einer Umfrage ab, speichern wir deine Wahl mit deinem Twitch-Namen, bis die Umfrage gelöscht wird; öffentlich gezeigt wird nur das Gesamtergebnis. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Löschst du dein Konto, werden Freundschaften, offene Einladungen, deine Wunschliste und deine Umfrage-Stimmen mitgelöscht. Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Stimmst du bei einer Umfrage ab, speichern wir deine Wahl mit deinem Twitch-Namen, bis die Umfrage gelöscht wird; öffentlich gezeigt wird nur das Gesamtergebnis. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Schließt du Zeni im Zeni-Tresor ein, speichern wir Twitch-Name, Betrag, Zeitpunkte, gezogenen Zins und eine Buchung wie bei einem Kauf. Schaust du angemeldet vorbei, speichern wir für die Besuchs-Serie deinen Twitch-Namen, die Anzahl der Tage in Folge, deinen letzten Besuchstag und deinen Rekord; öffentlich sichtbar ist nur die aktuelle Serie. Löschst du dein Konto, werden Freundschaften, offene Einladungen, deine Wunschliste, deine Umfrage-Stimmen, deine Besuchs-Serie und deine Benachrichtigungs-Einstellungen mitgelöscht (ein noch laufender Tresor muss vorher abgeholt werden). Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7b. PUSH-BENACHRICHTIGUNGEN</h4><p>Benachrichtigungen bekommst du nur, wenn du sie unter „Ich“ → „🔔 Benachrichtigungen“ selbst aktivierst und im Browser erlaubst (Einwilligung, Art. 6 Abs. 1 lit. a DSGVO). Dafür speichern wir bei Supabase (Server in Frankfurt) die technische Push-Adresse deines Geräts samt Schlüsseln, deinen Twitch-Namen und welche Benachrichtigungen du eingeschaltet hast; damit Erinnerungen nicht doppelt kommen, merken wir uns bis zu 14 Tage, wann wir dir welche geschickt haben. Zugestellt werden die Nachrichten über den Push-Dienst deines Browsers bzw. Betriebssystems (z. B. Apple, Google oder Mozilla); dabei kann eine Übermittlung in die USA stattfinden, die Anbieter sind nach dem EU-US Data Privacy Framework zertifiziert. Der Inhalt ist verschlüsselt und enthält keine persönlichen Daten außer Hinweisen wie „Dein Tresor ist bereit“. Du kannst einzelne Benachrichtigungen jederzeit ausschalten, sie unter „Ich“ ganz abschalten oder die Erlaubnis im Browser entziehen – dann löschen wir die Geräteadresse; nicht mehr erreichbare Geräte löschen wir automatisch.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
     karteOeffnen(h);
@@ -3670,7 +3872,7 @@
         (ich ? '' : '<p class="leise">Ohne Anmeldung: such dich unter 🏆 Ranglisten und tipp bei deinem Namen auf ⭐ Das bin ich.</p>') + '</div>' + ichKacheln(false);
     }
     var z = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[sitzung.name] : null);
-    return '<div class="sbox ichbox"><div class="mkopf"' + dl(sitzung.name) + '>' + avatarMitRahmen(sitzung.name) + '<div><b' + fs(sitzung.name) + '>' + esc(prof(sitzung.name).n || sitzung.name) + '</b><div class="leise">' + (z != null ? '💰 ' + zahl(z) + ' Zeni · ' : '') + 'Profil ansehen ›</div></div></div></div>' + ichKacheln(true);
+    return '<div class="sbox ichbox"><div class="mkopf"' + dl(sitzung.name) + '>' + avatarMitRahmen(sitzung.name) + '<div><b' + fs(sitzung.name) + '>' + esc(prof(sitzung.name).n || sitzung.name) + '</b><div class="leise">' + (z != null ? '💰 ' + zahl(z) + ' Zeni · ' : '') + 'Profil ansehen ›</div>' + serieZeile() + '</div></div></div>' + ichKacheln(true);
   }
   function ichKacheln(an) {
     var k = [];
@@ -3683,6 +3885,8 @@
       k.push(['einladen', '🤝', 'Freunde einladen', '10.000 Zeni pro Freund']);
       k.push(['feedback', '💡', 'Ideen & Feedback', 'Wünsche für die Seite']);
       k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
+      k.push(['tresor', '🔐', 'Zeni-Tresor', tresorKurz()]);
+      k.push(['push', '🔔', 'Benachrichtigungen', pushKurz()]);
     }
     k.push(['ansicht', '⚙️', 'Ansicht', 'Farbthema, Schrift, Animationen']);
     if (!istApp()) k.push(['app', '📱', 'Als App', 'auf den Homescreen']);
@@ -3704,6 +3908,8 @@
       else if (k === 'code') codeDialog('');
       else if (k === 'einladen') einladenDialog();
       else if (k === 'feedback') feedbackDialog();
+      else if (k === 'tresor') tresorDialog();
+      else if (k === 'push') pushDialog();
       else if (k === 'wunsch') { shopF.typ = 'wunsch'; shopFilterSetzen('typ', 'wunsch'); geheZu('shop'); }
       else if (k === 'ansicht') ansichtDialog();
       else if (k === 'app') appInstallieren();
@@ -3825,7 +4031,7 @@
     if (!spezial) { $('liste').className = 'liste'; return false; }
     if (reiter === 'start') { $('liste').className = ''; $('liste').innerHTML = startHtml(); startEvents(); $('hinweis').textContent = ''; return true; }
     if (reiter === 'shop') { $('liste').className = ''; var snx = shopNeu(); if (snx.length) shopNeuJetzt = snx; shopGesehen(); setTimeout(punkteSetzen, 0); $('liste').innerHTML = shopHtml(); shopEvents(); $('hinweis').textContent = 'Zeni sind Spielgeld aus dem Stream ohne Geldwert · Artikel sind rein kosmetisch · kein Tausch, kein Echtgeld-Handel'; return true; }
-    if (reiter === 'ich') { $('liste').className = ''; $('liste').innerHTML = ichHtml(); ichEvents(); $('hinweis').textContent = ''; return true; }
+    if (reiter === 'ich') { $('liste').className = ''; $('liste').innerHTML = ichHtml(); ichEvents(); $('hinweis').textContent = ''; if (sitzung && tresorDaten === null) { tresorDaten = false; tresorLaden().then(function () { if (reiter === 'ich') { $('liste').innerHTML = ichHtml(); ichEvents(); } }).catch(function () { }); } return true; }
     if (reiter === 'ruhm') { $('liste').className = ''; $('liste').innerHTML = ruhmHtml(); $('hinweis').textContent = 'Von Kaze jede Woche und jeden Monat ausgezeichnet'; return true; }
     if (reiter === 'emotes') {
       var em = daten.emotes || [];
@@ -4034,7 +4240,7 @@
     daten = d;
     plaetzeMerken(d);
     kopfleiste();
-    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); });
+    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); pushPruefen(); });
     reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d._offline) { var ob = document.createElement('div'); ob.className = 'offlineband'; ob.textContent = '📴 Gerade keine Verbindung – du siehst den letzten Stand vom ' + (d.stand || 'letzten Besuch') + '.'; var hd = document.querySelector('header'); if (hd) hd.parentNode.insertBefore(ob, hd.nextSibling); }
