@@ -2124,9 +2124,14 @@
       '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" loading="lazy" src="' + esc(cov) + '" onerror="this.style.visibility=\'hidden\'">' : '<span class="pcover ph">🎮</span>') +
       '<div class="ptext"><h3>' + (live ? '🔴 LIVE' : '⏳ NÄCHSTER STREAM') + '</h3><div class="cd" id="countdown">' + countdownText() + '</div>' +
       (live ? '<a class="plivebtn" href="https://www.twitch.tv/kazenity" target="_blank" rel="noopener">Zuschauen ›</a>' : '') + '</div></div>';
-    if (tt.length) {
+    // Leiste: nur die aktuelle Woche (Mo–So). Die nächste Woche darf schon eingetragen sein (z. B. samstags) – sie erscheint ab Montag.
+    var mo = new Date(); mo.setHours(0, 0, 0, 0); mo.setDate(mo.getDate() - (mo.getDay() + 6) % 7);
+    var so = new Date(mo); so.setDate(so.getDate() + 7);
+    var woche = tt.filter(function (x) { return x.d >= mo && x.d < so; });
+    if (!woche.length) woche = tt.filter(function (x) { return x.d >= mo; }).slice(0, 7);
+    if (woche.length) {
       h += '<div class="planwoche">';
-      tt.forEach(function (x) {
+      woche.forEach(function (x) {
         var vorbei = x.d.getTime() < jetzt - 4 * 3600000, c = coverFuer(x.t.spiel);
         h += '<div class="ptag' + (vorbei ? ' vorbei' : '') + (x === naechster && !live ? ' next' : '') + '" title="' + esc(x.t.spiel) + '">' + (c ? '<img alt="" loading="lazy" src="' + esc(c) + '">' : '<span class="pmini">🎮</span>') +
           '<div><b>' + WTAG[x.d.getDay()] + ' ' + ('0' + x.d.getDate()).slice(-2) + '.' + ('0' + (x.d.getMonth() + 1)).slice(-2) + '.</b><span>' + esc(x.t.zeit) + '</span></div></div>';
@@ -3667,10 +3672,13 @@
     }).catch(fehler);
     if (tab === 'plan') {
       var pq = planQuelle() || { woche: '', community: '', termine: [] };
-      var reihen = (pq.termine || []).slice().sort(function (a, b) { return (a.datum + a.zeit).localeCompare(b.datum + b.zeit); });
+      // Termine vor dem Montag der laufenden Woche fallen beim Speichern automatisch weg – neue Woche einfach dazu eintragen
+      var apMo = new Date(); apMo.setHours(0, 0, 0, 0); apMo.setDate(apMo.getDate() - (apMo.getDay() + 6) % 7);
+      var apAb = apMo.getFullYear() + '-' + ('0' + (apMo.getMonth() + 1)).slice(-2) + '-' + ('0' + apMo.getDate()).slice(-2);
+      var reihen = (pq.termine || []).filter(function (t) { return String(t.datum || '') >= apAb; }).slice().sort(function (a, b) { return (a.datum + a.zeit).localeCompare(b.datum + b.zeit); });
       var spieleVor = {}; reihen.forEach(function (t) { spieleVor[t.spiel] = 1; }); (daten.spiele || []).slice(0, 30).forEach(function (x) { if (x.n) spieleVor[x.n] = 1; });
       var zeile = function (t) { t = t || {}; var wt = t.datum ? WTAG[new Date(t.datum + 'T12:00:00').getDay()] : ''; return '<div class="apz"><div class="apkopf"><span>📅 ' + (wt ? wt + ', ' : '') + 'Termin</span><button class="vlink" data-apweg="1" aria-label="Termin löschen">✕ Löschen</button></div><div class="apr"><input class="admfeld" type="date" data-ap="datum" value="' + esc(t.datum || '') + '"><input class="admfeld" type="time" data-ap="zeit" value="' + esc(t.zeit || '19:00') + '"></div><input class="admfeld" data-ap="spiel" maxlength="60" list="apspiele" placeholder="Spiel, z. B. GTA VI" value="' + esc(t.spiel || '') + '"><input class="admfeld" data-ap="info" maxlength="40" placeholder="Info (optional), z. B. STORY TIME" value="' + esc(t.info || '') + '"></div>'; };
-      $('adm').innerHTML = '<div class="sbox admplan"><h3>📅 STREAMPLAN</h3><p class="leise">Gilt sofort auf der Website. Die Kommandozentrale übernimmt es beim nächsten Upload des Bots.</p>' +
+      $('adm').innerHTML = '<div class="sbox admplan"><h3>📅 STREAMPLAN</h3><p class="leise">Gilt sofort auf der Website. Die neue Woche kannst du jederzeit dazu eintragen – auch schon samstags: Die laufende Woche bleibt, die neue erscheint auf der Startseite ab Montag. Alte Wochen verschwinden beim Speichern von selbst.</p>' +
         '<input class="admfeld" id="apwoche" maxlength="40" placeholder="Woche, z. B. 23. – 29. November" value="' + esc(pq.woche || '') + '">' +
         '<div id="apliste" style="margin-top:8px">' + (reihen.length ? reihen.map(zeile).join('') : zeile()) + '</div>' +
         '<datalist id="apspiele">' + Object.keys(spieleVor).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
