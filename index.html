@@ -3080,7 +3080,7 @@
     if (!p.ok) { el.innerHTML = '<p class="leise">Gerade läuft keine Saison.</p>'; $('passunter').textContent = ''; return; }
     var S = p.stufen || [], st = p.stufe || 0, v = p.werte || {}, vor = p.heute < p.saison.start;
     $('passunter').textContent = '❄️ ' + p.saison.name + ' · ' + (vor ? 'startet am ' + p.saison.start.split('-').reverse().join('.') : 'noch ' + passTage(p.saison.ende) + ' Tage');
-    var h = '<div class="passkopf"><img src="' + kosBild('rahmen_eiskristall') + '" alt=""><div><b>Stufe 50: Rahmen „Eiskristall“ + Titel „Winterkönig“</b><small>Gibt es nur in dieser Saison – danach nie wieder. Alles, was du tust, zählt automatisch mit.</small></div></div>';
+    var h = '<div class="passkopf"><img src="' + kosBild('rahmen_frostkrone') + '" alt=""><div><b>Stufe 50: Rahmen „Frostkrone“ + Titel „Winterkönig“</b><small>Gibt es nur in dieser Saison – danach nie wieder. Alles, was du tust, zählt automatisch mit.</small></div></div>';
     if (!sitzung) h += '<p class="leise">Melde dich an, dann siehst du hier deinen Fortschritt.</p>';
     else {
       var nx = S[st] || null;
@@ -3139,7 +3139,7 @@
   }
   function passIntro() {
     var t = document.createElement('div'); t.className = 'passup';
-    t.innerHTML = '<div style="max-width:340px;padding:22px;background:#151a2e;border-radius:18px;border:1px solid rgba(155,231,255,.35)"><b style="font-size:40px">❄️</b><span>WINTER-SAISON</span><p style="font-size:14px;line-height:1.55;font-weight:500;margin:12px 0">Bis 31.12. gibt es 50 Stufen. Jede Stufe hat eine Aufgabe – Zuschauen, Chatten, Vorbeischauen, Glücks-Knopf, Quests.<br><br>Alles zählt <b style="display:inline;font-size:14px;color:#bfefff;text-shadow:none">automatisch</b> ab Saisonstart mit, auch was du schon erledigt hast. Belohnungen landen direkt bei dir.<br><br>Ganz oben wartet der Rahmen „Eiskristall“ – den gibt es nur diesen Winter.</p><button class="vtw" id="passok">Los geht\'s</button></div>';
+    t.innerHTML = '<div style="max-width:340px;padding:22px;background:#151a2e;border-radius:18px;border:1px solid rgba(155,231,255,.35)"><b style="font-size:40px">❄️</b><span>WINTER-SAISON</span><p style="font-size:14px;line-height:1.55;font-weight:500;margin:12px 0">Bis 31.12. gibt es 50 Stufen. Jede Stufe hat eine Aufgabe – Zuschauen, Chatten, Vorbeischauen, Glücks-Knopf, Quests.<br><br>Alles zählt <b style="display:inline;font-size:14px;color:#bfefff;text-shadow:none">automatisch</b> ab Saisonstart mit, auch was du schon erledigt hast. Belohnungen landen direkt bei dir.<br><br>Ganz oben wartet der Rahmen „Frostkrone“ – den gibt es nur diesen Winter.</p><button class="vtw" id="passok">Los geht\'s</button></div>';
     document.body.appendChild(t);
     $('passok').onclick = function () { t.remove(); };
   }
