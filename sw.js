@@ -1,7 +1,7 @@
-// Kazetopia – kleiner Service Worker, damit man die Seite als App auf den Homescreen legen kann.
+// Kazetopia – kleiner Service Worker, damit man die Seite als App auf den Homescreen legen kann (+ Push-Benachrichtigungen).
 // Seite immer zuerst frisch aus dem Netz laden; nur ohne Netz die zuletzt gespeicherte Kopie zeigen.
 // Daten (daten.json, Supabase, Bilder von GitHub) werden NICHT zwischengespeichert – sie sind immer aktuell.
-var CACHE = 'kazetopia-v1';
+var CACHE = 'kazetopia-v2';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -18,4 +18,24 @@ self.addEventListener('fetch', function (e) {
     if (r && r.ok) { var kopie = r.clone(); caches.open(CACHE).then(function (c) { c.put(e.request.mode === 'navigate' ? './index.html' : e.request, kopie); }); }
     return r;
   }).catch(function () { return caches.match(e.request.mode === 'navigate' ? './index.html' : e.request).then(function (r) { return r || caches.match('./'); }); }));
+});
+
+// 🔔 Push-Benachrichtigungen (nur wenn unter „Ich“ aktiviert)
+self.addEventListener('push', function (e) {
+  var d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Kazetopia', {
+    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'kazetopia', renotify: true,
+    data: { url: d.url || './' }
+  }));
+});
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  var ziel = (e.notification.data && e.notification.data.url) || './';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
+    if (ziel.indexOf(self.location.origin) === 0 || ziel.indexOf('./') === 0) {
+      for (var i = 0; i < cs.length; i++) { if (cs[i].url.indexOf(self.registration.scope) === 0 && 'focus' in cs[i]) { cs[i].navigate(ziel).catch(function () { }); return cs[i].focus(); } }
+    }
+    return self.clients.openWindow(ziel);
+  }));
 });
