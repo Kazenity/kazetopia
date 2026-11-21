@@ -3117,13 +3117,12 @@
       var C = p.challenges || [], wochen = [];
       C.forEach(function (c) { if (wochen.indexOf(c.woche) < 0) wochen.push(c.woche); });
       var bel = p.belohnt || [], fertig = 0;
-      h = '<p class="leise">Jeden Montag 3 neue Challenges. Alle 3 geschafft = 💰 1.500 Zeni. Alle ' + wochen.length + ' Wochen geschafft = 🏷️ Titel „Frostjäger“.</p>';
+      h = '<p class="leise">Jeden Montag kommen 3 neue Challenges dazu – und alle bleiben bis Saisonende offen. Urlaub? Kein Problem, einfach später nachholen. Jede Woche komplett = 💰 1.500 Zeni. Alle ' + wochen.length + ' Wochen bis 31.12. geschafft = 🏷️ Titel „Frostjäger“.</p>';
       wochen.forEach(function (w, i) {
         var done = bel.indexOf(101 + i) >= 0; if (done) fertig++;
-        var aktuell = w === p.woche, zukunft = w > p.heute, wv = (p.wochenwerte || {})[w] || {};
+        var zukunft = w > p.heute, wv = (p.wochenwerte || {})[w] || {};
         var d = w.split('-'), titel = 'Woche ' + (i + 1) + ' · ab ' + d[2] + '.' + d[1] + '.';
         if (zukunft) { h += '<div class="pch leise">🔒 ' + titel + '</div>'; return; }
-        if (!aktuell && !done) { h += '<div class="pch leise">✗ ' + titel + ' – nicht geschafft</div>'; return; }
         h += '<div class="pch"><b>' + (done ? '✅ ' : '⏳ ') + titel + '</b>' + C.filter(function (c) { return c.woche === w; }).map(function (c) {
           var ist = Number(wv[c.art] || 0), ok = ist >= c.ziel;
           return '<br>' + (ok ? '✓ ' : '· ') + PASS_ART[c.art][0] + ' ' + PASS_ART[c.art][1](c.ziel) + (sitzung ? ' <span class="leise">' + zahl(Math.floor(ist * 10) / 10) + ' / ' + zahl(c.ziel) + '</span>' : '');
