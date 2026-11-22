@@ -706,6 +706,25 @@
   @keyframes tzdreh { 0% { transform: translateY(-3px); } 50% { transform: translateY(3px); } 100% { transform: translateY(-3px); } }
   .tresorinfo { font-size: 12px; color: var(--grau); line-height: 1.5; margin-top: 10px; }
   .rbkopf { font-size: 12.5px; color: var(--grau); margin: -4px 0 10px; }
+  .ztg-kopf { text-align: center; border-bottom: 3px double var(--rand); padding-bottom: 10px; margin-bottom: 12px; }
+  .ztg-kopf .ztg-titel { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 900; letter-spacing: .02em; color: var(--hell); line-height: 1.1; }
+  .ztg-kopf .ztg-unter { font-size: 12px; color: var(--grau); margin-top: 4px; letter-spacing: .06em; text-transform: uppercase; }
+  .ztg-auf { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 800; line-height: 1.3; margin: 4px 0 6px; color: var(--hell); }
+  .ztg-sub { font-size: 13px; color: var(--grau); line-height: 1.5; margin-bottom: 12px; }
+  .ztg-teil { border-top: 1px solid var(--rand); padding: 10px 0; }
+  .ztg-teil h4 { margin: 0 0 7px; font-size: 12px; letter-spacing: .08em; color: var(--rosa); text-transform: uppercase; }
+  .ztg-teil .ztg-z { font-size: 13.5px; line-height: 1.6; }
+  .ztg-zahlen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+  .ztg-zahlen b { display: block; font-size: 18px; font-weight: 900; color: var(--hell); }
+  .ztg-zahlen small { font-size: 11px; color: var(--grau); }
+  .ztg-kol { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 14.5px; line-height: 1.6; white-space: pre-line; }
+  .ztg-clip { display: flex; gap: 10px; align-items: center; text-decoration: none; color: var(--hell); }
+  .ztg-clip img { width: 120px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
+  .ztg-clip span { font-size: 13px; font-weight: 700; }
+  .ztg-archiv { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ztg-archiv button { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rand); background: transparent; color: var(--grau); cursor: pointer; }
+  .ztg-archiv button.an { background: var(--rosa); color: #1a0f1f; border-color: var(--rosa); }
+  .kwz a.ztglink { color: var(--rosa); font-weight: 800; cursor: pointer; text-decoration: none; }
   .rbwahl { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .rbwahl button { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rand); background: transparent; color: var(--grau); cursor: pointer; }
   .rbwahl button.an { background: var(--rosa); color: #1a0f1f; border-color: var(--rosa); }
@@ -2160,7 +2179,9 @@
     if (q.freund && q.freund.duos) z.push('🤝 <b>' + q.freund.duos + '</b> ' + (q.freund.duos === 1 ? 'Freundes-Duo hat' : 'Freundes-Duos haben') + ' ihre Quest geschafft');
     var cw = daten.clips && (daten.clips.wocheTop || [])[0];
     if (cw) z.push('🎬 Clip der Woche: <b>' + esc(cw.titel || 'Clip') + '</b>');
-    if (z.length < 2) return '';
+    var zt = zDaten && zDaten.liste && zDaten.liste[0];
+    if (zt) z.push('🗞️ <a class="ztglink" data-zeitung="0">Kazetopia-Zeitung · Ausgabe #' + zt.nr + ' lesen</a>');
+    if (z.length < (zt ? 1 : 2)) return '';
     return '<div class="sbox kwoche"><h3>📰 DIESE WOCHE IN KAZETOPIA <span class="leise">seit Sonntag</span></h3>' + z.map(function (x) { return '<div class="kwz">' + x + '</div>'; }).join('') + '</div>';
   }
   function questKarte() {
@@ -3215,6 +3236,53 @@
 
   // 📊 Stream-Rückblick: nach jedem Stream eine persönliche Karte (Daten vom Bot: rueckblick.json, die letzten 6 Streams)
   var rbDaten = null, rbLaedt = null, rbWahl = 0;
+  // 📰 Kazetopia-Zeitung (Idee von joe3000): jeden Sonntag eine Ausgabe der letzten Woche, mit Archiv
+  var zDaten = null, zLaedt = null, zWahl = 0;
+  function zLaden() {
+    if (zDaten) return Promise.resolve(zDaten);
+    if (!zLaedt) zLaedt = fetch('https://raw.githubusercontent.com/Kazenity/kazetopia/main/zeitung.json?t=' + Math.floor(Date.now() / 600000))
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { zDaten = d && d.liste ? d : { liste: [] }; return zDaten; })
+      .catch(function () { zLaedt = null; return { liste: [] }; });
+    return zLaedt;
+  }
+  function zDatum(s) { var d = new Date(s + 'T00:00:00'); return d.getDate() + '.' + (d.getMonth() + 1) + '.'; }
+  function zName(l) { return '<b' + fs(l) + '>' + esc(prof(l).n || l) + '</b>'; }
+  function zeitungDialog(i) {
+    zaehlen('zeitung');
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds" id="ztginh"><p class="leise">Lade …</p></div>');
+    zLaden().then(function () { zWahl = i || 0; zeitungZeigen(); });
+  }
+  function zeitungZeigen() {
+    var el = $('ztginh'); if (!el) return;
+    var L = zDaten && zDaten.liste || [];
+    if (!L.length) { el.innerHTML = '<div class="ztg-kopf"><div class="ztg-titel">Kazetopia-Zeitung</div></div><p class="leise">Die erste Ausgabe erscheint am Sonntag.</p>'; return; }
+    var a = L[zWahl] || L[0], z = a.zahlen || {}, h = '';
+    var bisJ = new Date(a.bis + 'T00:00:00').getFullYear();
+    h += '<div class="ztg-kopf"><div class="ztg-titel">Kazetopia-Zeitung</div><div class="ztg-unter">Ausgabe #' + a.nr + ' · ' + zDatum(a.von) + '–' + zDatum(a.bis) + bisJ + '</div></div>';
+    // Aufmacher
+    var REK = { std: 'Watchtime', nachrichten: 'Chat-Nachrichten', leute: 'Zuschauer' };
+    if (a.rekorde && a.rekorde.length) h += '<div class="ztg-auf">🏅 Rekordwoche! So viel ' + a.rekorde.map(function (k) { return REK[k] || k; }).join(', ') + ' wie nie zuvor</div>';
+    else if (a.gemeinsam) h += '<div class="ztg-auf">🎯 Gemeinsam geschafft: „' + esc(a.gemeinsam.text) + '“</div>';
+    else h += '<div class="ztg-auf">' + zahl(z.leute || 0) + ' Zuschauer, ' + zahl(z.std || 0) + ' Stunden – das war die Woche</div>';
+    var sub = [];
+    if (a.gemeinsam) sub.push(zahl(a.gemeinsam.n) + ' von euch haben die Gemeinschafts-Quest gemeistert und je 1.000 Zeni bekommen.');
+    if (a.siegerW) sub.push('Wochensieger bei der Watchtime: ' + zName(a.siegerW.l) + ' mit ' + String(a.siegerW.v).replace('.', ',') + ' Std.');
+    if (a.siegerC) sub.push('Im Chat vorne: ' + zName(a.siegerC.l) + ' mit ' + zahl(a.siegerC.v) + ' Nachrichten.');
+    if (sub.length) h += '<div class="ztg-sub">' + sub.join(' ') + '</div>';
+    if (a.kolumne) h += '<div class="ztg-teil"><h4>✍️ Kazes Kolumne</h4><div class="ztg-kol">' + esc(a.kolumne) + '</div></div>';
+    if (a.auf && a.auf.length) h += '<div class="ztg-teil"><h4>📈 Aufsteiger der Woche</h4><div class="ztg-z">' + a.auf.map(function (x, k) { return ['🥇', '🥈', '🥉'][k] + ' ' + zName(x.l) + ' <span class="leise">+' + zahl(x.p) + ' Plätze</span>'; }).join('<br>') + '</div></div>';
+    if (a.topW && a.topW.length) h += '<div class="ztg-teil"><h4>⏱️ Am längsten dabei</h4><div class="ztg-z">' + a.topW.map(function (x, k) { return (k + 1) + '. ' + zName(x.l) + ' <span class="leise">' + String(x.v).replace('.', ',') + ' Std.</span>'; }).join('<br>') + '</div></div>';
+    if (a.topC && a.topC.length) h += '<div class="ztg-teil"><h4>💬 Die fleißigsten Chatter</h4><div class="ztg-z">' + a.topC.map(function (x, k) { return (k + 1) + '. ' + zName(x.l) + ' <span class="leise">' + zahl(x.v) + '</span>'; }).join('<br>') + '</div></div>';
+    if (a.clip && a.clip.url) h += '<div class="ztg-teil"><h4>🎬 Clip der Woche</h4><a class="ztg-clip" href="' + esc(a.clip.url) + '" target="_blank" rel="noopener">' + (sicher(a.clip.bild) ? '<img alt="" loading="lazy" src="' + esc(sicher(a.clip.bild)) + '">' : '') + '<span>' + esc(a.clip.titel || 'Clip') + '<br><small class="leise">von ' + esc(a.clip.von || '') + ' · ▶ ' + zahl(a.clip.aufrufe || 0) + '</small></span></a></div>';
+    h += '<div class="ztg-teil"><h4>📊 Die Woche in Zahlen</h4><div class="ztg-zahlen">' +
+      '<div><b>' + zahl(z.std || 0) + '</b><small>⏱️ Stunden geschaut</small></div><div><b>' + zahl(z.nachrichten || 0) + '</b><small>💬 Nachrichten</small></div><div><b>' + zahl(z.leute || 0) + '</b><small>👥 Zuschauer</small></div>' +
+      '<div><b>' + zahl(z.quests || 0) + '</b><small>🎯 Quests geschafft</small></div><div><b>' + zahl(z.duos || 0) + '</b><small>🤝 Freundes-Duos</small></div><div><b>' + zahl(z.kaeufe || 0) + '</b><small>🛍️ Shop-Käufe</small></div>' +
+      '<div><b>' + zahl(z.glueck || 0) + '</b><small>🍀 Glücks-Drehs</small></div><div><b>' + zahl(z.jackpots || 0) + '</b><small>🎰 Jackpots</small></div><div></div></div></div>';
+    if (L.length > 1) h += '<div class="ztg-teil"><h4>🗂️ Archiv</h4><div class="ztg-archiv">' + L.map(function (x, k) { return '<button data-zw="' + k + '" class="' + (k === zWahl ? 'an' : '') + '">#' + x.nr + ' · ' + zDatum(x.von) + '</button>'; }).join('') + '</div></div>';
+    el.innerHTML = h;
+    Array.prototype.forEach.call(el.querySelectorAll('[data-zw]'), function (b) { b.onclick = function () { zWahl = Number(b.getAttribute('data-zw')); zeitungZeigen(); var ka = $('karte'); if (ka) ka.scrollTop = 0; }; });
+  }
+  document.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('[data-zeitung]') : null; if (t) { e.preventDefault(); zeitungDialog(Number(t.getAttribute('data-zeitung')) || 0); } });
   function rbLaden() {
     if (rbDaten) return Promise.resolve(rbDaten);
     if (!rbLaedt) rbLaedt = fetch('https://raw.githubusercontent.com/Kazenity/kazetopia/main/rueckblick.json?t=' + Math.floor(Date.now() / 300000))
@@ -3353,7 +3421,8 @@
                     ['tresor', '🔐 Tresor bereit', 'wenn deine 7 Tage um sind'], ['serie', '🔥 Serie in Gefahr', 'um 20 Uhr, wenn du heute noch nicht da warst'],
                     ['glueck', '🍀 Glücks-Knopf bereit', 'mittags, wenn du ihn noch nicht gedrückt hast'],
                     ['rueckblick', '📊 Stream-Rückblick', 'nach jedem Stream: wie du abgeschnitten hast'],
-                    ['post', '📬 Posteingang', 'wenn du eine neue Nachricht bekommst (Freunde, Geschenke, Antworten)']];
+                    ['post', '📬 Posteingang', 'wenn du eine neue Nachricht bekommst (Freunde, Geschenke, Antworten)'],
+                    ['zeitung', '📰 Kazetopia-Zeitung', 'sonntags, wenn die neue Wochenausgabe da ist']];
   var pushAbo = null, pushArten = null;
   function pushMoeglich() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol === 'https:'; }
   function istIos() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
@@ -3660,12 +3729,12 @@
       $('adm').innerHTML = h;
       rpc('admin_bereiche').then(function (b) {
         var el = $('adm'); if (!el || !(b || []).length) return;
-        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut' };
+        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut', zeitung: '📰 Zeitung', rueckblick: '📊 Rückblick' };
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="kzzeile"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
     }).catch(fehler);
     if (tab === 'push') rpc('admin_push_info').then(function (p) {
-      var A = { live: '🔴 Live', update: '📢 Update', tresor: '🔐 Tresor', serie: '🔥 Serie', glueck: '🍀 Glück', rueckblick: '📊 Rückblick', post: '📬 Post' };
+      var A = { live: '🔴 Live', update: '📢 Update', tresor: '🔐 Tresor', serie: '🔥 Serie', glueck: '🍀 Glück', rueckblick: '📊 Rückblick', post: '📬 Post', zeitung: '📰 Zeitung' };
       $('adm').innerHTML = '<div class="sbox"><div class="plz vier"><div><b>' + zahl(p.leute) + '</b>Leute</div><div><b>' + zahl(p.geraete) + '</b>Geräte</div><div><b>' + zahl((p.arten || {}).live || 0) + '</b>🔴 Live an</div><div><b>' + zahl((p.arten || {}).update || 0) + '</b>📢 Update an</div></div></div>' +
         '<div class="sbox"><h3>📢 NEU AUF KAZETOPIA</h3><p class="leise">Geht an alle mit „📢 Neu auf Kazetopia“. Höchstens ein Update-Push pro Tag – nur für echte Neuigkeiten.</p>' +
         '<textarea class="admfeld" id="pushtext" maxlength="120" rows="2" placeholder="z. B. 🔐 Neu: der Zeni-Tresor – schließ Zeni ein und hol dir Zins!"></textarea><div class="admfbk2"><button class="vtw" id="pushsend">📢 Senden</button><span class="leise" id="pushinfo"></span></div></div>' +
@@ -4170,6 +4239,7 @@
       k.push(['wunsch', '♥', 'Wunschliste', wuensche().length + ' Artikel gemerkt']);
       k.push(['pass', '🎫', 'Saisonpass', passKurz()]);
       k.push(['rueckblick', '📊', 'Letzter Stream', rbKurz()]);
+      k.push(['zeitung', '📰', 'Kazetopia-Zeitung', zDaten && zDaten.liste && zDaten.liste[0] ? 'Ausgabe #' + zDaten.liste[0].nr : 'jeden Sonntag neu']);
       k.push(['tresor', '🔐', 'Zeni-Tresor', tresorKurz()]);
       k.push(['push', '🔔', 'Benachrichtigungen', pushKurz()]);
       k.push(['ausweis', '🪪', 'Mitgliedsausweis', 'deine Kazetopia-Nummer']);
@@ -4195,6 +4265,7 @@
       else if (k === 'einladen') einladenDialog();
       else if (k === 'feedback') feedbackDialog();
       else if (k === 'rueckblick') rbDialog();
+      else if (k === 'zeitung') zeitungDialog(0);
       else if (k === 'pass') passDialog();
       else if (k === 'ausweis') ausweisDialog();
       else if (k === 'tresor') tresorDialog();
@@ -4546,6 +4617,8 @@
     if (location.hash === '#datenschutz') datenschutz();
     if (location.hash === '#shop') geheZu('shop');
     if (location.hash === '#rueckblick') setTimeout(rbDialog, 600);
+    if (location.hash === '#zeitung') setTimeout(function () { zeitungDialog(0); }, 600);
+    zLaden().then(function (d) { if (d && d.liste && d.liste.length && !document.querySelector('[data-zeitung]')) { var k = document.querySelector('.kwoche'); if (k) { var div = document.createElement('div'); div.className = 'kwz'; div.innerHTML = '🗞️ <a class="ztglink" data-zeitung="0">Kazetopia-Zeitung · Ausgabe #' + d.liste[0].nr + ' lesen</a>'; k.appendChild(div); } } });
     if (location.hash === '#pass') setTimeout(passDialog, 700);
     var m = location.hash.match(/^#profil=(.+)$/);
     if (m) profilZeigen(decodeURIComponent(m[1]).toLowerCase());
