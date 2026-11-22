@@ -724,6 +724,18 @@
   .ztg-archiv { display: flex; flex-wrap: wrap; gap: 6px; }
   .ztg-archiv button { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rand); background: transparent; color: var(--grau); cursor: pointer; }
   .ztg-archiv button.an { background: var(--rosa); color: #1a0f1f; border-color: var(--rosa); }
+  .ztgteaser { border: 1px solid var(--rosa); background: linear-gradient(135deg, rgba(255,122,180,.10), rgba(255,255,255,.02)); cursor: pointer; }
+  .ztgteaser .ztg-k { font-size: 11.5px; letter-spacing: .1em; color: var(--rosa); font-weight: 800; text-transform: uppercase; }
+  .ztgteaser .ztg-s { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 800; line-height: 1.3; margin: 6px 0 10px; color: var(--hell); }
+  .cvbox { background: var(--flaeche); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
+  .cvbox b { color: var(--hell); }
+  .cvzeile { display: flex; align-items: center; gap: 10px; background: var(--flaeche); border-radius: 12px; padding: 8px; margin-bottom: 8px; }
+  .cvzeile.meins { outline: 1px solid var(--rosa); }
+  .cvzeile img { width: 112px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
+  .cvzeile .cvt { flex: 1; min-width: 0; } .cvzeile .cvt a { color: var(--hell); font-weight: 700; font-size: 13.5px; text-decoration: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cvzeile .cvt span { font-size: 11.5px; color: var(--grau); }
+  .cvzeile .cvn { font-size: 12px; color: var(--grau); text-align: center; min-width: 54px; } .cvzeile .cvn b { display: block; font-size: 17px; color: var(--hell); }
+  @media (max-width: 560px) { .cvzeile img { width: 84px; } }
   .kwz a.ztglink { color: var(--rosa); font-weight: 800; cursor: pointer; text-decoration: none; }
   .rbwahl { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .rbwahl button { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rand); background: transparent; color: var(--grau); cursor: pointer; }
@@ -2044,6 +2056,7 @@
     h += gebKarte();
     h += besuchKarte();
     h += umfrageKarte();
+    h += zeitungTeaser();
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
     if (planOben) h += planKarte();
@@ -2178,7 +2191,7 @@
     if (q.erledigtN) z.push('🎯 <b>' + q.erledigtN + '</b> Wochen-Quests geschafft');
     if (q.freund && q.freund.duos) z.push('🤝 <b>' + q.freund.duos + '</b> ' + (q.freund.duos === 1 ? 'Freundes-Duo hat' : 'Freundes-Duos haben') + ' ihre Quest geschafft');
     var cw = daten.clips && (daten.clips.wocheTop || [])[0];
-    if (cw) z.push('🎬 Clip der Woche: <b>' + esc(cw.titel || 'Clip') + '</b>');
+    if (cw) z.push('🎬 Meistgesehener Clip: <b>' + esc(cw.titel || 'Clip') + '</b>');
     var zt = zDaten && zDaten.liste && zDaten.liste[0];
     if (zt) z.push('🗞️ <a class="ztglink" data-zeitung="0">Kazetopia-Zeitung · Ausgabe #' + zt.nr + ' lesen</a>');
     if (z.length < (zt ? 1 : 2)) return '';
@@ -3247,8 +3260,21 @@
   }
   function zDatum(s) { var d = new Date(s + 'T00:00:00'); return d.getDate() + '.' + (d.getMonth() + 1) + '.'; }
   function zName(l) { return '<b' + fs(l) + '>' + esc(prof(l).n || l) + '</b>'; }
+  function zAufmacher(a) {
+    var z = a.zahlen || {}, REK = { std: 'Watchtime', nachrichten: 'Chat-Nachrichten', leute: 'Zuschauer' };
+    if (a.rekorde && a.rekorde.length) return '🏅 Rekordwoche! So viel ' + a.rekorde.map(function (k) { return REK[k] || k; }).join(', ') + ' wie nie zuvor';
+    if (a.gemeinsam) return '🎯 Gemeinsam geschafft: „' + esc(a.gemeinsam.text) + '“';
+    return zahl(z.leute || 0) + ' Zuschauer, ' + zahl(z.std || 0) + ' Stunden – das war die Woche';
+  }
+  function zGelesen() { try { return Number(localStorage.getItem('kz_ztg_gelesen') || 0); } catch (x) { return 0; } }
+  function zeitungTeaser() {
+    var a = zDaten && zDaten.liste && zDaten.liste[0];
+    if (!a || a.nr <= zGelesen()) return '';
+    return '<div class="sbox ztgteaser" data-zeitung="0"><div class="ztg-k">📰 Kazetopia-Zeitung · Neue Ausgabe #' + a.nr + '</div><div class="ztg-s">' + zAufmacher(a) + '</div><button class="vtw" data-zeitung="0">Jetzt lesen</button></div>';
+  }
   function zeitungDialog(i) {
     zaehlen('zeitung');
+    try { var nr0 = zDaten && zDaten.liste && zDaten.liste[0] ? zDaten.liste[0].nr : 0; if (nr0 > zGelesen()) { localStorage.setItem('kz_ztg_gelesen', String(nr0)); var t = document.querySelector('.ztgteaser'); if (t) t.remove(); } } catch (x) { }
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds" id="ztginh"><p class="leise">Lade …</p></div>');
     zLaden().then(function () { zWahl = i || 0; zeitungZeigen(); });
   }
@@ -3260,10 +3286,7 @@
     var bisJ = new Date(a.bis + 'T00:00:00').getFullYear();
     h += '<div class="ztg-kopf"><div class="ztg-titel">Kazetopia-Zeitung</div><div class="ztg-unter">Ausgabe #' + a.nr + ' · ' + zDatum(a.von) + '–' + zDatum(a.bis) + bisJ + '</div></div>';
     // Aufmacher
-    var REK = { std: 'Watchtime', nachrichten: 'Chat-Nachrichten', leute: 'Zuschauer' };
-    if (a.rekorde && a.rekorde.length) h += '<div class="ztg-auf">🏅 Rekordwoche! So viel ' + a.rekorde.map(function (k) { return REK[k] || k; }).join(', ') + ' wie nie zuvor</div>';
-    else if (a.gemeinsam) h += '<div class="ztg-auf">🎯 Gemeinsam geschafft: „' + esc(a.gemeinsam.text) + '“</div>';
-    else h += '<div class="ztg-auf">' + zahl(z.leute || 0) + ' Zuschauer, ' + zahl(z.std || 0) + ' Stunden – das war die Woche</div>';
+    h += '<div class="ztg-auf">' + zAufmacher(a) + '</div>';
     var sub = [];
     if (a.gemeinsam) sub.push(zahl(a.gemeinsam.n) + ' von euch haben die Gemeinschafts-Quest gemeistert und je 1.000 Zeni bekommen.');
     if (a.siegerW) sub.push('Wochensieger bei der Watchtime: ' + zName(a.siegerW.l) + ' mit ' + String(a.siegerW.v).replace('.', ',') + ' Std.');
@@ -3273,6 +3296,7 @@
     if (a.auf && a.auf.length) h += '<div class="ztg-teil"><h4>📈 Aufsteiger der Woche</h4><div class="ztg-z">' + a.auf.map(function (x, k) { return ['🥇', '🥈', '🥉'][k] + ' ' + zName(x.l) + ' <span class="leise">+' + zahl(x.p) + ' Plätze</span>'; }).join('<br>') + '</div></div>';
     if (a.topW && a.topW.length) h += '<div class="ztg-teil"><h4>⏱️ Am längsten dabei</h4><div class="ztg-z">' + a.topW.map(function (x, k) { return (k + 1) + '. ' + zName(x.l) + ' <span class="leise">' + String(x.v).replace('.', ',') + ' Std.</span>'; }).join('<br>') + '</div></div>';
     if (a.topC && a.topC.length) h += '<div class="ztg-teil"><h4>💬 Die fleißigsten Chatter</h4><div class="ztg-z">' + a.topC.map(function (x, k) { return (k + 1) + '. ' + zName(x.l) + ' <span class="leise">' + zahl(x.v) + '</span>'; }).join('<br>') + '</div></div>';
+    if (a.vote && a.vote.sieger && a.vote.sieger.length) h += '<div class="ztg-teil"><h4>🗳️ Community-Clip der Woche</h4>' + a.vote.sieger.map(function (c) { return '<a class="ztg-clip" href="' + esc(c.url) + '" target="_blank" rel="noopener">' + (sicher(c.bild) ? '<img alt="" loading="lazy" src="' + esc(sicher(c.bild)) + '">' : '') + '<span>' + esc(c.titel || 'Clip') + '<br><small class="leise">von ' + esc(c.von || '') + ' · ' + c.stimmen + (c.stimmen === 1 ? ' Stimme' : ' Stimmen') + ' · +2.500 Zeni</small></span></a>'; }).join('<div style="height:8px"></div>') + '<div class="leise" style="margin-top:6px;font-size:12px">' + a.vote.stimmen + ' Stimmen insgesamt</div></div>';
     if (a.clip && a.clip.url) h += '<div class="ztg-teil"><h4>🎬 Meistgesehener Clip der Woche</h4><a class="ztg-clip" href="' + esc(a.clip.url) + '" target="_blank" rel="noopener">' + (sicher(a.clip.bild) ? '<img alt="" loading="lazy" src="' + esc(sicher(a.clip.bild)) + '">' : '') + '<span>' + esc(a.clip.titel || 'Clip') + '<br><small class="leise">von ' + esc(a.clip.von || '') + ' · ▶ ' + zahl(a.clip.aufrufe || 0) + '</small></span></a></div>';
     h += '<div class="ztg-teil"><h4>📊 Die Woche in Zahlen</h4><div class="ztg-zahlen">' +
       '<div><b>' + zahl(z.std || 0) + '</b><small>⏱️ Stunden geschaut</small></div><div><b>' + zahl(z.nachrichten || 0) + '</b><small>💬 Nachrichten</small></div><div><b>' + zahl(z.leute || 0) + '</b><small>👥 Zuschauer</small></div>' +
@@ -3283,6 +3307,42 @@
     Array.prototype.forEach.call(el.querySelectorAll('[data-zw]'), function (b) { b.onclick = function () { zWahl = Number(b.getAttribute('data-zw')); zeitungZeigen(); var ka = $('karte'); if (ka) ka.scrollTop = 0; }; });
   }
   document.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('[data-zeitung]') : null; if (t) { e.preventDefault(); zeitungDialog(Number(t.getAttribute('data-zeitung')) || 0); } });
+  // 🗳️ Community-Clip der Woche: Abstimmung bis Samstag 23:59, Gewinner bekommt 2.500 Zeni (Auswertung am Sonntag durch den Bot)
+  var cvStand = null, cvLaedt = false, cvFehler = '';
+  function cvLaden(neu) {
+    if (cvLaedt || (cvStand && !neu)) return;
+    cvLaedt = true;
+    sFrisch().catch(function () { }).then(function () { return sbFetch('/rest/v1/rpc/clip_stimmen', { method: 'POST', body: {} }); })
+      .then(function (r) { cvStand = r || { stimmen: {} }; }).catch(function () { cvStand = { stimmen: {} }; })
+      .then(function () { cvLaedt = false; if (reiter === 'clips' && clipZeit === 'vote') zeigen(); });
+  }
+  function cvHtml(L) {
+    cvLaden();
+    var st = (cvStand && cvStand.stimmen) || {}, meine = cvStand ? cvStand.meine : null, ich2 = sitzung ? String(sitzung.name).toLowerCase() : '';
+    var h = '<div class="cvbox">🗳️ <b>Community-Clip der Woche:</b> Welcher Clip dieser Woche ist euer Favorit? Eine Stimme pro Woche, jederzeit änderbar – abstimmen bis <b>Samstag 23:59</b>. Der Ersteller des Gewinner-Clips bekommt <b>2.500 Zeni</b>.' +
+      (sitzung ? '' : '<br><a href="#" class="glanmelden cvlogin">Melde dich mit Twitch an</a>, um abzustimmen.') + (cvFehler ? '<br><span style="color:var(--rosa)">' + esc(cvFehler) + '</span>' : '') + '</div>';
+    if (!L.length) return h + '<div class="liste"><div class="leer">Diese Woche gibt es noch keine Clips aus der Community. Clippt mit !clip mit!</div></div>';
+    var sort = L.slice().sort(function (a, b) { return (st[b.id] || 0) - (st[a.id] || 0); });
+    return h + sort.map(function (x) {
+      var n = st[x.id] || 0, mein = meine && meine === x.id, eigen = ich2 && x.l === ich2;
+      return '<div class="cvzeile' + (mein ? ' meins' : '') + '">' + (sicher(x.bild) ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener"><img alt="" loading="lazy" src="' + esc(sicher(x.bild)) + '"></a>' : '') +
+        '<div class="cvt"><a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titel || 'Clip') + '</a><span>von ' + esc(prof(x.l).n || x.von) + (x.datum ? ' · ' + esc(x.datum.slice(0, 6)) : '') + ' · ▶ ' + zahl(x.aufrufe || 0) + '</span></div>' +
+        '<div class="cvn"><b>' + n + '</b>' + (n === 1 ? 'Stimme' : 'Stimmen') + '</div>' +
+        (sitzung ? (eigen ? '<span class="leise" style="font-size:11px;width:70px;text-align:center">dein Clip</span>' : '<button class="' + (mein ? 'vbtn an' : 'vbtn') + '" data-cv="' + esc(x.id) + '" data-cvl="' + esc(x.l) + '">' + (mein ? '✓ Deine Stimme' : 'Stimme geben') + '</button>') : '') + '</div>';
+    }).join('');
+  }
+  function cvEvents() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cv]'), function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-cv'), weg = cvStand && cvStand.meine === id;
+        b.disabled = true; cvFehler = '';
+        sFrisch().then(function () { return sbFetch('/rest/v1/rpc/clip_abstimmen', { method: 'POST', body: { p_clip: weg ? null : id, p_ersteller: b.getAttribute('data-cvl') } }); })
+          .then(function () { zaehlen('clipvote'); cvLaden(true); })
+          .catch(function (e) { cvFehler = e && e.message ? e.message : 'Abstimmen hat nicht geklappt'; zeigen(); });
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.cvlogin'), function (a) { a.onclick = function (e) { e.preventDefault(); einloggenFragen(); }; });
+  }
   function rbLaden() {
     if (rbDaten) return Promise.resolve(rbDaten);
     if (!rbLaedt) rbLaedt = fetch('https://raw.githubusercontent.com/Kazenity/kazetopia/main/rueckblick.json?t=' + Math.floor(Date.now() / 300000))
@@ -4131,7 +4191,7 @@
       '<h4>5. SCHRIFTARTEN</h4><p>Die Schriftart ist direkt in die Seite eingebettet. Es findet keine Verbindung zu Google Fonts oder anderen Schrift-Anbietern statt.</p>' +
       '<h4>6. SPEICHER IM BROWSER</h4><p>Wenn du „Das bin ich“ wählst, wird dein Twitch-Name nur lokal in deinem Browser (localStorage) gespeichert, ebenso die Platzierungen deines letzten Besuchs für die ▲▼-Anzeige. Bist du angemeldet oder hast „Das bin ich“ gewählt, merkt sich die Seite außerdem deinen letzten Stand (Plätze, Ränge, Zeni) für die Anzeige „Seit deinem letzten Besuch“ sowie den Zeitpunkt einer gerade abgeschickten Shop-Bestellung, ob das Willkommensgeschenk schon abgefragt wurde, ob du den App-Hinweis geschlossen hast, von wem du eingeladen wurdest, deine Wunschliste, ob der Jahreszeiten-Effekt an ist, deine Ansichts-Einstellungen, eine Kopie der öffentlichen Ranglisten-Daten (damit die Seite auch ohne Verbindung etwas zeigt), deine Shop-Filter und – nur bis zur Anmeldung – einen Code aus einem Link. Die Anmeldung selbst wird ebenfalls nur lokal gespeichert, bis du dich abmeldest. Die Kalender-Datei für den Streamplan wird direkt in deinem Browser erstellt. Damit man Kazetopia als App auf den Homescreen legen kann, speichert dein Browser eine Kopie der Seite selbst (ohne persönliche Daten), um sie auch bei schlechtem Netz öffnen zu können. Diese Daten verlassen dein Gerät nicht und können jederzeit über die Browser-Einstellungen gelöscht werden. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (vom Nutzer gewünschte Funktion).</p>' +
       '<h4>7. DARGESTELLTE COMMUNITY-DATEN</h4><p>Die Seite zeigt öffentliche Twitch-Namen und Profilbilder sowie Aktivitäts-Statistiken aus dem Stream (z. B. Watchtime, Chat-Nachrichten, Kanal-Währung, Erfolge). Nach jedem Stream zeigt der Stream-Rückblick für die letzten 6 Streams pro Person die Zeit im Stream, die Anzahl der Nachrichten, die Zeni-Bilanz, den Platz und was im Stream freigeschaltet wurde. Spenden werden ohne Beträge nur als Namen angezeigt. Wer seinen Geburtstag im Stream selbst einträgt, wird an diesem Tag auf der Startseite mit Namen gratuliert (ohne Datum und Alter). Für Watch-Streak und Stempelhefte zählen wir, bei welchen Streams jemand dabei war. Feedback, das du über „Ideen & Feedback“ schickst, wird mit deinem Twitch-Namen auf unserem Supabase-Server gespeichert und nur von Kaze gelesen; wird eine Idee umgesetzt, kann Kaze sie kurz auf der Startseite mit deinem Namen nennen. Löschst du dein Konto, wird auch dein Feedback gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer Community-Rangliste). Wer nicht auf der Seite erscheinen möchte, kann jederzeit widersprechen: am einfachsten mit dem Befehl <b>!kazetopia aus</b> im Twitch-Chat (rückgängig mit <b>!kazetopia an</b>) oder formlos über die Kontaktdaten im Impressum. Der Eintrag wird dann ab der nächsten Aktualisierung nicht mehr angezeigt. Für die Wochen-Quests wird aus denselben Zählern (z. B. Watchtime, Chat-Nachrichten, Stream-Teilnahmen, Clips) berechnet, wie viel jemand seit Wochenbeginn erreicht hat; dieser Fortschritt wird zusammen mit dem Twitch-Namen auf der Seite angezeigt, und Belohnungen werden automatisch gutgeschrieben. Auch dafür gilt der Widerspruch mit !kazetopia aus.</p>' +
-      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Stimmst du bei einer Umfrage ab, speichern wir deine Wahl mit deinem Twitch-Namen, bis die Umfrage gelöscht wird; öffentlich gezeigt wird nur das Gesamtergebnis. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Für den Saisonpass speichern wir pro Saison deinen Twitch-Namen mit deinen Zählerständen (Watchtime, Streams, Chat-Nachrichten, Wochen-Quests, Besuchstage, Glücks-Knopf-Tage), deine erreichte Stufe und die vergebenen Belohnungen; Name und Stufe erscheinen in der Saison-Rangliste. Für den Mitgliedsausweis vergeben wir einmalig eine feste Nummer in der Reihenfolge der Anmeldung. Schließt du Zeni im Zeni-Tresor ein, speichern wir Twitch-Name, Betrag, Zeitpunkte, gezogenen Zins und eine Buchung wie bei einem Kauf. Schaust du angemeldet vorbei, speichern wir für die Besuchs-Serie deinen Twitch-Namen, die Anzahl der Tage in Folge, deinen letzten Besuchstag und deinen Rekord; öffentlich sichtbar ist nur die aktuelle Serie. Löschst du dein Konto, werden Freundschaften, offene Einladungen, deine Wunschliste, deine Umfrage-Stimmen, deine Besuchs-Serie, deine Benachrichtigungs-Einstellungen, dein Saisonpass-Fortschritt und deine Mitgliedsnummer mitgelöscht (ein noch laufender Tresor muss vorher abgeholt werden). Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
+      '<h4>7a. ANMELDUNG MIT TWITCH UND SPIELE-VOTING</h4><p>Wenn du den Voting-Bereich öffnest, werden Ergebnisse und Spielesuche von unserem Supabase-Server in Frankfurt geladen; dabei wird technisch deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO). Für das Spiele-Voting kannst du dich freiwillig mit deinem Twitch-Konto anmelden. Dafür nutzen wir Supabase (Supabase, Inc., USA) mit Servern in Frankfurt (EU). Gespeichert werden dabei deine Twitch-Nutzer-ID, dein Twitch-Name, ggf. die bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch beim Login übermittelt und nicht angezeigt oder genutzt), deine Vorschläge (sichtbar mit deinem Twitch-Namen) und deine Stimme (öffentlich wird nur die Gesamtzahl gezeigt, nicht wer wofür gestimmt hat). Wenn du dein Profil gestaltest, speichern wir zusätzlich deine Auswahl (Namensfarbe, Titel, Vitrinen-Abzeichen, Hintergrund) zusammen mit deinem Twitch-Namen; diese Auswahl ist auf deiner Profilkarte öffentlich sichtbar und kann jederzeit zurückgesetzt werden. Bestellst du im Zeni-Shop einen Artikel, speichern wir die Bestellung (Twitch-Name, Artikel, Zeitpunkt); dafür speichern wir in Supabase außerdem den aktuellen Zeni-Stand und die gekauften Artikel je Twitch-Name (vom Stream-Bot übertragen); der Kauf wird dort geprüft und gebucht, unser Stream-Bot zieht den Preis anschließend auch im Zeni-System ab. Löst du einen Code ein oder bekommst das einmalige Willkommensgeschenk, speichern wir Code, Twitch-Name und Zeitpunkt (damit jeder Code pro Person nur einmal geht) und eine Buchung wie bei einem Kauf; bei falsch eingegebenen Codes speichern wir für 24 Stunden Twitch-Name und Zeitpunkt, um Raten zu verhindern. Drückst du den täglichen Glücks-Knopf, speichern wir Twitch-Name, Tag und Gewinn höchstens 60 Tage lang (damit er nur einmal am Tag geht). Markierst du jemanden als Freund, speichern wir das; öffentlich auf den Profilkarten erscheinen nur Freundschaften, bei denen sich beide markiert haben. Bist du angemeldet, speichern wir deine Wunschliste (bis zu 12 Shop-Artikel) mit deinem Twitch-Namen; sehen können sie nur Freunde, bei denen ihr euch gegenseitig markiert habt. Stimmst du bei einer Umfrage ab, speichern wir deine Wahl mit deinem Twitch-Namen, bis die Umfrage gelöscht wird; öffentlich gezeigt wird nur das Gesamtergebnis. Stimmst du beim „Community-Clip der Woche“ ab, speichern wir deinen Twitch-Namen und den gewählten Clip bis zu 90 Tage, um den Gewinner zu ermitteln; öffentlich gezeigt wird nur die Stimmenzahl je Clip. Kommst du über einen Einladungslink, speichern wir, wer dich eingeladen hat; unser Stream-Bot merkt sich dazu deine Watchtime und Nachrichtenzahl zum Zeitpunkt der Einladung, damit ihr belohnt werdet, sobald du 5 Stunden dabei warst und 20 Nachrichten geschrieben hast; öffentlich sichtbar ist nur die Anzahl, wie viele Leute jemand gebracht hat. Für den Saisonpass speichern wir pro Saison deinen Twitch-Namen mit deinen Zählerständen (Watchtime, Streams, Chat-Nachrichten, Wochen-Quests, Besuchstage, Glücks-Knopf-Tage), deine erreichte Stufe und die vergebenen Belohnungen; Name und Stufe erscheinen in der Saison-Rangliste. Für den Mitgliedsausweis vergeben wir einmalig eine feste Nummer in der Reihenfolge der Anmeldung. Schließt du Zeni im Zeni-Tresor ein, speichern wir Twitch-Name, Betrag, Zeitpunkte, gezogenen Zins und eine Buchung wie bei einem Kauf. Schaust du angemeldet vorbei, speichern wir für die Besuchs-Serie deinen Twitch-Namen, die Anzahl der Tage in Folge, deinen letzten Besuchstag und deinen Rekord; öffentlich sichtbar ist nur die aktuelle Serie. Löschst du dein Konto, werden Freundschaften, offene Einladungen, deine Wunschliste, deine Umfrage-Stimmen, deine Besuchs-Serie, deine Benachrichtigungs-Einstellungen, dein Saisonpass-Fortschritt und deine Mitgliedsnummer mitgelöscht (ein noch laufender Tresor muss vorher abgeholt werden). Gekaufte Artikel und der aktuelle Zeni-Stand sind auf der Seite öffentlich sichtbar. Zeni sind eine Spielwährung aus dem Stream ohne Geldwert; man erhält sie fürs Zuschauen und Mitmachen sowie als Dankeschön bei Subs, Bits und Spenden, kann sie aber nicht direkt kaufen, auszahlen oder gegen Echtgeld handeln. Die Anmeldung wird in deinem Browser (localStorage) gemerkt, bis du dich abmeldest. Die Seite erhält keine Rechte auf dein Twitch-Konto. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der von dir gewünschten Funktion). Vor der Anmeldung wirst du über diese Punkte informiert und bestätigst sie. Über den Knopf „Meine Daten löschen“ kannst du dein Konto samt Stimme und Vorschlägen jederzeit selbst sofort und endgültig löschen; alternativ genügt eine kurze Nachricht über die Kontaktdaten im Impressum. Mehr: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Supabase</a>.</p>' +
       '<h4>7b. PUSH-BENACHRICHTIGUNGEN</h4><p>Benachrichtigungen bekommst du nur, wenn du sie unter „Ich“ → „🔔 Benachrichtigungen“ selbst aktivierst und im Browser erlaubst (Einwilligung, Art. 6 Abs. 1 lit. a DSGVO). Dafür speichern wir bei Supabase (Server in Frankfurt) die technische Push-Adresse deines Geräts samt Schlüsseln, deinen Twitch-Namen und welche Benachrichtigungen du eingeschaltet hast; damit Erinnerungen nicht doppelt kommen, merken wir uns bis zu 14 Tage, wann wir dir welche geschickt haben. Zugestellt werden die Nachrichten über den Push-Dienst deines Browsers bzw. Betriebssystems (z. B. Apple, Google oder Mozilla); dabei kann eine Übermittlung in die USA stattfinden, die Anbieter sind nach dem EU-US Data Privacy Framework zertifiziert. Der Inhalt ist verschlüsselt und enthält nur kurze Hinweise wie „Dein Tresor ist bereit“; bei „📬 Posteingang“ steht zusätzlich der Twitch-Name der Person darin, die dir z. B. eine Freundschaftsanfrage oder ein Geschenk geschickt hat. Diese Posteingang-Hinweise speichern wir bis zu 60 Tage, danach werden sie automatisch gelöscht. Du kannst einzelne Benachrichtigungen jederzeit ausschalten, sie unter „Ich“ ganz abschalten oder die Erlaubnis im Browser entziehen – dann löschen wir die Geräteadresse; nicht mehr erreichbare Geräte löschen wir automatisch.</p>' +
       '<h4>8. EXTERNE LINKS</h4><p>Links zu Twitch, Discord, YouTube, TikTok und Instagram führen zu Angeboten anderer Anbieter. Erst beim Anklicken gelten deren Datenschutzbestimmungen.</p>' +
       '<h4>9. DEINE RECHTE</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, z. B. dem Hessischen Beauftragten für Datenschutz und Informationsfreiheit.</p></div>';
@@ -4418,12 +4478,17 @@
       var c = daten.clips || {};
       var hc = '';
       if (c.woche) hc += '<div class="serie"><b>🎬 Clipper der Woche: ' + esc(prof(c.woche.name).n) + '</b><span>' + c.woche.anzahl + (c.woche.anzahl == 1 ? ' Clip' : ' Clips') + ' seit Sonntag, ' + esc(c.woche.seit) + ' · Clippt mit !clip mit!</span></div>';
-      var zeitraeume = [['woche', 'Diese Woche', c.wocheTop], ['monat', 'Letzte 30 Tage', c.monat], ['top', 'Alle Zeiten', c.top]];
+      var zeitraeume = [['vote', '🗳️ Abstimmen', c.vote], ['woche', 'Diese Woche', c.wocheTop], ['monat', 'Letzte 30 Tage', c.monat], ['top', 'Alle Zeiten', c.top]];
       hc += '<div class="schalter" id="schalter">';
       zeitraeume.forEach(function (z) { hc += '<button data-z="' + z[0] + '"' + (z[0] === clipZeit ? ' class="aktiv"' : '') + '>' + z[1] + '</button>'; });
       hc += '</div>';
       var tc = (clipZeit === 'woche' ? c.wocheTop : clipZeit === 'top' ? c.top : c.monat) || [];
-      if (tc.length) {
+      if (clipZeit === 'vote') {
+        hc += cvHtml(c.vote || []);
+        tc = null;
+      }
+      if (tc === null) { }
+      else if (tc.length) {
         hc += '<div class="kacheln clips">';
         tc.forEach(function (x, i) {
           hc += '<a class="clip" href="' + esc(x.url) + '" target="_blank" rel="noopener"><div class="vb"><img loading="lazy" alt="" src="' + esc(sicher(x.bild)) + '"><i>#' + (i + 1) + '</i><u>▶ ' + Number(x.aufrufe).toLocaleString('de-DE') + '</u></div><div class="t"><b>' + esc(x.titel) + '</b><span>von ' + esc(prof(x.von).n) + (x.datum ? ' · ' + esc(x.datum) : '') + '</span></div></a>';
@@ -4438,7 +4503,8 @@
         clipZeit = b.getAttribute('data-z');
         zeigen();
       };
-      $('hinweis').textContent = 'Die meistgesehenen Clips · ' + (clipZeit === 'woche' ? 'seit Sonntag' : clipZeit === 'top' ? 'aller Zeiten' : 'der letzten 30 Tage');
+      $('hinweis').textContent = clipZeit === 'vote' ? 'Community-Clip der Woche · abstimmen bis Samstag 23:59' : 'Die meistgesehenen Clips · ' + (clipZeit === 'woche' ? 'seit Sonntag' : clipZeit === 'top' ? 'aller Zeiten' : 'der letzten 30 Tage');
+      if (clipZeit === 'vote') cvEvents();
       return true;
     }
     if (reiter === 'spiele') {
@@ -4618,7 +4684,7 @@
     if (location.hash === '#shop') geheZu('shop');
     if (location.hash === '#rueckblick') setTimeout(rbDialog, 600);
     if (location.hash === '#zeitung') setTimeout(function () { zeitungDialog(0); }, 600);
-    zLaden().then(function (d) { if (d && d.liste && d.liste.length && !document.querySelector('[data-zeitung]')) { var k = document.querySelector('.kwoche'); if (k) { var div = document.createElement('div'); div.className = 'kwz'; div.innerHTML = '🗞️ <a class="ztglink" data-zeitung="0">Kazetopia-Zeitung · Ausgabe #' + d.liste[0].nr + ' lesen</a>'; k.appendChild(div); } } });
+    zLaden().then(function (d) { if (d && d.liste && d.liste.length && reiter === 'start') zeigen(); });
     if (location.hash === '#pass') setTimeout(passDialog, 700);
     var m = location.hash.match(/^#profil=(.+)$/);
     if (m) profilZeigen(decodeURIComponent(m[1]).toLowerCase());
