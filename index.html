@@ -3092,8 +3092,27 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     { id: 'leseratte', icon: '📜', name: 'Leseratte', text: 'Die Datenschutzerklärung bis zum Ende gelesen', tipp: 'Auch das Kleingedruckte zählt.' },
     { id: 'narziss', icon: '🪞', name: 'Spieglein, Spieglein', text: 'Das eigene Profil 25-mal geöffnet', tipp: '' },
     { id: 'app', icon: '📱', name: 'Immer dabei', text: 'Kazetopia als App vom Homescreen geöffnet', tipp: 'Es geht auch ohne Browser.' },
-    { id: 'detektiv', icon: '🕵️', name: 'Detektiv', text: 'In der Rangliste nach dem eigenen Namen gesucht', tipp: '' }
+    { id: 'detektiv', icon: '🕵️', name: 'Detektiv', text: 'In der Rangliste nach dem eigenen Namen gesucht', tipp: '' },
+    // Reihe 2 (ab 22.11.2026) – fast alles prüft der Server
+    { r: 2, id: 'volltreffer', icon: '🎰', name: 'Volltreffer', text: 'Den Jackpot am Glücks-Knopf gewonnen', tipp: 'Manchmal muss das Glück einfach mitspielen.' },
+    { r: 2, id: 'glueckspilz', icon: '💎', name: 'Goldene Woche', text: 'Im Zeni-Tresor die 6-%-Woche erwischt', tipp: 'Geduld wird manchmal reich belohnt.' },
+    { r: 2, id: 'schnapszahl', icon: '7️⃣', name: 'Schnapszahl', text: 'Genau 77.777 Zeni auf dem Konto', tipp: 'Eine ganz bestimmte Zahl auf dem Konto.' },
+    { r: 2, id: 'riecher', icon: '🗳️', name: 'Guter Riecher', text: 'Für den Clip gestimmt, der Community-Clip der Woche wurde', tipp: 'Wer den richtigen Riecher hat …' },
+    { r: 2, id: 'engel', icon: '🎁', name: 'Weihnachtsengel', text: 'An Heiligabend einem Freund etwas geschenkt', tipp: 'Geben ist seliger als nehmen – an einem besonderen Tag.' },
+    { r: 2, id: 'neujahr', icon: '🎆', name: 'Erster im neuen Jahr', text: 'In den ersten 10 Minuten des neuen Jahres auf Kazetopia', tipp: 'Einmal im Jahr, nur ein paar Minuten lang.' },
+    { r: 2, id: 'archivar', icon: '📰', name: 'Archivar', text: 'Jede Ausgabe der Kazetopia-Zeitung geöffnet (ab 4 Ausgaben)', tipp: 'Wer die Geschichte kennt …' },
+    { r: 2, id: 'gerettet', icon: '🛟', name: 'Gerettet', text: 'Der Serienschutz hat deine Besuchs-Serie gerettet', tipp: 'Einmal vergessen ist nicht schlimm.' },
+    { r: 2, id: 'gesellig', icon: '🤝', name: 'Gesellig', text: '5 gegenseitige Freunde auf Kazetopia', tipp: 'Gemeinsam ist man weniger allein.' },
+    { r: 2, id: 'durchgemacht', icon: '🌙', name: 'Durchgemacht', text: 'Am selben Tag um 3 Uhr nachts und um 9 Uhr morgens vorbeigeschaut', tipp: 'Schlaf wird überbewertet.' }
   ];
+  var GEH_TITEL = { titel_meisterdetektiv: 'Meisterdetektiv', titel_meisterdetektiv2: 'Meisterdetektiv ✦2' };
+  function geheimTitelToast(t) {
+    if (!GEH_TITEL[t]) return; sofortBesitz[t] = true;
+    var d = document.createElement('div'); d.className = 'gehtoast';
+    d.innerHTML = '<span>🕵️</span><div><small>🏷️ Neuer Titel – alle Geheimnisse ' + (t === 'titel_meisterdetektiv2' ? 'der Reihe 2 ' : '') + 'entdeckt!</small><b>' + esc(GEH_TITEL[t]) + '</b></div>';
+    document.body.appendChild(d);
+    setTimeout(function () { d.classList.add('weg'); }, 6000); setTimeout(function () { d.remove(); }, 6700);
+  }
   var geheimHat = {};
   function geheimAlleLaden() {
     fetch(SB_URL + '/rest/v1/rpc/geheim_alle', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' })
@@ -3110,6 +3129,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   function geheimNeu(id) {
     if (!sitzung || !sitzung.name) return;
+    if (String(id).indexOf('titel:') === 0) { geheimTitelToast(id.substring(6)); return; }
     (geheimHat[sitzung.name] = geheimHat[sitzung.name] || []).push(id);
     geheimToast(id);
   }
@@ -3119,6 +3139,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     sFrisch().then(function () { return sbFetch('/rest/v1/rpc/geheim_melden', { method: 'POST', body: { p_id: id } }); }).then(function (r) {
       try { localStorage.setItem(k, '1'); } catch (x) { }
       if (r && r.neu) geheimNeu(id);
+      if (r && r.titel) setTimeout(function () { geheimTitelToast(r.titel); }, 1500);
     }).catch(function () { });
   }
   function geheimPruefen() {
@@ -3404,6 +3425,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     var L = zDaten && zDaten.liste || [];
     if (!L.length) { el.innerHTML = '<div class="ztg-kopf"><div class="ztg-titel">Kazetopia-Zeitung</div></div><p class="leise">Die erste Ausgabe erscheint am Sonntag.</p>'; return; }
     var a = L[zWahl] || L[0], z = a.zahlen || {}, h = '';
+    if (sitzung && sitzung.name) { try { var zk = 'kz_ztg_offen_' + sitzung.name, zo = JSON.parse(localStorage.getItem(zk) || '[]'); if (zo.indexOf(a.nr) < 0) { zo.push(a.nr); localStorage.setItem(zk, JSON.stringify(zo)); } if (L.length >= 4 && L.every(function (x) { return zo.indexOf(x.nr) >= 0; })) geheimMelden('archivar'); } catch (x) { } }
     var bisJ = new Date(a.bis + 'T00:00:00').getFullYear();
     h += '<div class="ztg-kopf"><div class="ztg-titel">Kazetopia-Zeitung</div><div class="ztg-unter">Ausgabe #' + a.nr + ' · ' + zDatum(a.von) + '–' + zDatum(a.bis) + bisJ + '</div></div>';
     // Aufmacher
@@ -3692,19 +3714,25 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       if (pos === folge.length) { pos = 0; geheimMelden('konami'); }
     });
   })();
-  function geheimHtml(login) {
+  function geheimReihe(login, ALLE, kopf) {
     // Spoiler-Schutz (Hinweis von joe3000): bei anderen nur die Erfolge aufdecken, die man selbst schon hat
-    var eigen = sitzung && sitzung.name === login, ichSelbst = sitzung && sitzung.name, hat = GEHEIM.filter(function (g) { return geheimDa(login, g.id); });
+    var eigen = sitzung && sitzung.name === login, ichSelbst = sitzung && sitzung.name, hat = ALLE.filter(function (g) { return geheimDa(login, g.id); });
     if (!eigen && !hat.length) return '';
-    var liste = eigen ? GEHEIM : hat;
+    var liste = eigen ? ALLE : hat;
     function offen(g) { return eigen ? geheimDa(login, g.id) : (ichSelbst && geheimDa(ichSelbst, g.id)); }
     var verdeckt = eigen ? 0 : hat.filter(function (g) { return !offen(g); }).length;
-    return '<h4>🔒 GEHEIME ERFOLGE · ' + hat.length + '/' + GEHEIM.length + '</h4><div class="gehgitter">' + liste.filter(function (g) { return eigen || offen(g); }).map(function (g) {
+    return kopf + ' · ' + hat.length + '/' + ALLE.length + (hat.length === ALLE.length ? ' ✓' : '') + '</h4><div class="gehgitter">' + liste.filter(function (g) { return eigen || offen(g); }).map(function (g) {
       return (eigen ? geheimDa(login, g.id) : true) ? '<div class="gehk ja" title="' + esc(g.text) + '"><span>' + g.icon + '</span><div><b>' + esc(g.name) + '</b><small>' + esc(g.text) + '</small></div></div>'
         : '<div class="gehk"><span>❓</span><div><b>???</b><small>' + esc(g.tipp || 'Ganz geheim – kein Hinweis.') + '</small></div></div>';
     }).join('') + (verdeckt ? '<div class="gehk"><span>🔒</span><div><b>' + verdeckt + (verdeckt === 1 ? ' weiterer' : ' weitere') + '</b><small>' + (ichSelbst ? 'Die hast du selbst noch nicht – kein Spoiler 😉' : 'Melde dich an, um zu sehen, welche du auch hast.') + '</small></div></div>' : '') + '</div>' +
-      (eigen && hat.length < GEHEIM.length ? '<div class="leise" style="margin-top:6px">Was genau man tun muss, verrät erst das Freischalten. Nur Abzeichen, keine Zeni.</div>' : '');
+      (eigen && hat.length < ALLE.length ? '<div class="leise" style="margin-top:6px">Was genau man tun muss, verrät erst das Freischalten. Nur Abzeichen, keine Zeni.</div>' : '');
   }
+  function geheimHtml(login) {
+    var r1 = GEHEIM.filter(function (g) { return !g.r; }), r2 = GEHEIM.filter(function (g) { return g.r === 2; });
+    var a = geheimReihe(login, r1, '<h4>🔒 GEHEIME ERFOLGE · REIHE 1'), b = geheimReihe(login, r2, '<h4>🔒 REIHE 2');
+    return a + b;
+  }
+
 
   // 🤝 Freunde (gegenseitig) und „Hat X Leute gebracht“ – öffentlich nur gegenseitige Freundschaften
   var freunde = { paare: {}, werber: {}, geladen: false, meine: null };
