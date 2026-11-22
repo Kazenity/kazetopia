@@ -866,6 +866,27 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes xfunkel { 0%, 100% { opacity: 1; } 50% { opacity: .35; box-shadow: none; } }
   .xcount { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px; padding: 4px 12px; }
   html.xmas .xcount { display: inline-block; }
+  /* 🎅 Weihnachtsmann-Easter-Egg */
+  .santa { position: fixed; left: 0; z-index: 60; width: 190px; height: 90px; padding: 14px; box-sizing: content-box; cursor: pointer; animation: santaflug 7.5s linear forwards; -webkit-tap-highlight-color: transparent; }
+  .santa svg { width: 100%; height: 100%; overflow: visible; animation: santawelle 1.6s ease-in-out infinite; filter: drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
+  .santa.gold svg { filter: drop-shadow(0 0 12px #ffd166) drop-shadow(0 0 4px #fff3c4); }
+  .santa .funken { position: absolute; right: -6px; top: 40px; width: 60px; height: 20px; }
+  .santa .funken i { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff6c9; box-shadow: 0 0 6px #ffd166; animation: santafunke 1s linear infinite; }
+  @keyframes santaflug { from { transform: translateX(calc(100vw + 20px)); } to { transform: translateX(-260px); } }
+  @keyframes santawelle { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
+  @keyframes santafunke { from { transform: translateX(0); opacity: 1; } to { transform: translateX(46px); opacity: 0; } }
+  html.a-ruhig .santa { animation: santaruhig 9s linear forwards !important; left: auto; right: 12px; }
+  html.a-ruhig .santa svg { animation: none !important; }
+  @keyframes santaruhig { 0% { opacity: 0; } 8%, 88% { opacity: 1; } 100% { opacity: 0; } }
+  .santa.gefangen { animation-play-state: paused; pointer-events: none; }
+  .santa.gefangen svg { animation: santaweg .7s ease-in forwards; }
+  @keyframes santaweg { to { transform: translateY(-160px) scale(.6); opacity: 0; } }
+  .santaboom { position: fixed; z-index: 61; pointer-events: none; font-size: 22px; animation: santaboom 1.4s ease-out forwards; }
+  @keyframes santaboom { from { transform: translate(0, 0) scale(.6); opacity: 1; } to { transform: translate(var(--x), var(--y)) scale(1.1); opacity: 0; } }
+  .santakarte { text-align: center; }
+  .santakarte .gross { font-size: 64px; line-height: 1; margin: 6px 0 10px; animation: santahuepf .9s ease-out; }
+  .santakarte .zeni { font-size: 28px; font-weight: 800; color: var(--gold, #ffd166); margin: 6px 0; }
+  @keyframes santahuepf { 0% { transform: scale(.3) rotate(-20deg); } 60% { transform: scale(1.15) rotate(6deg); } 100% { transform: scale(1) rotate(0); } }
   /* 📱 Kompakter Kopf am Handy (nur Start) */
   @media (max-width: 560px) {
     body:not(.kopf-klein) header { margin-bottom: 14px; }
@@ -3935,7 +3956,9 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       if ((u.werben || []).length) h += '<div class="sbox"><h3>🌱 GEWORBEN</h3>' + u.werben.map(function (w) { return '<div class="kzzeile"><b>' + esc(w.g) + '</b><span>von ' + esc(w.w) + '</span><span class="leise">' + (w.s === 'belohnt' ? '✅' : w.s === 'abgelehnt' ? '✖️' : '⏳ wartet') + '</span></div>'; }).join('') + '</div>';
       var gross = (u.glueck || []).filter(function (g) { return g.g !== 'vip'; });
       if (gross.length) h += '<div class="sbox"><h3>🍀 GROSSE GLÜCKS-GEWINNE</h3>' + gross.map(function (g) { return '<div class="kzzeile"><b>' + esc(g.l) + '</b><span>' + glueckText(g.g, g.z) + '</span><span class="leise">' + esc(g.d) + '</span></div>'; }).join('') + '</div>';
+      h = '<div class="sbox"><h3>🎅 WEIHNACHTSMANN TESTEN</h3><p class="leise">Lässt ihn sofort einmal fliegen – nur bei dir, ohne echte Zeni. Gut zum Zeigen im Stream.</p><div class="admfbk2"><button class="vtw" id="santat1">🎅 Normal</button><button class="vtw" id="santat2">🛷 Golden</button></div></div>' + h;
       $('adm').innerHTML = h;
+      [['santat1', 'normal'], ['santat2', 'gold']].forEach(function (x) { var b = $(x[0]); if (b) b.onclick = function () { profilZu(); setTimeout(function () { santaZeigen(x[1]); }, 700); }; });
       rpc('admin_bereiche').then(function (b) {
         var el = $('adm'); if (!el || !(b || []).length) return;
         var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut', zeitung: '📰 Zeitung', rueckblick: '📊 Rückblick' };
@@ -4222,6 +4245,94 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     box.innerHTML = h;
     document.body.insertBefore(box, document.body.firstChild);
   }
+  // 🎅 Weihnachtsmann-Easter-Egg (22.11.–24.12.): Server würfelt pro Person und Tag (25 %, Heiligabend immer).
+  //    Er kommt 20 Sek. bis 4 Min. nach dem Öffnen (nur sichtbare Zeit zählt), verpasst = kommt einmal wieder.
+  var santa = { stand: null, auftritte: 0, sichtbar: 0, ziel: 0, aktiv: false, gefangen: false };
+  function santaZeit() { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); return (m === 11 && t >= 22) || (m === 12 && t <= 24); }
+  function santaSvg(gold) {
+    var rot = gold ? '#e8b923' : '#d6303a', rot2 = gold ? '#b8860b' : '#a3202a', kufe = gold ? '#fff3c4' : '#ffd166';
+    return '<svg viewBox="0 0 190 90" aria-hidden="true">' +
+      // Rentiere (vorne = links, er fliegt nach links)
+      [0, 44].map(function (x) { return '<g transform="translate(' + x + ',0)"><path d="M18 46 q8-10 22-6 l6 10 q-2 6-10 6 l-14 0 q-6-2-4-10z" fill="#8a5a3c"/><circle cx="16" cy="40" r="6" fill="#8a5a3c"/><circle cx="12" cy="40" r="2.2" fill="' + (x === 0 ? '#ff4d4d' : '#3a2416') + '"/><path d="M18 34 l-3-8 m3 8 l4-7 m-4-1 l-4-3 m8 4 l3-4" stroke="#6b4228" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M24 56 l-3 10 M34 56 l2 10 M40 54 l4 9" stroke="#6b4228" stroke-width="3" stroke-linecap="round"/></g>'; }).join('') +
+      // Zügel
+      '<path d="M40 48 Q66 40 84 48 Q108 42 124 52" stroke="' + kufe + '" stroke-width="1.6" fill="none"/>' +
+      // Schlitten
+      '<path d="M112 46 h52 q10 0 10 10 v8 q0 6-6 6 h-48 q-10 0-12-12z" fill="' + rot + '"/><path d="M112 46 h52 v6 h-52z" fill="' + rot2 + '"/>' +
+      '<path d="M104 76 h64 q10 0 12-8" stroke="' + kufe + '" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M122 70 v6 M158 70 v6" stroke="' + kufe + '" stroke-width="3"/>' +
+      // Geschenke-Sack
+      '<path d="M160 44 q-2-16 8-18 q12 2 10 18z" fill="#7a4a2a"/><rect x="150" y="34" width="10" height="10" rx="1.5" fill="#3fae6a"/><path d="M155 34 v10" stroke="#ffd166" stroke-width="2"/>' +
+      // Weihnachtsmann
+      '<path d="M128 46 q0-16 12-16 q12 0 12 16z" fill="' + rot + '"/><circle cx="140" cy="26" r="8" fill="#f6c9a8"/>' +
+      '<path d="M132 28 q8 12 16 0 q-2 8-8 8 q-6 0-8-8z" fill="#fff"/><path d="M131 22 q9-14 20-2 l-1 3 h-18z" fill="' + rot + '"/><path d="M131 22 h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="152" cy="17" r="3" fill="#fff"/>' +
+      '<circle cx="137" cy="25" r="1.1" fill="#3a2416"/><path d="M128 40 l-10 -4" stroke="' + rot + '" stroke-width="5" stroke-linecap="round"/><circle cx="117" cy="36" r="2.6" fill="#fff"/>' +
+      '</svg><div class="funken"><i style="top:4px"></i><i style="top:12px;animation-delay:.3s"></i><i style="top:8px;animation-delay:.6s"></i></div>';
+  }
+  function santaZeigen(demo) {
+    if (!demo && (santa.aktiv || santa.gefangen || document.hidden)) return;
+    if (!demo) { santa.aktiv = true; santa.auftritte++; }
+    var gold = demo ? demo === 'gold' : !!(santa.stand && santa.stand.gold);
+    var el = document.createElement('div'); el.className = 'santa' + (gold ? ' gold' : ''); el.setAttribute('role', 'button'); el.setAttribute('aria-label', 'Weihnachtsmann antippen');
+    el.style.top = Math.round(window.innerHeight * (0.18 + Math.random() * 0.4)) + 'px';
+    el.innerHTML = santaSvg(gold);
+    document.body.appendChild(el);
+    var weg = setTimeout(function () { el.remove(); if (demo) return; santa.aktiv = false; if (!santa.gefangen && santa.auftritte < 2) { santa.sichtbar = 0; santa.ziel = 90 + Math.floor(Math.random() * 60); } }, 9200);
+    el.onclick = function (e) {
+      clearTimeout(weg); el.classList.add('gefangen'); if (!demo) { santa.gefangen = true; zaehlen('santa'); }
+      var r = el.getBoundingClientRect(), cx = e.clientX || (r.left + r.width / 2), cy = e.clientY || (r.top + r.height / 2);
+      for (var i = 0; i < 14; i++) { var b = document.createElement('div'); b.className = 'santaboom'; b.textContent = ['🎁', '✨', '❄️', '⭐'][i % 4]; b.style.left = cx + 'px'; b.style.top = cy + 'px'; b.style.setProperty('--x', Math.round((Math.random() - 0.5) * 220) + 'px'); b.style.setProperty('--y', Math.round((Math.random() - 0.7) * 200) + 'px'); document.body.appendChild(b); setTimeout(function (x) { return function () { x.remove(); }; }(b), 1500); }
+      santaHoho();
+      setTimeout(function () { el.remove(); if (!demo) santa.aktiv = false; }, 800);
+      if (demo) { var dz = gold ? 5000 : 200 + Math.floor(Math.random() * 17) * 50; setTimeout(function () { santaKarte(gold ? '🌟' : '🎁', gold ? '🛷 Der Goldene Schlitten!' : 'Du hast den Weihnachtsmann erwischt!', '<div class="zeni">+' + zahl(dz) + ' Zeni</div>', (gold ? 'Nur jeder 20. Weihnachtsmann kommt mit dem goldenen Schlitten! ' : '') + 'Er kommt nicht jeden Tag – bis Heiligabend die Augen offen halten! Ab 5 Fängen gibt es den Titel „Rentierflüsterer“.'); }, 900); return; }
+      santaAbholen(gold);
+    };
+  }
+  function santaHoho() {
+    try {
+      var C = window.AudioContext || window.webkitAudioContext; if (C) { var c = new C(); [0, .12, .24, .36].forEach(function (t, i) { var o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = [1568, 2093, 1760, 2349][i]; g.gain.setValueAtTime(.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(.12, c.currentTime + t + .01); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + t + .35); o.connect(g); g.connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + .4); }); }
+    } catch (x) { }
+    try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance('Ho ho ho!'); u.lang = 'de-DE'; u.pitch = 0.3; u.rate = 0.8; u.volume = 0.9; window.speechSynthesis.speak(u); } } catch (x) { }
+  }
+  function santaKarte(gross, kopf, mitte, unten) {
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds santakarte"><div class="gross">' + gross + '</div><b style="font-size:19px">' + kopf + '</b>' + mitte + '<p class="leise">' + unten + '</p><div class="edknoepfe" style="justify-content:center"><button class="vtw" id="santazu">Ho ho ho! 🎄</button></div></div>');
+    if ($('santazu')) $('santazu').onclick = profilZu;
+  }
+  function santaAbholen(gold) {
+    if (!sitzung || !sitzung.name) {
+      setTimeout(function () { santaKarte('🎅', 'Du hast den Weihnachtsmann erwischt!', '<p>Er hat ein Geschenk für dich dabei – melde dich mit Twitch an, dann bringt er es dir beim nächsten Mal.</p>', 'Er kommt nicht jeden Tag vorbei. Halte bis Heiligabend die Augen offen 👀'); }, 900);
+      return;
+    }
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/santa_fangen', { method: 'POST', body: {} }); }).then(function (r) {
+      if (!r || !r.ok) { setTimeout(function () { santaKarte('🎅', 'Ho ho ho!', '', 'Dein Geschenk für heute hast du schon. Komm an einem anderen Tag wieder!'); }, 900); return; }
+      if (typeof r.rest === 'number') liveZeni = r.rest;
+      if (r.titel) sofortBesitz[r.titel] = true;
+      var kopf = r.art === 'gold' ? '🛷 Der Goldene Schlitten!' : r.art === 'heilig' ? '🎄 Frohe Weihnachten!' : 'Du hast den Weihnachtsmann erwischt!';
+      var mitte = (r.zeni ? '<div class="zeni">+' + zahl(r.zeni) + ' Zeni</div>' : '') + (r.titel ? '<p>🏷️ Neuer Titel: <b>„' + esc(kosName(r.titel)) + '“</b> – leg ihn unter ✏️ Profil gestalten an.</p>' : '');
+      var rest = Math.max(0, 5 - r.faenge);
+      var unten = (r.art === 'gold' ? 'Nur jeder 20. Weihnachtsmann kommt mit dem goldenen Schlitten – Glückwunsch! ' : '') + 'Schon ' + r.faenge + '× gefangen' + (rest ? ' · noch ' + rest + ' bis zum Titel „Rentierflüsterer“.' : '.') + ' Er kommt nicht jeden Tag – bis Heiligabend die Augen offen halten!';
+      setTimeout(function () { santaKarte(r.art === 'gold' ? '🌟' : '🎁', kopf, mitte, unten); }, 900);
+    }).catch(function (x) { setTimeout(function () { santaKarte('🎅', 'Ho ho ho!', '', esc(x.message)); }, 900); });
+  }
+  function santaStart() {
+    if (!santaZeit()) return;
+    var los = function (kommt) {
+      if (!kommt) return;
+      santa.ziel = 20 + Math.floor(Math.random() * 220);   // 20 Sek. bis 4 Min. sichtbare Zeit
+      setInterval(function () {
+        if (document.hidden || santa.gefangen || santa.aktiv || santa.auftritte >= 2 || !santa.ziel) return;
+        if (++santa.sichtbar >= santa.ziel) { santa.ziel = 0; santaZeigen(); }
+      }, 1000);
+    };
+    if (sitzung && sitzung.name) {
+      sFrisch().then(function () { return sbFetch('/rest/v1/rpc/santa_heute', { method: 'POST', body: {} }); })
+        .then(function (r) { santa.stand = r; los(r && r.ok && r.kommt && !r.gefangen); }).catch(function () { });
+    } else {
+      // nicht angemeldet: eigener Würfel pro Tag (nur zum Anschauen, Geschenk erst mit Anmeldung)
+      var k = 'kz_santa_' + new Date().toDateString(), w = null;
+      try { w = localStorage.getItem(k); if (w === null) { w = Math.random() < 0.25 ? '1' : '0'; localStorage.setItem(k, w); } } catch (x) { w = '0'; }
+      los(w === '1');
+    }
+  }
+  setTimeout(santaStart, 4000);
   saisonStarten();
   if ($('saisonknopf')) $('saisonknopf').onclick = function (e) { e.preventDefault(); try { localStorage.setItem('kz_saison', saisonAn() ? 'aus' : 'an'); } catch (x) { } saisonStarten(); };
 
