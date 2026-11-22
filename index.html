@@ -2169,7 +2169,7 @@
     if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
     var l = (sitzung && sitzung.name) || ich || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
     // seit Bot v20.36 hat jeder eigene Einzel-Quests (q.pro: IDs je Zuschauer, q.q: Beschreibung)
-    var meine = q.pro ? (l ? (q.pro[l] || []) : []).map(function (id) { return (q.q || {})[id]; }).filter(Boolean) : (q.liste || []);
+    var meine = q.pro ? (l ? (q.pro[l] || []) : []).map(function (id) { return typeof id === 'string' ? (q.q || {})[id] : id; }).filter(Boolean) : (q.liste || []);
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
     var fq = q.freund, fs0 = fq && l ? (fq.stand || {})[l] : null, fFertig = !!(fs0 && fs0.mit && fs0.v >= fq.ziel && fs0.pv >= fq.ziel);
     // kompakt: eine Zeile mit Fortschritt, Details aufklappbar (Zustand wird im Browser gemerkt)
@@ -2193,10 +2193,10 @@
           : l && rolle(l) !== 'streamer' ? '<div class="leise qfreund">Dir fehlt noch ein Freund: Markiert euch <b>gegenseitig</b> als Freund (Profilkarte → 🤝). Deine Watchtime zählt schon, sobald dein Freund auch ' + zahl(fq.ziel) + ' ' + esc(fq.einheit || 'Std.') + ' hat, gibt es die Belohnung.</div>' : '') +
         '<div class="qlohn">🎁 ' + esc(fq.lohn) + (fFertig ? ' · erhalten' : ' · für euch beide') + '</div></div>';
     }
-    if (q.pro && meine.length) h += '<div class="leise qinfo">🎲 Deine eigenen Quests – jeder hat diese Woche andere.</div>';
+    if (q.pro && meine.length) h += '<div class="leise qinfo">🎲 Deine persönlichen Quests – die Ziele richten sich nach deinem eigenen Stand der letzten Wochen.</div>';
     meine.forEach(function (x, i) {
       var v = f ? (f[i] || 0) : null, fertig = v !== null && v >= x.ziel, pr = v !== null ? Math.min(100, v / Math.max(1, x.ziel) * 100) : 0;
-      h += '<div class="qe' + (fertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fertig ? '✅ ' : '') + esc(x.text) + '</b>' + (v !== null ? '<span>' + zahl(Math.min(v, x.ziel)) + ' / ' + zahl(x.ziel) + (x.einheit ? ' ' + esc(x.einheit) : '') + '</span>' : '') + '</div>' +
+      h += '<div class="qe' + (fertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fertig ? '✅ ' : '') + esc(x.text) + (x.neu && !fertig ? ' <span class="leise">· ✨ Einstieg</span>' : '') + '</b>' + (v !== null ? '<span>' + zahl(Math.min(v, x.ziel)) + ' / ' + zahl(x.ziel) + (x.einheit ? ' ' + esc(x.einheit) : '') + '</span>' : '') + '</div>' +
         (v !== null ? '<div class="qbar"><i style="width:' + pr + '%"></i></div>' : '') + '<div class="qlohn">🎁 ' + esc(x.lohn) + (fertig ? ' · erhalten' : '') + '</div></div>';
     });
     if (!l) h += '<div class="leise qinfo">' + (q.pro ? 'Jeder bekommt eigene Quests. ' : '') + 'Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um ' + (q.pro ? 'deine Quests' : 'deinen Fortschritt') + ' zu sehen.</div>';
@@ -4033,8 +4033,8 @@
     h += '</div></div>';
     h += '<div class="isek" data-sek="qu" style="display:none"><h4>🎯 WOCHEN-QUESTS</h4><div class="liste-abz">' +
       '<div>Jeden <b>Sonntag</b> gibt es <b>3 neue Einzel-Quests</b>, <b>1 Gemeinschafts-Quest</b> und die <b>Freundes-Quest</b> – zu sehen auf der Startseite.</div>' +
-      '<div>🎲 Die Einzel-Quests sind bei jedem anders: eine fürs Dabeisein, eine für deine Zeit im Stream, eine fürs Mitmachen. Nie dieselbe wie letzte Woche, und Titel, die du schon hast, kommen nicht nochmal.</div>' +
-      '<div>Einzel-Quests sind z. B. „Sei bei allen Streams dabei“, „Schau 12 Stunden zu“ oder „Schreib 200 Nachrichten“. Geschafft? Die Belohnung kommt automatisch beim nächsten Update, mit Meldung im Chat.</div>' +
+      '<div>🎲 Die Einzel-Quests sind persönlich: eine fürs Dabeisein im Chat, eine für deine Zeit im Stream, eine fürs Mitmachen. Die Art wechselt jede Woche, sodass jeder mal alles bekommt. Das Ziel richtet sich nach deinem eigenen Stand der letzten Wochen – etwas mehr als sonst. Was du noch nie gemacht hast, startet mit einem leichten Einstieg. Jede Quest bringt 1.500 Zeni.</div>' +
+      '<div>Einzel-Quests sind z. B. „Schreib in allen 4 Streams im Chat“, „Schau 12 Stunden zu“ oder „Erstelle einen Clip“. Geschafft? Die Belohnung kommt automatisch beim nächsten Update, mit Meldung im Chat.</div>' +
       '<div>Die Gemeinschafts-Quest schafft der ganze Chat zusammen. Die Belohnung bekommt jeder, der in der Woche bei mindestens einem Stream dabei war – ausgezahlt am Sonntag.</div>' +
       '<div>Belohnungen: Zeni oder <b>Titel, die es nicht im Shop gibt</b>.</div>' +
       '<div>Deinen Fortschritt siehst du auf der Startseite oder mit <b>!quests</b> im Chat.</div></div></div>';
