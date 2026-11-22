@@ -1512,7 +1512,8 @@
     var a = kosArtikel(id); if (!a || !sitzung) return;
     var stf = STUFE[a.stufe] || STUFE.g, typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛍️ ' + typ + ' kaufen</b><div class="kk">' + stf[0] + ' ' + stf[1] + '</div></div></div>' +
-      '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(preisVon(a)) + ' Zeni</b>' + (preisVon(a) !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>' +
+      (function () { var pv = preisVon(a), rab = gsAktiv('gutschein') && !a.thron && pv > 0, pr = rab ? Math.max(0, Math.round(pv * 0.8 / 100) * 100) : pv;
+        return '<p style="font-size:17px"><b>' + esc(a.name) + '</b> für <b>' + zahl(pr) + ' Zeni</b>' + (rab ? ' <span class="leise">(🛍️ Shop-Gutschein −20 %, statt ' + zahl(pv) + ')</span>' : pv !== a.preis ? ' <span class="leise">(Angebot der Woche, statt ' + zahl(a.preis) + ')</span>' : '') + '?</p>'; })() +
       (a.gutschein ? '<p class="leise">Gutschein für ein Design nach deinem Entwurf. Nach dem Kauf schickst du es als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener">Ticket in #support</a>. Wird es abgelehnt, bekommst du die Zeni komplett zurück.</p><label class="anz" style="border:0;padding:6px 0"><span><b>Ich habe die Regeln gelesen</b><small>Ich reiche nur ein Design ein, das ich selbst erstellt habe oder an dem ich alle Rechte besitze.</small></span><input type="checkbox" id="kaufregeln"></label>' : '<p class="leise">Der Kauf wird sofort gebucht. Rein kosmetisch – kein Umtausch, Zeni haben keinen Geldwert.</p>') +
       '<div class="edknoepfe"><button class="vtw" id="kaufok">Ja, kaufen</button><button class="vlink" id="kaufab">Abbrechen</button></div><p class="leise" id="kaufinfo"></p></div>';
     karteOeffnen(h);
@@ -1523,6 +1524,7 @@
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/kaufen', { method: 'POST', body: { p_artikel: id } }); })
         .then(function (r) {
           sofortBesitz[id] = true; if (meineBest) delete meineBest[id];
+          if (r && r.rabatt) gsLaden();
           if (r && typeof r.rest === 'number') liveZeni = r.rest;
           if (a.gutschein) {
             $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Gutschein gekauft!</b><div class="kk">' + esc(a.name) + '</div></div></div><p><b>Nächster Schritt:</b> Schick dein Design als <a href="https://discord.com/channels/546732452509515796/874811628124782592" target="_blank" rel="noopener"><b>Ticket in #support</b></a>. Kaze prüft es und schaltet es für dich frei – du bekommst dann eine Nachricht im Posteingang.</p><h4>REGELN</h4>' + DESIGN_REGELN + '<div class="edknoepfe"><button class="vlink" id="kaufzu">Alles klar</button></div>';
@@ -1648,9 +1650,9 @@
         var el = $('edfarbe'); if (!el) return;
         var kurz = wahl.rahmen, a = kurz && kurz !== 'aus' ? kosArtikel('rahmen_' + kurz) : null;
         if (!a || !a.faerbbar) { el.innerHTML = kurz && kurz !== 'aus' ? '<p class="leise">🎨 Dieser Rahmen lässt sich nicht umfärben.</p>' : ''; return; }
-        var akt = rahmenFarbe(login, kurz), wahlTon = akt, kosten = rolle(login) === 'streamer' ? 0 : Math.max(5000, Math.round(preisVon(a) * 0.25 / 100) * 100);
+        var akt = rahmenFarbe(login, kurz), wahlTon = akt, gsGratis = gsAktiv('umfaerben'), kosten = rolle(login) === 'streamer' || gsGratis ? 0 : Math.max(5000, Math.round(preisVon(a) * 0.25 / 100) * 100);
         var mitAv = function (ton) { return '<span class="rwrap">' + bild(login, true) + '<img class="rahmen" alt="" src="' + kosBild('rahmen_' + kurz) + '"' + filterFuer(kurz, ton) + '></span>'; };
-        el.innerHTML = '<h4>🎨 RAHMEN UMFÄRBEN <span class="leise">(' + (kosten ? zahl(kosten) + ' Zeni pro Umfärbung' : 'für dich kostenlos') + ')</span></h4>' +
+        el.innerHTML = '<h4>🎨 RAHMEN UMFÄRBEN <span class="leise">(' + (kosten ? zahl(kosten) + ' Zeni pro Umfärbung' : gsGratis ? '🖌️ nächste Umfärbung gratis dank Saisonpass-Gutschein' : 'für dich kostenlos') + ')</span></h4>' +
           '<div class="edfvor" id="edfvor">' + mitAv(akt) + '</div><div class="edftoene"><button data-ton="" class="' + (akt === null || akt === (a.farbton || 0) ? 'an' : '') + '">Original</button>' +
           FARBTOENE.map(function (t) { return '<button data-ton="' + t[1] + '" style="--ton:hsl(' + t[1] + ',85%,62%)" class="' + (akt === t[1] ? 'an' : '') + '"><i></i>' + t[0] + '</button>'; }).join('') + '</div>' +
           '<div class="edknoepfe"><button class="vtw" id="edfkauf" disabled>Farbe wählen</button></div><p class="leise" id="edfinfo"></p>';
@@ -1666,7 +1668,7 @@
         $('edfkauf').onclick = function () {
           var k = $('edfkauf'); k.disabled = true; $('edfinfo').textContent = 'Wird gebucht …';
           sFrisch().then(function () { return sbFetch('/rest/v1/rpc/faerben', { method: 'POST', body: { p_rahmen: 'rahmen_' + kurz, p_farbe: wahlTon } }); })
-            .then(function () { sofortFarbe['rahmen_' + kurz] = wahlTon; if (liveZeni !== null && kosten) liveZeni = Math.max(0, liveZeni - kosten); $('edfinfo').textContent = '✓ Umgefärbt! Für dich sofort sichtbar, für alle anderen nach dem nächsten Kazetopia-Update.'; zeigen(); })
+            .then(function () { if (gsGratis) gsLaden(); sofortFarbe['rahmen_' + kurz] = wahlTon; if (liveZeni !== null && kosten) liveZeni = Math.max(0, liveZeni - kosten); $('edfinfo').textContent = '✓ Umgefärbt! Für dich sofort sichtbar, für alle anderen nach dem nächsten Kazetopia-Update.'; zeigen(); })
             .catch(function (x) { $('edfinfo').textContent = x.message; k.disabled = false; });
         };
       }
@@ -3121,6 +3123,57 @@
 
   // 🎫 Saisonpass: Aufgaben pro Stufe (alles zählt ab Saisonstart mit), Belohnungen vergibt Supabase automatisch
   var passDaten = null, passReiter = 'stufen';
+  // 🎟️ Saisonpass-Gutscheine (Supabase-Update 44)
+  var gsDaten = null;
+  var GS_INFO = {
+    dreh: ['🍀', 'Extra-Dreh', 'Sofort ein zusätzlicher Dreh am Glücks-Knopf – gleiche Gewinne wie sonst.'],
+    booster: ['🔐', 'Tresor-Booster', '+1 % Zins auf deinen laufenden Tresor (höchstens +3 %). Erst Zeni einschließen, dann einlösen.'],
+    gutschein: ['🛍️', 'Shop-Gutschein', 'Dein nächster Kauf im Shop kostet 20 % weniger (nicht beim Thron).'],
+    umfaerben: ['🖌️', 'Gratis-Umfärben', 'Deine nächste Rahmen-Umfärbung ist kostenlos.'],
+    zbooster: ['⚡', 'Zeni-Booster', 'In den nächsten 2 Streams, die du schaust: +1 Zeni pro Minute Zuschauen extra (ab 10 Min., gebucht nach dem Stream).']
+  };
+  function gsLaden() {
+    if (!sitzung) return Promise.resolve([]);
+    return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_gutscheine', { method: 'POST', body: {} }); })
+      .then(function (r) { gsDaten = r || []; return gsDaten; }).catch(function () { gsDaten = gsDaten || []; return gsDaten; });
+  }
+  function gsAktiv(art) { return (gsDaten || []).some(function (g) { return g.art === art && g.eingeloest && !g.benutzt; }); }
+  function gsStatus(g) {
+    var i = g.info || {};
+    if (!g.eingeloest) return '';
+    if (g.art === 'dreh') return i.gewinn === 'titel' ? '✓ Titel „Glückspilz“ gewonnen!' : '✓ +' + zahl(i.zeni || 0) + ' Zeni gewonnen';
+    if (g.art === 'booster') return '✓ +1 % auf deinen Tresor';
+    if (g.art === 'gutschein') return g.benutzt ? '✓ Benutzt: ' + esc(kosName(i.artikel) || i.artikel || '') + ' für ' + zahl(i.preis || 0) + ' statt ' + zahl(i.statt || 0) + ' Zeni' : '✅ Aktiv – dein nächster Shop-Kauf kostet 20 % weniger';
+    if (g.art === 'umfaerben') return g.benutzt ? '✓ Benutzt' : '✅ Aktiv – deine nächste Umfärbung ist gratis';
+    if (g.art === 'zbooster') { var n = (i.streams || []).length; return g.benutzt ? '✓ 2 Streams geboostet' : '⚡ Aktiv – ' + n + ' von 2 Streams geboostet'; }
+    return '✓';
+  }
+  function gsHtml() {
+    if (!sitzung) return '<p class="leise">Melde dich an, um deine Gutscheine zu sehen.</p>';
+    if (gsDaten === null) { gsLaden().then(function () { if (passReiter === 'gut') passTeil(); }); return '<p class="leise">Lade …</p>'; }
+    if (!gsDaten.length) return '<p class="leise">Noch keine Gutscheine. Die gibt es auf den Stufen 3, 7, 9, 12, 14, 17 … – einfach weiterspielen.</p>';
+    return '<p class="leise">Gutscheine aus dem Saisonpass. Einlösen, wann du willst – bis 31 Tage nach Saisonende.</p>' + gsDaten.map(function (g) {
+      var a = GS_INFO[g.art] || ['🎟️', g.art, ''];
+      return '<div class="pch"><b>' + a[0] + ' ' + a[1] + '</b> <span class="leise">· Stufe ' + g.stufe + '</span><br><span class="leise">' + a[2] + '</span>' +
+        (g.eingeloest ? '<br><b>' + gsStatus(g) + '</b>' : '<div class="edknoepfe" style="margin-top:8px"><button class="vtw" data-gs="' + g.id + '">Einlösen</button></div><p class="leise" id="gsi' + g.id + '"></p>') + '</div>';
+    }).join('');
+  }
+  function gsEvents(el) {
+    Array.prototype.forEach.call(el.querySelectorAll('[data-gs]'), function (b) {
+      b.onclick = function () {
+        var id = Number(b.getAttribute('data-gs')), info = $('gsi' + id); b.disabled = true; if (info) info.textContent = 'Wird eingelöst …';
+        sFrisch().then(function () { return sbFetch('/rest/v1/rpc/gutschein_einloesen', { method: 'POST', body: { p_id: id } }); })
+          .then(function (r) {
+            zaehlen('gutschein');
+            if (r && typeof r.rest === 'number') { liveZeni = r.rest; zeniOben(); }
+            if (r && r.art === 'dreh') { var t = document.createElement('div'); t.className = 'gehtoast'; t.innerHTML = '<span>🍀</span><div><small>Saisonpass · Extra-Dreh</small><b>' + (r.gewinn === 'titel' ? 'Titel „Glückspilz“ gewonnen!' : '+' + zahl(r.zeni) + ' Zeni' + (r.gewinn === 'jackpot' ? ' – JACKPOT!' : '')) + '</b></div>'; document.body.appendChild(t); setTimeout(function () { t.classList.add('weg'); }, 6000); setTimeout(function () { t.remove(); }, 6700); }
+            return gsLaden();
+          })
+          .then(function () { passTeil(); })
+          .catch(function (x) { b.disabled = false; if (info) info.textContent = '❌ ' + x.message; });
+      };
+    });
+  }
   var PASS_ART = { w: ['⏱️', function (z) { return zahl(z) + ' Std. Watchtime'; }, ' Std.'], s: ['📺', function (z) { return 'Bei ' + z + (z == 1 ? ' Stream' : ' Streams') + ' dabei (je 30 Min.)'; }, ''],
     cs: ['💬', function (z) { return z == 1 ? 'Im Chat geschrieben' : 'In ' + z + ' verschiedenen Streams geschrieben'; }, ''], cm: ['✍️', function (z) { return zahl(z) + ' Chat-Nachrichten'; }, ''],
     b: ['🌐', function (z) { return 'Kazetopia an ' + z + ' Tagen besucht'; }, ''], g: ['🍀', function (z) { return 'Glücks-Knopf an ' + z + ' Tagen'; }, ''],
@@ -3162,7 +3215,7 @@
       } else h += '<div class="passnext">👑 Alles geschafft! Jede weitere 5 Std. Watchtime gibt einen ✦ für die Rangliste.</div>';
       h += '</div>';
     }
-    h += '<div class="passreiter">' + [['stufen', '🎯 Stufen'], ['wochen', '📅 Wochen'], ['rang', '🏆 Rangliste']].map(function (r) { return '<button data-pr="' + r[0] + '" class="' + (passReiter === r[0] ? 'an' : '') + '">' + r[1] + '</button>'; }).join('') + '</div><div id="passteil"></div>';
+    h += '<div class="passreiter">' + [['stufen', '🎯 Stufen'], ['wochen', '📅 Wochen'], ['gut', '🎟️ Gutscheine'], ['rang', '🏆 Rangliste']].map(function (r) { return '<button data-pr="' + r[0] + '" class="' + (passReiter === r[0] ? 'an' : '') + '">' + r[1] + '</button>'; }).join('') + '</div><div id="passteil"></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll('[data-pr]'), function (b) { b.onclick = function () { passReiter = b.getAttribute('data-pr'); passZeigen(false); }; });
     passTeil();
@@ -3183,7 +3236,9 @@
         return '<div class="pst' + (ok ? ' ok' : '') + (jetzt ? ' jetzt' : '') + '"><span class="pn">' + (ok ? '✓' : x.n) + '</span><span>' + PASS_ART[x.art][0] + ' ' + PASS_ART[x.art][1](x.ziel) + (jetzt && sitzung ? '<small>' + zahl(Math.floor(Number(v[x.art] || 0) * 10) / 10) + ' / ' + zahl(x.ziel) + '</small>' : '') + '</span><span class="pb">' + passBel(x.bel, x.wert) + (x.bel2 ? '<br>' + passBel(x.bel2, x.wert2) : '') + '</span></div>';
       }).join('');
       var g = p.gutscheine || [];
-      if (g.length) h += '<div class="pch"><b>🎟️ Deine Gutscheine</b><br>' + g.map(function (x) { return passBel(x.art) + (x.eingeloest ? ' ✓' : ''); }).join(' · ') + '<br><span class="leise">Einlösen kannst du sie in wenigen Tagen – sie bleiben dir sicher.</span></div>';
+      if (g.length) { var offenG = g.filter(function (x) { return !x.eingeloest; }).length; h += '<div class="pch"><b>🎟️ Deine Gutscheine</b><br>' + g.map(function (x) { return passBel(x.art) + (x.eingeloest ? ' ✓' : ''); }).join(' · ') + '<br><span class="leise">' + (offenG ? offenG + ' bereit zum Einlösen – im Reiter „🎟️ Gutscheine“.' : 'Alle eingelöst.') + '</span></div>'; }
+    } else if (passReiter === 'gut') {
+      h = gsHtml();
     } else if (passReiter === 'wochen') {
       var C = p.challenges || [], wochen = [];
       C.forEach(function (c) { if (wochen.indexOf(c.woche) < 0) wochen.push(c.woche); });
@@ -3206,6 +3261,7 @@
       else h = R.map(function (x, i) { var me = sitzung && x.l === String(sitzung.name).toLowerCase(); return '<div class="pst' + (me ? ' jetzt' : '') + '"><span class="pn">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</span><span><b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b></span><span class="pb">Stufe ' + x.s + (x.st ? ' ✦' + x.st : '') + '</span></div>'; }).join('');
     }
     el.innerHTML = h;
+    if (passReiter === 'gut') gsEvents(el);
   }
   function passIntro() {
     var t = document.createElement('div'); t.className = 'passup';
@@ -3474,7 +3530,7 @@
       return;
     }
     var bereit = a.bereit || new Date(a.faellig) <= new Date();
-    h = '<div class="tresorbox"><div class="tunter">Im Tresor</div><div class="tzahl">' + zahl(a.betrag) + ' Zeni</div><div class="tunter">' +
+    h = '<div class="tresorbox"><div class="tunter">Im Tresor' + (a.bonus ? ' · 🔐 Booster +' + a.bonus + ' % Zins' : '') + '</div><div class="tzahl">' + zahl(a.betrag) + ' Zeni</div><div class="tunter">' +
       (bereit ? '✨ Fertig – hol dir deinen Zins!' : 'Fertig am ' + new Date(a.faellig).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr · ' + tresorRest(a.faellig)) + '</div><div class="tzins" id="trzins" hidden></div></div>' +
       (bereit ? '<div class="edknoepfe"><button class="vtw" id="trab">🎲 Abholen</button></div>' : '<div class="edknoepfe"><button class="vlink" id="trfrueh">Früher abholen (−5 %, kein Zins)</button></div>') +
       '<p class="leise" id="trinfo"></p>' + TRESOR_INFO;
@@ -4695,7 +4751,7 @@
     daten = d;
     plaetzeMerken(d);
     kopfleiste();
-    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
+    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); setTimeout(gsLaden, 4000); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
     reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d._offline) { var ob = document.createElement('div'); ob.className = 'offlineband'; ob.textContent = '📴 Gerade keine Verbindung – du siehst den letzten Stand vom ' + (d.stand || 'letzten Besuch') + '.'; var hd = document.querySelector('header'); if (hd) hd.parentNode.insertBefore(ob, hd.nextSibling); }
