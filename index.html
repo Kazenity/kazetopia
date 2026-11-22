@@ -2169,7 +2169,9 @@
     if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
     var l = (sitzung && sitzung.name) || ich || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
     // seit Bot v20.36 hat jeder eigene Einzel-Quests (q.pro: IDs je Zuschauer, q.q: Beschreibung)
-    var meine = q.pro ? (l ? (q.pro[l] || []) : []).map(function (id) { return typeof id === 'string' ? (q.q || {})[id] : id; }).filter(Boolean) : (q.liste || []);
+    var eigene = q.pro && l && q.pro[l] && q.pro[l].length;
+    var starter = q.pro && !eigene && q.starter && q.starter.length && !(l && rolle(l) === 'streamer');
+    var meine = q.pro ? (eigene ? q.pro[l] : starter ? q.starter : []).map(function (id) { return typeof id === 'string' ? (q.q || {})[id] : id; }).filter(Boolean) : (q.liste || []);
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
     var fq = q.freund, fs0 = fq && l ? (fq.stand || {})[l] : null, fFertig = !!(fs0 && fs0.mit && fs0.v >= fq.ziel && fs0.pv >= fq.ziel);
     // kompakt: eine Zeile mit Fortschritt, Details aufklappbar (Zustand wird im Browser gemerkt)
@@ -2193,14 +2195,15 @@
           : l && rolle(l) !== 'streamer' ? '<div class="leise qfreund">Dir fehlt noch ein Freund: Markiert euch <b>gegenseitig</b> als Freund (Profilkarte → 🤝). Deine Watchtime zählt schon, sobald dein Freund auch ' + zahl(fq.ziel) + ' ' + esc(fq.einheit || 'Std.') + ' hat, gibt es die Belohnung.</div>' : '') +
         '<div class="qlohn">🎁 ' + esc(fq.lohn) + (fFertig ? ' · erhalten' : ' · für euch beide') + '</div></div>';
     }
-    if (q.pro && meine.length) h += '<div class="leise qinfo">🎲 Deine persönlichen Quests – die Ziele richten sich nach deinem eigenen Stand der letzten Wochen.</div>';
+    if (eigene) h += '<div class="leise qinfo">🎲 Deine persönlichen Quests – die Ziele richten sich nach deinem eigenen Stand der letzten Wochen.</div>';
+    else if (starter) h += '<div class="leise qinfo">🌱 Starter-Quests für neue Zuschauer – ab 10 Std. Watchtime bekommst du persönliche Quests.</div>';
     meine.forEach(function (x, i) {
       var v = f ? (f[i] || 0) : null, fertig = v !== null && v >= x.ziel, pr = v !== null ? Math.min(100, v / Math.max(1, x.ziel) * 100) : 0;
       h += '<div class="qe' + (fertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fertig ? '✅ ' : '') + esc(x.text) + (x.neu && !fertig ? ' <span class="leise">· ✨ Einstieg</span>' : '') + '</b>' + (v !== null ? '<span>' + zahl(Math.min(v, x.ziel)) + ' / ' + zahl(x.ziel) + (x.einheit ? ' ' + esc(x.einheit) : '') + '</span>' : '') + '</div>' +
         (v !== null ? '<div class="qbar"><i style="width:' + pr + '%"></i></div>' : '') + '<div class="qlohn">🎁 ' + esc(x.lohn) + (fertig ? ' · erhalten' : '') + '</div></div>';
     });
     if (!l) h += '<div class="leise qinfo">' + (q.pro ? 'Jeder bekommt eigene Quests. ' : '') + 'Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um ' + (q.pro ? 'deine Quests' : 'deinen Fortschritt') + ' zu sehen.</div>';
-    else if (q.pro && !meine.length && rolle(l) !== 'streamer') h += '<div class="leise qinfo">🎲 Deine eigenen Quests bekommst du, sobald du diese Woche bei einem Stream dabei bist.</div>';
+
     return h + '<div class="leise qinfo">Neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + ' · wird während der Streams alle 10 Minuten aktualisiert, Clips alle 20 Min..</div></details>';
   }
   document.addEventListener('toggle', function (e) { if (e.target && e.target.id === 'questkarte') { try { localStorage.setItem('kz_quest_auf', e.target.open ? '1' : '0'); } catch (x) { } } }, true);
