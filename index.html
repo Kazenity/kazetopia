@@ -2079,10 +2079,11 @@
   var spServer = null, spJson = '';
   function planQuelle() {
     var alt = daten && daten.streamplan;
-    if (!spServer || !spServer.daten) return alt;
+    var verg = (alt && alt.vergangen) || [];
+    if (!spServer || !spServer.daten) return alt && verg.length ? { woche: alt.woche, community: alt.community, termine: (alt.termine || []).concat(verg.filter(function (v) { return !(alt.termine || []).some(function (t) { return t.datum === v.datum; }); })) } : alt;
     var d = spServer.daten, cov = {};
     ((alt && alt.termine) || []).forEach(function (t) { if (t.cover) cov[String(t.spiel || '').toLowerCase().trim()] = t.cover; });
-    return { woche: d.woche || '', community: d.community || '', termine: (d.termine || []).map(function (t) { var o = { datum: t.datum, zeit: t.zeit, spiel: t.spiel, info: t.info || '' }, c = cov[String(t.spiel || '').toLowerCase().trim()]; if (c) o.cover = c; return o; }) };
+    return { woche: d.woche || '', community: d.community || '', termine: (d.termine || []).concat(verg.filter(function (v) { return !(d.termine || []).some(function (t) { return t.datum === v.datum; }); })).map(function (t) { var o = { datum: t.datum, zeit: t.zeit, spiel: t.spiel, info: t.info || '' }, c = cov[String(t.spiel || '').toLowerCase().trim()]; if (c) o.cover = c; return o; }) };
   }
   function planLaden() {
     return sbFetch('/rest/v1/rpc/streamplan_laden', { method: 'POST', body: {} }).then(function (r) {
@@ -2124,11 +2125,12 @@
       '<div class="pinhalt">' + (cov ? '<img class="pcover" alt="" loading="lazy" src="' + esc(cov) + '" onerror="this.style.visibility=\'hidden\'">' : '<span class="pcover ph">🎮</span>') +
       '<div class="ptext"><h3>' + (live ? '🔴 LIVE' : '⏳ NÄCHSTER STREAM') + '</h3><div class="cd" id="countdown">' + countdownText() + '</div>' +
       (live ? '<a class="plivebtn" href="https://www.twitch.tv/kazenity" target="_blank" rel="noopener">Zuschauen ›</a>' : '') + '</div></div>';
-    // Leiste: immer eine komplette Woche Mo–So – die neueste eingetragene Woche. Ist die nächste Woche schon angelegt
-    // (z. B. samstags), wird sie gezeigt; der Countdown oben zeigt trotzdem immer den nächsten Stream.
-    var mo = new Date(tt.length ? tt[tt.length - 1].d : Date.now()); mo.setHours(0, 0, 0, 0); mo.setDate(mo.getDate() - (mo.getDay() + 6) % 7);
+    // Leiste: die laufende Woche Mo–So (vergangene Tage ausgegraut), ab Montag 0 Uhr die neue Woche.
+    // Steht in der laufenden Woche nichts mehr an, wird die nächste eingetragene Woche gezeigt.
+    var mo = new Date(); mo.setHours(0, 0, 0, 0); mo.setDate(mo.getDate() - (mo.getDay() + 6) % 7);
     var bis = new Date(mo); bis.setDate(bis.getDate() + 7);
     var woche = tt.filter(function (x) { return x.d >= mo && x.d < bis; });
+    if (!woche.length) { var nx = tt.filter(function (x) { return x.d >= bis; })[0]; if (nx) { mo = new Date(nx.d); mo.setHours(0, 0, 0, 0); mo.setDate(mo.getDate() - (mo.getDay() + 6) % 7); bis = new Date(mo); bis.setDate(bis.getDate() + 7); woche = tt.filter(function (x) { return x.d >= mo && x.d < bis; }); } }
     if (woche.length) {
       h += '<div class="planwoche">';
       woche.forEach(function (x) {
@@ -3678,7 +3680,7 @@
       var reihen = (pq.termine || []).filter(function (t) { return String(t.datum || '') >= apAb; }).slice().sort(function (a, b) { return (a.datum + a.zeit).localeCompare(b.datum + b.zeit); });
       var spieleVor = {}; reihen.forEach(function (t) { spieleVor[t.spiel] = 1; }); (daten.spiele || []).slice(0, 30).forEach(function (x) { if (x.n) spieleVor[x.n] = 1; });
       var zeile = function (t) { t = t || {}; var wt = t.datum ? WTAG[new Date(t.datum + 'T12:00:00').getDay()] : ''; return '<div class="apz"><div class="apkopf"><span>📅 ' + (wt ? wt + ', ' : '') + 'Termin</span><button class="vlink" data-apweg="1" aria-label="Termin löschen">✕ Löschen</button></div><div class="apr"><input class="admfeld" type="date" data-ap="datum" value="' + esc(t.datum || '') + '"><input class="admfeld" type="time" data-ap="zeit" value="' + esc(t.zeit || '19:00') + '"></div><input class="admfeld" data-ap="spiel" maxlength="60" list="apspiele" placeholder="Spiel, z. B. GTA VI" value="' + esc(t.spiel || '') + '"><input class="admfeld" data-ap="info" maxlength="40" placeholder="Info (optional), z. B. STORY TIME" value="' + esc(t.info || '') + '"></div>'; };
-      $('adm').innerHTML = '<div class="sbox admplan"><h3>📅 STREAMPLAN</h3><p class="leise">Gilt sofort auf der Website. Die neue Woche kannst du jederzeit dazu eintragen – auch schon samstags: Die Startseite zeigt immer die neueste Woche (Mo–So). Alte Wochen verschwinden beim Speichern von selbst.</p>' +
+      $('adm').innerHTML = '<div class="sbox admplan"><h3>📅 STREAMPLAN</h3><p class="leise">Gilt sofort auf der Website. Die neue Woche kannst du jederzeit dazu eintragen – auch schon samstags: Die Startseite zeigt die laufende Woche (Mo–So) und wechselt Montag um 0 Uhr auf die neue. Alte Wochen verschwinden beim Speichern von selbst.</p>' +
         '<input class="admfeld" id="apwoche" maxlength="40" placeholder="Woche, z. B. 23. – 29. November" value="' + esc(pq.woche || '') + '">' +
         '<div id="apliste" style="margin-top:8px">' + (reihen.length ? reihen.map(zeile).join('') : zeile()) + '</div>' +
         '<datalist id="apspiele">' + Object.keys(spieleVor).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
