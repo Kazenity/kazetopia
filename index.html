@@ -2168,13 +2168,15 @@
     function tag(d) { var x = new Date(d + 'T00:00:00'); return WTAG[x.getDay()] + ', ' + x.getDate() + '.' + (x.getMonth() + 1) + '.'; }
     if (q.start) return '<div class="sbox questkarte"><h3>🎯 WOCHEN-QUESTS</h3><div class="leise">Die ersten Quests starten am <b>' + tag(q.start) + '</b> Jede Woche neue Aufgaben – als Belohnung gibt es Zeni und exklusive Titel, die man nicht kaufen kann.</div></div>';
     var l = (sitzung && sitzung.name) || ich || '', f = l ? ((q.fortschritt || {})[l] || []) : null;
+    // seit Bot v20.36 hat jeder eigene Einzel-Quests (q.pro: IDs je Zuschauer, q.q: Beschreibung)
+    var meine = q.pro ? (l ? (q.pro[l] || []) : []).map(function (id) { return (q.q || {})[id]; }).filter(Boolean) : (q.liste || []);
     var rest = Math.max(0, Math.ceil((new Date(q.ende + 'T00:00:00') - Date.now()) / 86400000));
     var fq = q.freund, fs0 = fq && l ? (fq.stand || {})[l] : null, fFertig = !!(fs0 && fs0.mit && fs0.v >= fq.ziel && fs0.pv >= fq.ziel);
     // kompakt: eine Zeile mit Fortschritt, Details aufklappbar (Zustand wird im Browser gemerkt)
     var auf = false; try { auf = localStorage.getItem('kz_quest_auf') === '1'; } catch (x) { }
-    var nFertig = 0; (q.liste || []).forEach(function (x, i) { if (f && (f[i] || 0) >= x.ziel) nFertig++; });
+    var nFertig = 0; meine.forEach(function (x, i) { if (f && (f[i] || 0) >= x.ziel) nFertig++; });
     var sum = [];
-    if (f) sum.push((nFertig + (fFertig ? 1 : 0)) + '/' + ((q.liste || []).length + (fq ? 1 : 0)) + ' ✓');
+    if (f) sum.push((nFertig + (fFertig ? 1 : 0)) + '/' + (meine.length + (fq ? 1 : 0)) + ' ✓');
     if (q.gemeinsam) sum.push('👥 ' + Math.min(100, Math.floor(q.gemeinsam.stand / Math.max(1, q.gemeinsam.ziel) * 100)) + ' %');
     sum.push(rest <= 1 ? 'neu morgen' : 'neu in ' + rest + ' T.');
     var h = '<details class="sbox questkarte" id="questkarte"' + (auf ? ' open' : '') + '><summary><h3>🎯 WOCHEN-QUESTS</h3><span class="qsum">' + sum.join(' · ') + '</span></summary>';
@@ -2191,12 +2193,14 @@
           : l && rolle(l) !== 'streamer' ? '<div class="leise qfreund">Dir fehlt noch ein Freund: Markiert euch <b>gegenseitig</b> als Freund (Profilkarte → 🤝). Deine Watchtime zählt schon, sobald dein Freund auch ' + zahl(fq.ziel) + ' ' + esc(fq.einheit || 'Std.') + ' hat, gibt es die Belohnung.</div>' : '') +
         '<div class="qlohn">🎁 ' + esc(fq.lohn) + (fFertig ? ' · erhalten' : ' · für euch beide') + '</div></div>';
     }
-    (q.liste || []).forEach(function (x, i) {
+    if (q.pro && meine.length) h += '<div class="leise qinfo">🎲 Deine eigenen Quests – jeder hat diese Woche andere.</div>';
+    meine.forEach(function (x, i) {
       var v = f ? (f[i] || 0) : null, fertig = v !== null && v >= x.ziel, pr = v !== null ? Math.min(100, v / Math.max(1, x.ziel) * 100) : 0;
       h += '<div class="qe' + (fertig ? ' fertig' : '') + '"><div class="qkopf"><b>' + (fertig ? '✅ ' : '') + esc(x.text) + '</b>' + (v !== null ? '<span>' + zahl(Math.min(v, x.ziel)) + ' / ' + zahl(x.ziel) + (x.einheit ? ' ' + esc(x.einheit) : '') + '</span>' : '') + '</div>' +
         (v !== null ? '<div class="qbar"><i style="width:' + pr + '%"></i></div>' : '') + '<div class="qlohn">🎁 ' + esc(x.lohn) + (fertig ? ' · erhalten' : '') + '</div></div>';
     });
-    if (!l) h += '<div class="leise qinfo">Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um deinen Fortschritt zu sehen.</div>';
+    if (!l) h += '<div class="leise qinfo">' + (q.pro ? 'Jeder bekommt eigene Quests. ' : '') + 'Melde dich an oder tipp bei deinem Namen auf <b>⭐ Das bin ich</b>, um ' + (q.pro ? 'deine Quests' : 'deinen Fortschritt') + ' zu sehen.</div>';
+    else if (q.pro && !meine.length && rolle(l) !== 'streamer') h += '<div class="leise qinfo">🎲 Deine eigenen Quests bekommst du, sobald du diese Woche bei einem Stream dabei bist.</div>';
     return h + '<div class="leise qinfo">Neue Quests ' + (rest <= 1 ? 'morgen' : 'in ' + rest + ' Tagen') + ' · wird während der Streams alle 10 Minuten aktualisiert, Clips alle 20 Min..</div></details>';
   }
   document.addEventListener('toggle', function (e) { if (e.target && e.target.id === 'questkarte') { try { localStorage.setItem('kz_quest_auf', e.target.open ? '1' : '0'); } catch (x) { } } }, true);
@@ -4028,8 +4032,9 @@
     Object.keys(EVENTS).forEach(function (c) { var e = EVENTS[c]; h += '<div>' + evIcon(c, 20) + ' <b>' + e[1] + '</b> – ' + e[2] + '</div>'; });
     h += '</div></div>';
     h += '<div class="isek" data-sek="qu" style="display:none"><h4>🎯 WOCHEN-QUESTS</h4><div class="liste-abz">' +
-      '<div>Jeden <b>Sonntag</b> gibt es <b>3 neue Einzel-Quests</b> und <b>1 Gemeinschafts-Quest</b> – zu sehen auf der Startseite.</div>' +
-      '<div>Einzel-Quests sind z. B. „Sei bei 3 Streams dabei“ oder „Schau 8 Stunden zu“. Geschafft? Die Belohnung kommt automatisch beim nächsten Update, mit Meldung im Chat.</div>' +
+      '<div>Jeden <b>Sonntag</b> gibt es <b>3 neue Einzel-Quests</b>, <b>1 Gemeinschafts-Quest</b> und die <b>Freundes-Quest</b> – zu sehen auf der Startseite.</div>' +
+      '<div>🎲 Die Einzel-Quests sind bei jedem anders: eine fürs Dabeisein, eine für deine Zeit im Stream, eine fürs Mitmachen. Nie dieselbe wie letzte Woche, und Titel, die du schon hast, kommen nicht nochmal.</div>' +
+      '<div>Einzel-Quests sind z. B. „Sei bei allen Streams dabei“, „Schau 12 Stunden zu“ oder „Schreib 200 Nachrichten“. Geschafft? Die Belohnung kommt automatisch beim nächsten Update, mit Meldung im Chat.</div>' +
       '<div>Die Gemeinschafts-Quest schafft der ganze Chat zusammen. Die Belohnung bekommt jeder, der in der Woche bei mindestens einem Stream dabei war – ausgezahlt am Sonntag.</div>' +
       '<div>Belohnungen: Zeni oder <b>Titel, die es nicht im Shop gibt</b>.</div>' +
       '<div>Deinen Fortschritt siehst du auf der Startseite oder mit <b>!quests</b> im Chat.</div></div></div>';
