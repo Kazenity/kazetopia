@@ -3892,7 +3892,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['geheim', '🔒 Geheim'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -3914,6 +3914,21 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="kzzeile"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
     }).catch(fehler);
+    if (tab === 'geheim') rpc('admin_geheim').then(function (r) {
+      var pro = {}, wer = {};
+      (r || []).forEach(function (x) { (pro[x.l] = pro[x.l] || []).push(x); wer[x.id] = (wer[x.id] || 0) + 1; });
+      var leute = Object.keys(pro).sort(function (a, b) { return pro[b].length - pro[a].length || a.localeCompare(b); });
+      var gn = function (id) { return GEHEIM.filter(function (g) { return g.id === id; })[0] || { icon: '❔', name: id, text: '' }; };
+      var h = '<div class="sbox"><h3>🔒 GEHEIME ERFOLGE · ' + leute.length + ' LEUTE</h3><p class="leise">Tippe auf einen Namen für Details mit Datum. Nur du siehst diese Übersicht.</p>' +
+        leute.map(function (l) {
+          var e = pro[l];
+          return '<div class="kzzeile" data-gl="' + esc(l) + '" style="cursor:pointer;flex-wrap:wrap"><b>' + esc(prof(l).n || l) + '</b><span>' + e.map(function (x) { return gn(x.id).icon; }).join(' ') + '</span><span class="leise">' + e.length + '/' + GEHEIM.length + '</span>' +
+            '<div class="ggd" hidden style="flex-basis:100%;margin-top:6px">' + e.map(function (x) { var g = gn(x.id); return '<div class="leise">' + g.icon + ' <b>' + esc(g.name) + '</b> · ' + wann(x.t) + '</div>'; }).join('') + '</div></div>';
+        }).join('') + '</div>' +
+        '<div class="sbox"><h3>📊 WIE OFT FREIGESCHALTET</h3>' + GEHEIM.slice().sort(function (a, b) { return (wer[b.id] || 0) - (wer[a.id] || 0); }).map(function (g) { return '<div class="kzzeile"><b>' + g.icon + ' ' + esc(g.name) + '</b><span class="leise">' + esc(g.text) + '</span><span class="leise">' + (wer[g.id] || 0) + '×</span></div>'; }).join('') + '</div>';
+      $('adm').innerHTML = h;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-gl]'), function (z) { z.onclick = function () { var d = z.querySelector('.ggd'); d.hidden = !d.hidden; }; });
+    }).catch(function (x) { var el = $('adm'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202|admin_geheim/.test(x.message) ? 'Supabase-Update 45 fehlt noch.' : x.message) + '</p>'; });
     if (tab === 'push') rpc('admin_push_info').then(function (p) {
       var A = { live: '🔴 Live', update: '📢 Update', tresor: '🔐 Tresor', serie: '🔥 Serie', glueck: '🍀 Glück', rueckblick: '📊 Rückblick', post: '📬 Post', zeitung: '📰 Zeitung' };
       $('adm').innerHTML = '<div class="sbox"><div class="plz vier"><div><b>' + zahl(p.leute) + '</b>Leute</div><div><b>' + zahl(p.geraete) + '</b>Geräte</div><div><b>' + zahl((p.arten || {}).live || 0) + '</b>🔴 Live an</div><div><b>' + zahl((p.arten || {}).update || 0) + '</b>📢 Update an</div></div></div>' +
