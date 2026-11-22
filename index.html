@@ -1869,7 +1869,7 @@
     var t = mein ? 'Heute vor ' + mein.j + (mein.j === 1 ? ' Jahr' : ' Jahren') + ' bist du Kaze gefolgt! 🎉' : (andere.length === 1 ? 'Heute feiert Follow-Jubiläum:' : 'Heute feiern Follow-Jubiläum:');
     return '<div class="sbox gebkarte"><div class="geb-i">🎂</div><div><b class="geb-t">' + t + '</b>' +
       (chips ? (mein ? '<div class="leise" style="margin-bottom:6px">Heute feiern auch:</div>' : '') + '<div class="gebnamen">' + chips + '</div>' : '') +
-      '<div class="leise">' + (mein ? 'Dein Geschenk: <b>+' + zahl(mein.z) + ' Zeni</b> sind schon auf deinem Konto. Danke, dass du dabei bist 💜' : 'Jedes Jahr Follow gibt 1.000 Zeni als Geschenk 💜') + '</div></div></div>';
+      '<div class="leise">' + (mein ? 'Dein Geschenk: <b>+' + zahl(mein.z) + ' Zeni</b> sind schon auf deinem Konto. Danke, dass du dabei bist 💜' : 'Schreib im nächsten Stream einen Glückwunsch in den Chat 💜') + '</div></div></div>';
   }
   function jubToast() {
     var l = sitzung && sitzung.name; if (!l) return;
