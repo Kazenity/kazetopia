@@ -1859,6 +1859,27 @@
   }
   // 🎂 Geburtstagskinder (nur selbst über !geburtstag eingetragen, kein Alter) – nur am selben Tag zeigen
   function heuteIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  // 🎂 Follow-Jubiläum (Bot v20.40): wer heute vor X Jahren gefolgt ist
+  function jubHeute() { var j = daten && daten.jubilaeum; return j && j.tag === heuteIso() && j.liste ? j.liste : []; }
+  function jubKarte() {
+    var L = jubHeute(); if (!L.length) return '';
+    var l = (sitzung && sitzung.name) || ich || '', mein = L.filter(function (x) { return x.l === l; })[0];
+    var andere = L.filter(function (x) { return x.l !== l; });
+    var chips = andere.map(function (x) { return '<span class="z"' + dl(x.l) + '>' + bild(x.l) + '<span' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</span> <span class="leise">' + x.j + (x.j === 1 ? ' Jahr' : ' Jahre') + '</span></span>'; }).join('');
+    var t = mein ? 'Heute vor ' + mein.j + (mein.j === 1 ? ' Jahr' : ' Jahren') + ' bist du Kaze gefolgt! 🎉' : (andere.length === 1 ? 'Heute feiert Follow-Jubiläum:' : 'Heute feiern Follow-Jubiläum:');
+    return '<div class="sbox gebkarte"><div class="geb-i">🎂</div><div><b class="geb-t">' + t + '</b>' +
+      (chips ? (mein ? '<div class="leise" style="margin-bottom:6px">Heute feiern auch:</div>' : '') + '<div class="gebnamen">' + chips + '</div>' : '') +
+      '<div class="leise">' + (mein ? 'Dein Geschenk: <b>+' + zahl(mein.z) + ' Zeni</b> sind schon auf deinem Konto. Danke, dass du dabei bist 💜' : 'Jedes Jahr Follow gibt 1.000 Zeni als Geschenk 💜') + '</div></div></div>';
+  }
+  function jubToast() {
+    var l = sitzung && sitzung.name; if (!l) return;
+    var mein = jubHeute().filter(function (x) { return x.l === l; })[0]; if (!mein) return;
+    var k = 'kz_jub_' + heuteIso(); try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch (x) { }
+    var t = document.createElement('div'); t.className = 'gehtoast';
+    t.innerHTML = '<span>🎂</span><div><small>Follow-Jubiläum · ' + mein.j + (mein.j === 1 ? ' Jahr' : ' Jahre') + '</small><b>Danke, dass du dabei bist! +' + zahl(mein.z) + ' Zeni</b></div>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('weg'); }, 8000); setTimeout(function () { t.remove(); }, 8700);
+  }
   function gebKarte() {
     var g = daten && daten.geburtstag;
     if (!g || !g.namen || !g.namen.length || g.tag !== heuteIso()) return '';
@@ -2057,6 +2078,7 @@
     if (neu && !ich && !sitzung) h += '<div class="onboard" id="onboard"><button class="zu-klein" id="onbzu" aria-label="Schließen">×</button><b>🌸 Neu hier? So geht\'s:</b><ol><li><b>Melde dich oben rechts mit Twitch an</b> – oder such deinen Namen und tipp auf <b>⭐ Das bin ich</b></li><li>Erfüll die <b>🎯 Wochen-Quests</b> im Stream und sammel Zeni</li><li>Gib deine Zeni im <b>🛍️ Shop</b> für Rahmen, Banner und Titel aus</li><li>Unter <b>🎮 Spiele</b> bestimmst du mit, was Kaze als Nächstes spielt</li></ol></div>';
     function top3(t, l, f, r, m) { return '<div class="sbox' + (r ? ' klick" data-geh="' + r + '"' : '"') + '><h3>' + t + '</h3>' + ((l || []).slice(0, 3).map(function (x, i) { return '<div class="z"' + dl(x.n) + '>' + ['🥇', '🥈', '🥉'][i] + ' ' + bild(x.n) + '<span class="nm"' + fs(x.n) + '>' + esc(prof(x.n).n) + tTag(x.n) + '</span><b>' + f(x.w) + '</b></div>'; }).join('') || '<div class="leise">Noch keine Daten.</div>') + (m === '' ? '' : '<div class="mehr-link">' + (m || 'Alle anzeigen ›') + '</div>') + '</div>'; }
     h += gebKarte();
+    h += jubKarte();
     h += besuchKarte();
     h += umfrageKarte();
     h += zeitungKarte(true);
@@ -4392,6 +4414,7 @@
       e.push({ id: 'wk:' + w.l, t: w.t, an: w.l, text: '🌱 <b>' + esc(prof(w.l).n || w.l) + '</b> ist über deinen Einladungslink gekommen' + (w.s === 'wartet' ? ' – nach 5 Std. und 20 Nachrichten bekommst du 10.000 Zeni' : '') });
       if (w.s === 'belohnt') e.push({ id: 'wb:' + w.l, t: w.b || w.t, an: w.l, text: '🎉 <b>' + esc(prof(w.l).n || w.l) + '</b> hat das Ziel erreicht – du bekommst <b>10.000 Zeni</b>' });
     });
+    jubHeute().forEach(function (x) { if (x.l === l) e.push({ id: 'jb:' + heuteIso(), t: null, text: '🎂 Heute vor ' + x.j + (x.j === 1 ? ' Jahr' : ' Jahren') + ' bist du Kaze gefolgt – dein Geschenk: <b>+' + zahl(x.z) + ' Zeni</b>. Danke, dass du dabei bist 💜' }); });
     erfolgeFuer(l).forEach(function (t) { e.push({ id: 'er:' + t.replace(/<[^>]+>/g, ''), t: null, text: t }); });
     var zeni = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[l] : null);
     if (zeni != null) wuensche().forEach(function (id) { var a = kosArtikel(id); if (a && a.kaufbar !== false && !besitzt(l, id) && preisVon(a) <= zeni) e.push({ id: 'wu:' + id + ':' + preisVon(a), t: null, art: 'shop', text: '♥ Du kannst dir deinen Wunsch <b>' + esc(a.name) + '</b> jetzt leisten' }); });
@@ -4672,7 +4695,7 @@
     daten = d;
     plaetzeMerken(d);
     kopfleiste();
-    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
+    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
     reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d._offline) { var ob = document.createElement('div'); ob.className = 'offlineband'; ob.textContent = '📴 Gerade keine Verbindung – du siehst den letzten Stand vom ' + (d.stand || 'letzten Besuch') + '.'; var hd = document.querySelector('header'); if (hd) hd.parentNode.insertBefore(ob, hd.nextSibling); }
