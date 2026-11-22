@@ -887,6 +887,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .santakarte .gross { font-size: 64px; line-height: 1; margin: 6px 0 10px; animation: santahuepf .9s ease-out; }
   .santakarte .zeni { font-size: 28px; font-weight: 800; color: var(--gold, #ffd166); margin: 6px 0; }
   @keyframes santahuepf { 0% { transform: scale(.3) rotate(-20deg); } 60% { transform: scale(1.15) rotate(6deg); } 100% { transform: scale(1) rotate(0); } }
+  .puvz { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--rand); font-size: 13px; } .puvz:last-of-type { border-bottom: 0; }
+  .puvz .puvs { font-size: 18px; line-height: 1.2; } .puvz b { display: block; font-size: 13.5px; } .puvz a { color: var(--rosa); font-weight: 700; font-size: 12px; }
   /* 📱 Kompakter Kopf am Handy (nur Start) */
   @media (max-width: 560px) {
     body:not(.kopf-klein) header { margin-bottom: 14px; }
@@ -3668,7 +3670,32 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_speichern', { method: 'POST', body: { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_arten: arten } }); })
       .then(function (r) { pushArten = r && r.arten ? r.arten : arten; return r; });
   }
-  function pushDialog() {
+  // 📜 Push-Verlauf: die letzten Benachrichtigungen zum Nachlesen (Idee von evalyn_bloom)
+  function pushDialog() { pushDialogInnen(); if (sitzung) pushVerlaufAnhaengen(); }
+  function pushVerlaufAnhaengen() {
+    var ds = document.querySelector('#karte .ds'); if (!ds || $('puverlauf')) return;
+    ds.insertAdjacentHTML('beforeend', '<h4 id="puvk">📜 ZULETZT GESENDET</h4><div id="puverlauf" class="leise">Lade …</div>');
+    var SYM = { live: '🔴', update: '📢', zeitung: '📰', rueckblick: '📊', post: '📬' };
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/meine_pushes', { method: 'POST', body: {} }); }).then(function (r) {
+      var el = $('puverlauf'); if (!el) return;
+      r = r || [];
+      if (!r.length) { el.textContent = 'In den letzten 14 Tagen wurde noch nichts gesendet.'; return; }
+      el.className = '';
+      el.innerHTML = r.map(function (x) {
+        var d = new Date(x.t), w = isNaN(d) ? '' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        var ziel = String(x.url || ''), hash = ziel.indexOf('#') >= 0 ? ziel.substring(ziel.indexOf('#')) : '';
+        return '<div class="puvz"><span class="puvs">' + (SYM[x.art] || '🔔') + '</span><div><b>' + esc(x.titel) + '</b><div>' + esc(x.text) + '</div><small class="leise">' + w + '</small>' +
+          (x.art === 'live' ? ' · <a href="https://www.twitch.tv/kazenity" target="_blank" rel="noopener">Zum Stream</a>' : hash ? ' · <a href="' + esc(hash) + '" data-puhash="' + esc(hash) + '">Öffnen</a>' : '') + '</div></div>';
+      }).join('') + '<p class="leise">Gezeigt werden die letzten 14 Tage. Erinnerungen wie 🔐 Tresor, 🔥 Serie und 🍀 Glück stehen hier nicht drin.</p>';
+      Array.prototype.forEach.call(el.querySelectorAll('[data-puhash]'), function (a) { a.onclick = function (e) { e.preventDefault(); var h = a.getAttribute('data-puhash'); profilZu(); setTimeout(function () { hashOeffnen(h); }, 200); }; });
+      if (location.hash === '#push') { var k = $('puvk'); if (k) k.scrollIntoView({ block: 'start' }); try { history.replaceState(null, '', location.pathname); } catch (x) { } }
+    }).catch(function (x) { var el = $('puverlauf'); if (el) el.textContent = /404|PGRST202|meine_pushes/.test(x.message) ? 'Der Verlauf kommt gleich.' : ''; });
+  }
+  function hashOeffnen(h) {
+    if (h === '#push') pushDialog(); else if (h === '#zeitung') zeitungDialog(0); else if (h === '#rueckblick') rbDialog();
+    else if (h === '#post' && sitzung) posteingangOeffnen(); else if (h === '#tresor' && sitzung) tresorDialog();
+  }
+  function pushDialogInnen() {
     zaehlen('push');
     if (!sitzung) { einloggenFragen(); return; }
     var kopf = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🔔 Benachrichtigungen</b><div class="kk">Kazetopia meldet sich bei dir – nur mit dem, was du hier einschaltest.</div></div></div>';
@@ -4973,6 +5000,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (location.hash === '#shop') geheZu('shop');
     if (location.hash === '#rueckblick') setTimeout(rbDialog, 600);
     if (location.hash === '#zeitung') setTimeout(function () { zeitungDialog(0); }, 600);
+    if (location.hash === '#push') setTimeout(function () { pushDialog(); }, 1200);
+    window.addEventListener('hashchange', function () { hashOeffnen(location.hash); });
     zLaden().then(function (d) { if (d && d.liste && d.liste.length && reiter === 'start') zeigen(); });
     if (location.hash === '#pass') setTimeout(passDialog, 700);
     var m = location.hash.match(/^#profil=(.+)$/);
