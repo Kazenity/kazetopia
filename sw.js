@@ -32,6 +32,8 @@ self.addEventListener('push', function (e) {
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
   var ziel = (e.notification.data && e.notification.data.url) || './';
+  // Ohne eigenes Ziel öffnet die Seite direkt den Push-Verlauf, damit man die ganze Nachricht nachlesen kann
+  if ((ziel === './' || /\/kazetopia\/?$/.test(ziel)) && ziel.indexOf('#') < 0) ziel = ziel.replace(/\/?$/, '/') + '#push';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
     if (ziel.indexOf(self.location.origin) === 0 || ziel.indexOf('./') === 0) {
       for (var i = 0; i < cs.length; i++) { if (cs[i].url.indexOf(self.registration.scope) === 0 && 'focus' in cs[i]) { cs[i].navigate(ziel).catch(function () { }); return cs[i].focus(); } }
