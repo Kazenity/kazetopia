@@ -724,9 +724,12 @@
   .ztg-archiv { display: flex; flex-wrap: wrap; gap: 6px; }
   .ztg-archiv button { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rand); background: transparent; color: var(--grau); cursor: pointer; }
   .ztg-archiv button.an { background: var(--rosa); color: #1a0f1f; border-color: var(--rosa); }
-  .ztgteaser { border: 1px solid var(--rosa); background: linear-gradient(135deg, rgba(255,122,180,.10), rgba(255,255,255,.02)); cursor: pointer; }
-  .ztgteaser .ztg-k { font-size: 11.5px; letter-spacing: .1em; color: var(--rosa); font-weight: 800; text-transform: uppercase; }
-  .ztgteaser .ztg-s { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 800; line-height: 1.3; margin: 6px 0 10px; color: var(--hell); }
+  .ztgkarte { cursor: pointer; }
+  .ztgkarte.neu { border: 1px solid var(--rosa); }
+  .ztgkarte h3 .ztgneu { font-size: 10px; font-weight: 900; letter-spacing: .06em; background: var(--rosa); color: #1a0f1f; border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
+  .ztgkarte .ztgzeile { display: flex; align-items: center; gap: 12px; }
+  .ztgkarte .ztgzeile span { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; color: var(--hell); line-height: 1.4; }
+  .ztgkarte .ztgzeile .vbtn { flex: 0 0 auto; }
   .cvbox { background: var(--flaeche); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
   .cvbox b { color: var(--hell); }
   .cvzeile { display: flex; align-items: center; gap: 10px; background: var(--flaeche); border-radius: 12px; padding: 8px; margin-bottom: 8px; }
@@ -2056,7 +2059,7 @@
     h += gebKarte();
     h += besuchKarte();
     h += umfrageKarte();
-    h += zeitungTeaser();
+    h += zeitungKarte(true);
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
     if (planOben) h += planKarte();
@@ -2065,6 +2068,7 @@
     if (!planOben) h += planKarte();
     if (!(neu && !ich && !sitzung)) h += meineKarte();
     h += fbNeuKarte();
+    h += zeitungKarte(false);
     h += kazetopiaWocheKarte();
     h += '<div class="startgrid">';
     var ev = neuFreigeschaltet();
@@ -2192,9 +2196,7 @@
     if (q.freund && q.freund.duos) z.push('🤝 <b>' + q.freund.duos + '</b> ' + (q.freund.duos === 1 ? 'Freundes-Duo hat' : 'Freundes-Duos haben') + ' ihre Quest geschafft');
     var cw = daten.clips && (daten.clips.wocheTop || [])[0];
     if (cw) z.push('🎬 Meistgesehener Clip: <b>' + esc(cw.titel || 'Clip') + '</b>');
-    var zt = zDaten && zDaten.liste && zDaten.liste[0];
-    if (zt) z.push('🗞️ <a class="ztglink" data-zeitung="0">Kazetopia-Zeitung · Ausgabe #' + zt.nr + ' lesen</a>');
-    if (z.length < (zt ? 1 : 2)) return '';
+    if (z.length < 2) return '';
     return '<div class="sbox kwoche"><h3>📰 DIESE WOCHE IN KAZETOPIA <span class="leise">seit Sonntag</span></h3>' + z.map(function (x) { return '<div class="kwz">' + x + '</div>'; }).join('') + '</div>';
   }
   function questKarte() {
@@ -3267,14 +3269,18 @@
     return zahl(z.leute || 0) + ' Zuschauer, ' + zahl(z.std || 0) + ' Stunden – das war die Woche';
   }
   function zGelesen() { try { return Number(localStorage.getItem('kz_ztg_gelesen') || 0); } catch (x) { return 0; } }
-  function zeitungTeaser() {
+  // oben, solange ungelesen; danach als normale Karte weiter unten (bei „Diese Woche in Kazetopia“)
+  function zeitungKarte(oben) {
     var a = zDaten && zDaten.liste && zDaten.liste[0];
-    if (!a || a.nr <= zGelesen()) return '';
-    return '<div class="sbox ztgteaser" data-zeitung="0"><div class="ztg-k">📰 Kazetopia-Zeitung · Neue Ausgabe #' + a.nr + '</div><div class="ztg-s">' + zAufmacher(a) + '</div><button class="vtw" data-zeitung="0">Jetzt lesen</button></div>';
+    if (!a) return '';
+    var neu = a.nr > zGelesen();
+    if (neu !== oben) return '';
+    return '<div class="sbox ztgkarte' + (neu ? ' neu' : '') + '" data-zeitung="0"><h3>📰 KAZETOPIA-ZEITUNG <span class="leise">Ausgabe #' + a.nr + ' · ' + zDatum(a.von) + '–' + zDatum(a.bis) + '</span>' + (neu ? '<span class="ztgneu">NEU</span>' : '') + '</h3>' +
+      '<div class="ztgzeile"><span>' + zAufmacher(a) + '</span><button class="vbtn" data-zeitung="0">Lesen ›</button></div></div>';
   }
   function zeitungDialog(i) {
     zaehlen('zeitung');
-    try { var nr0 = zDaten && zDaten.liste && zDaten.liste[0] ? zDaten.liste[0].nr : 0; if (nr0 > zGelesen()) { localStorage.setItem('kz_ztg_gelesen', String(nr0)); var t = document.querySelector('.ztgteaser'); if (t) t.remove(); } } catch (x) { }
+    try { var nr0 = zDaten && zDaten.liste && zDaten.liste[0] ? zDaten.liste[0].nr : 0; if (nr0 > zGelesen()) { localStorage.setItem('kz_ztg_gelesen', String(nr0)); if (reiter === 'start') setTimeout(zeigen, 50); } } catch (x) { }
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds" id="ztginh"><p class="leise">Lade …</p></div>');
     zLaden().then(function () { zWahl = i || 0; zeitungZeigen(); });
   }
