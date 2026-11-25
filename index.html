@@ -1229,6 +1229,46 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   function shopArtikel() { return (daten && daten.shop && daten.shop.artikel) || []; }
   function kosArtikel(id) { return shopArtikel().filter(function (a) { return a.id === id; })[0]; }
   function kosName(id) { var a = kosArtikel(id); return a ? a.name : id; }
+  // 🟢 Live aus Supabase: Inventar, Rahmen-Farben und Profil-Designs sofort für alle sichtbar (der Bot bucht nur noch die Zeni)
+  var kosLive = null, designLive = null;
+  function liveMischen() {
+    if (!daten) return;
+    daten.shop = daten.shop || {};
+    if (kosLive) {
+      var inv = daten.shop.inventar = daten.shop.inventar || {};
+      Object.keys(kosLive.besitz || {}).forEach(function (l) { var ids = inv[l] = inv[l] || []; (kosLive.besitz[l] || []).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
+      var fa = daten.shop.farben = daten.shop.farben || {};
+      Object.keys(kosLive.farben || {}).forEach(function (l) { fa[l] = fa[l] || {}; Object.keys(kosLive.farben[l]).forEach(function (r) { fa[l][r] = kosLive.farben[l][r]; }); });
+    }
+    if (designLive) {
+      var ds = daten.designs = daten.designs || {};
+      designLive.forEach(function (x) {
+        var l = String(x.login || '').trim().toLowerCase(); if (!l || (!ds[l] && !(daten.spieler && daten.spieler[l]) && !(daten.profile && daten.profile[l]))) return;
+        var d = {};
+        if (/^#[0-9A-Fa-f]{6}$/.test(x.farbe || '')) d.f = x.farbe;
+        if (x.titel && String(x.titel).length <= 50) d.t = x.titel;
+        if (x.vitrine && x.vitrine.length) d.v = x.vitrine.slice(0, 3);
+        if (/^[wcfs]$/.test(x.hintergrund || '')) d.h = x.hintergrund;
+        if (/^[a-z0-9_]{1,30}$/.test(x.rahmen || '')) d.r = x.rahmen;
+        if (/^[a-z0-9_]{1,30}$/.test(x.banner || '')) d.b = x.banner;
+        ds[l] = d;
+      });
+    }
+  }
+  function liveLaden() {
+    var hd = { apikey: SB_KEY, 'Content-Type': 'application/json' };
+    return Promise.all([
+      fetch(SB_URL + '/rest/v1/rpc/kos_live', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(SB_URL + '/rest/v1/profil_oeffentlich?select=*', { headers: hd }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    ]).then(function (r) {
+      var neu = JSON.stringify(r);
+      if (r[0]) kosLive = r[0];
+      if (Array.isArray(r[1])) designLive = r[1];
+      liveMischen();
+      if (neu !== liveLaden.alt) { liveLaden.alt = neu; farbCache = {}; if (typeof zeigen === 'function' && daten) zeigen(); }
+    });
+  }
+  setInterval(function () { if (!document.hidden) liveLaden(); }, 3 * 60 * 1000);
   // Inventar: gekaufte Artikel (Kaze hat zum Testen alles)
   function kosInventar(l) {
     l = String(l || '').toLowerCase();
@@ -1519,7 +1559,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     // Solange etwas gebucht wird: alle 40 Sek. neue Daten holen, damit das Ergebnis von selbst erscheint
     if (document.querySelector('.sbtn.wartet') && !shopPoll) shopPoll = setTimeout(function () {
       shopPoll = null;
-      datenLaden().then(function (d) { daten = d; if (reiter === 'shop') zeigen(); }).catch(function () { });
+      datenLaden().then(function (d) { daten = d; liveMischen(); if (reiter === 'shop') zeigen(); }).catch(function () { });
     }, 40000);
   }
   var shopPoll = null;
@@ -1699,7 +1739,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       }
       e += slot('rahmen', '💠 RAHMEN') + '<div id="edfarbe"></div>' + slot('banner', '🌄 BANNER');
       e += '<h4>🖼️ PROFIL-HINTERGRUND <span class="leise">(wird von einem Banner überdeckt)</span></h4><div class="edbg"><button data-h="" class="' + (!wahl.hintergrund ? 'an' : '') + '">Standard</button>' + bgs.map(function (k) { return '<button data-h="' + k + '" class="bg-' + k + (wahl.hintergrund === k ? ' an' : '') + '">' + HG[k][0] + ' ' + HG[k][1] + '</button>'; }).join('') + '</div>' + (bgs.filter(function (k) { return k !== 'x'; }).length < 4 ? '<p class="leise">Weitere Hintergründe schaltest du mit dem ersten Rang in Watchtime, Chat, Treue oder Sub-Treue frei.</p>' : '');
-      e += '<div class="edknoepfe"><button class="vtw" id="edsave">Speichern</button><button class="vlink" id="edreset">Alles zurücksetzen</button></div><p class="leise" id="edinfo">Für dich sofort sichtbar, für alle anderen ab dem nächsten Kazetopia-Update (während der Streams alle 10 Minuten).</p>';
+      e += '<div class="edknoepfe"><button class="vtw" id="edsave">Speichern</button><button class="vlink" id="edreset">Alles zurücksetzen</button></div><p class="leise" id="edinfo">Für dich sofort sichtbar, für alle anderen in wenigen Minuten.</p>';
       $('ededaten').outerHTML = e;
       Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (b) { b.onclick = function () { wahl.farbe = b.getAttribute('data-f'); Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.toggle('an', x === b); }); }; });
       if ($('edeigen')) $('edeigen').oninput = function () { wahl.farbe = this.value; Array.prototype.forEach.call(document.querySelectorAll('.edf'), function (x) { x.classList.remove('an'); }); };
@@ -1728,7 +1768,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
         $('edfkauf').onclick = function () {
           var k = $('edfkauf'); k.disabled = true; $('edfinfo').textContent = 'Wird gebucht …';
           sFrisch().then(function () { return sbFetch('/rest/v1/rpc/faerben', { method: 'POST', body: { p_rahmen: 'rahmen_' + kurz, p_farbe: wahlTon } }); })
-            .then(function () { if (gsGratis) gsLaden(); sofortFarbe['rahmen_' + kurz] = wahlTon; if (liveZeni !== null && kosten) liveZeni = Math.max(0, liveZeni - kosten); $('edfinfo').textContent = '✓ Umgefärbt! Für dich sofort sichtbar, für alle anderen nach dem nächsten Kazetopia-Update.'; zeigen(); })
+            .then(function () { if (gsGratis) gsLaden(); sofortFarbe['rahmen_' + kurz] = wahlTon; if (liveZeni !== null && kosten) liveZeni = Math.max(0, liveZeni - kosten); $('edfinfo').textContent = '✓ Umgefärbt! Für dich sofort sichtbar, für alle anderen in wenigen Minuten.'; zeigen(); })
             .catch(function (x) { $('edfinfo').textContent = x.message; k.disabled = false; });
         };
       }
@@ -4979,6 +5019,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   fbNeuLaden();
   datenLaden().then(function (d) {
     daten = d;
+    liveMischen(); setTimeout(liveLaden, 300);
     plaetzeMerken(d);
     kopfleiste();
     if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); setTimeout(gsLaden, 4000); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
