@@ -889,6 +889,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes santahuepf { 0% { transform: scale(.3) rotate(-20deg); } 60% { transform: scale(1.15) rotate(6deg); } 100% { transform: scale(1) rotate(0); } }
   .gsvorschl { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } .gsvorschl button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
   .gsvorschl button:hover { border-color: var(--rosa); } .pmsg { display: block; margin-top: 6px; padding: 8px 10px; background: var(--bg); border-left: 3px solid var(--rosa); border-radius: 8px; font-style: italic; }
+  .pverlauf { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: -4px 0 10px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--rosa); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 12px; cursor: pointer; text-align: left; }
+  .pverlauf span { font-size: 18px; line-height: 1; }
   .pmeld { font-size: 11px; padding: 0 0 0 6px; font-style: normal; }
   .puvz { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--rand); font-size: 13px; } .puvz:last-of-type { border-bottom: 0; }
   .puvz .puvs { font-size: 18px; line-height: 1.2; } .puvz b { display: block; font-size: 13.5px; } .puvz a { color: var(--rosa); font-weight: 700; font-size: 12px; }
@@ -3748,7 +3750,23 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       .then(function (r) { pushArten = r && r.arten ? r.arten : arten; return r; });
   }
   // 📜 Push-Verlauf: die letzten Benachrichtigungen zum Nachlesen (Idee von evalyn_bloom)
-  function pushDialog() { pushDialogInnen(); if (sitzung) pushVerlaufAnhaengen(); }
+  function pushDialog() {
+    pushDialogInnen(); if (!sitzung) return;
+    pushVerlaufAnhaengen();
+    var kopf = document.querySelector('#karte .ds .kopf');
+    if (kopf && !$('puspring')) { kopf.insertAdjacentHTML('afterend', '<button class="vlink" id="puspring" style="margin:-6px 0 8px">📜 Zuletzt gesendet ansehen ↓</button>'); $('puspring').onclick = function () { var k = $('puvk'); if (k) k.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; }
+  }
+  // Nur der Verlauf (aus dem Posteingang oder beim Tippen auf eine Push) – ohne die Schalter
+  function pushVerlaufDialog(vonPost) {
+    if (!sitzung) { einloggenFragen(); return; }
+    zaehlen('pushverlauf');
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🔔 Zuletzt gesendet</b><div class="kk">Alle Push-Benachrichtigungen der letzten 14 Tage zum Nachlesen</div></div></div>' +
+      '<div class="edknoepfe" style="margin-top:0">' + (vonPost ? '<button class="vlink" id="puvzur">← Posteingang</button>' : '') + '<button class="vlink" id="puveinst">⚙️ Benachrichtigungen einstellen</button></div></div>');
+    if ($('puvzur')) $('puvzur').onclick = posteingangOeffnen;
+    $('puveinst').onclick = pushDialog;
+    pushVerlaufAnhaengen();
+    var k = $('puvk'); if (k) k.style.display = 'none';
+  }
   function pushVerlaufAnhaengen() {
     var ds = document.querySelector('#karte .ds'); if (!ds || $('puverlauf')) return;
     ds.insertAdjacentHTML('beforeend', '<h4 id="puvk">📜 ZULETZT GESENDET</h4><div id="puverlauf" class="leise">Lade …</div>');
@@ -3769,7 +3787,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     }).catch(function (x) { var el = $('puverlauf'); if (el) el.textContent = /404|PGRST202|meine_pushes/.test(x.message) ? 'Der Verlauf kommt gleich.' : ''; });
   }
   function hashOeffnen(h) {
-    if (h === '#push') pushDialog(); else if (h === '#zeitung') zeitungDialog(0); else if (h === '#rueckblick') rbDialog();
+    if (h === '#push') pushVerlaufDialog(); else if (h === '#zeitung') zeitungDialog(0); else if (h === '#rueckblick') rbDialog();
     else if (h === '#post' && sitzung) posteingangOeffnen(); else if (h === '#tresor' && sitzung) tresorDialog();
   }
   function pushDialogInnen() {
@@ -4817,6 +4835,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     var e = postEintraege(), g = postGelesen();
     function wann(t) { if (!t) return ''; var d = new Date(t), m = Math.round((Date.now() - d) / 60000); return m < 60 ? 'vor ' + Math.max(1, m) + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }); }
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>📬 Posteingang</b><div class="kk">Was es Neues für dich gibt</div></div></div>' +
+      '<button class="pverlauf" id="pverlauf">🔔 Zuletzt gesendete Pushes ansehen <span>›</span></button>' +
       (e.length ? e.map(function (x) { return '<div class="posteintrag' + (g[x.id] ? ' gelesen' : '') + '"><button class="pweg" data-pweg="' + esc(x.id) + '" aria-label="Löschen" title="Löschen">×</button><div class="pt">' + x.text + '<span class="leise">' + wann(x.t) + '</span></div>' +
         (x.art === 'anfrage' ? '<div class="pk"><button class="vtw" data-pa="' + esc(x.an) + '">Annehmen</button><button class="vlink" data-pab="' + esc(x.an) + '">Ablehnen</button></div>' : x.art === 'shop' ? '<div class="pk"><button class="vtw" data-pgeh="shop">Zum Shop</button></div>' : x.art === 'glueck' ? '<div class="pk"><button class="vtw" data-pgeh="start">Drücken</button></div>' : x.art === 'geschenk' ? '<div class="pk"><button class="vtw" data-panl>Jetzt anlegen</button><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : x.an ? '<div class="pk"><button class="vlink" data-pprof="' + esc(x.an) + '">Profil</button></div>' : '') + '</div>'; }).join('')
         : '<p class="leise">Gerade nichts Neues. Hier landen Freundschaftsanfragen, neue Erfolge und Neuigkeiten zu deinen Einladungen.</p>') + '</div>';
@@ -4831,6 +4850,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     Array.prototype.forEach.call(document.querySelectorAll('[data-pgeh]'), function (b) { b.onclick = function () { profilZu(); geheZu(b.getAttribute('data-pgeh')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-panl]'), function (b) { b.onclick = function () { designEditor(sitzung.name); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pprof]'), function (b) { b.onclick = function () { profilZeigen(b.getAttribute('data-pprof')); }; });
+    if ($('pverlauf')) $('pverlauf').onclick = function () { pushVerlaufDialog(true); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-pdanke]'), function (b) { b.onclick = function () { dankeDialog(Number(b.getAttribute('data-pdanke')), b.getAttribute('data-pvon')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pmeld]'), function (b) { b.onclick = function () { if (b.dataset.sicher) { b.disabled = true; geschenkMelden(Number(b.getAttribute('data-pmeld'))); } else { b.dataset.sicher = '1'; b.textContent = '🚩 Wirklich melden?'; } }; });
   }
@@ -5089,7 +5109,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (location.hash === '#shop') geheZu('shop');
     if (location.hash === '#rueckblick') setTimeout(rbDialog, 600);
     if (location.hash === '#zeitung') setTimeout(function () { zeitungDialog(0); }, 600);
-    if (location.hash === '#push') setTimeout(function () { pushDialog(); }, 1200);
+    if (location.hash === '#push') setTimeout(function () { pushVerlaufDialog(); }, 1200);
     window.addEventListener('hashchange', function () { hashOeffnen(location.hash); });
     zLaden().then(function (d) { if (d && d.liste && d.liste.length && reiter === 'start') zeigen(); });
     if (location.hash === '#pass') setTimeout(passDialog, 700);
