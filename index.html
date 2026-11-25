@@ -899,7 +899,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .karte [data-ne="neon"], .neffshop[data-ne="neon"] { animation: neffneon 2.2s ease-in-out infinite; }
   @keyframes neffwelle { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
   @keyframes neffneon { 0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 8px currentColor; } 50% { text-shadow: 0 0 3px currentColor, 0 0 14px currentColor; } }
-  .neffshop { font-size: 20px; font-weight: 800; } .shopgrid.effekt .swunsch { display: none; }
+  .neffshop { font-size: 20px; font-weight: 800; }
   .gsvorschl { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } .gsvorschl button { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--hell); background: var(--bg); border: 1px solid var(--rand); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
   .gsvorschl button:hover { border-color: var(--rosa); } .pmsg { display: block; margin-top: 6px; padding: 8px 10px; background: var(--bg); border-left: 3px solid var(--rosa); border-radius: 8px; font-style: italic; }
   .pverlauf { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: -4px 0 10px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--rosa); background: var(--bg); border: 1px solid var(--rand); border-radius: 10px; padding: 9px 12px; cursor: pointer; text-align: left; }
@@ -1356,7 +1356,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   var STUFEN_REIHE = ['g', 's', 'e', 'l', 'm', 'x'];
   var shopF = { typ: 'rahmen', stufe: '', sort: 'preis', leisten: false };
   try { var sfGemerkt = JSON.parse(localStorage.getItem('kz_shopfilter') || 'null'); if (sfGemerkt) for (var sfk in shopF) if (sfGemerkt[sfk] !== undefined) shopF[sfk] = sfGemerkt[sfk]; } catch (x) { }
-  function wuensche() { try { return JSON.parse(localStorage.getItem('kz_wunsch') || '[]').filter(function (id) { return /^(rahmen|banner|titel)_[a-z0-9_]+$/.test(id); }); } catch (x) { return []; } }
+  function wuensche() { try { return JSON.parse(localStorage.getItem('kz_wunsch') || '[]').filter(function (id) { return /^(rahmen|banner|titel|effekt)_[a-z0-9_]+$/.test(id); }); } catch (x) { return []; } }
   function wunschUmschalten(id) { var w = wuensche(), i = w.indexOf(id); if (i >= 0) w.splice(i, 1); else w.push(id); try { localStorage.setItem('kz_wunsch', JSON.stringify(w.slice(-12))); } catch (x) { } if (sitzung && sitzung.name) wunschSpeichern(); zeigen(); }
   // 💜 Wunschliste: wird mit dem Konto gespeichert, gegenseitige Freunde sehen sie (Idee von gojynku)
   var wunschF = null;
@@ -1393,7 +1393,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     else if (z === 'hat') knopf = '<button class="vtw" id="probeanlegen">✓ Im Besitz · Anlegen</button>';
     else if (z === 'login') knopf = '<button class="vtw tw" id="probelogin">Mit Twitch anmelden</button>';
     var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="kopf"><div><b>👀 Anprobieren</b><div class="kk">So sieht „' + esc(a.name) + '“ auf ' + (l ? 'deiner' : 'einer') + ' Profilkarte aus' + (l ? '' : ' – melde dich an oder tipp bei deinem Namen auf ⭐ Das bin ich, dann siehst du es mit deinem Bild') + '.</div></div></div>' +
-      '<div class="probe"><div class="kopf design' + (banner ? ' mitbanner' : '') + (dz.h && !banner ? ' bg-' + dz.h : '') + '"' + stil + '>' + av + '<div><b' + (l ? fs(l) : '') + '>' + esc(name) + '</b>' + (titel ? '<div class="titel">« ' + esc(titel) + ' »</div>' : '') + '</div></div></div>' +
+      '<div class="probe"><div class="kopf design' + (banner ? ' mitbanner' : '') + (dz.h && !banner ? ' bg-' + dz.h : '') + '"' + stil + '>' + av + '<div><b' + (typ === 'effekt' ? (l ? fs(l) : '').replace(/ data-ne="[^"]*"/, '') + ' data-ne="' + esc(kurz) + '"' : (l ? fs(l) : '')) + '>' + esc(name) + '</b>' + (titel ? '<div class="titel">« ' + esc(titel) + ' »</div>' : '') + '</div></div></div>' +
       '<div class="edknoepfe">' + knopf + '<button class="vlink" id="probezu">Schließen</button></div>';
     karteOeffnen(h);
     $('probezu').onclick = profilZu;
@@ -1584,7 +1584,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   var shopPoll = null;
   // 🎁 Verschenken an Freunde (Idee von TheAshborn0) – Regeln prüft Supabase (Update 32)
-  function verschenkbar(a) { return a && a.kaufbar !== false && !a.thron && !a.einmalig && !a.gutschein && !a.quest && a.stufe !== 'x' && /^(rahmen|banner|titel)_/.test(a.id); }
+  function verschenkbar(a) { return a && a.kaufbar !== false && !a.thron && !a.einmalig && !a.gutschein && !a.quest && a.stufe !== 'x' && /^(rahmen|banner|titel|effekt)_/.test(a.id); }
   function geschenkPreis(a) { return Math.ceil(preisVon(a) * 1.25 / 100) * 100; }
   // 💬 Nachricht beim Verschenken / Danke sagen (Idee von joe3000): Freitext bis 100 Zeichen, Vorschläge zum Antippen
   var gsText = '';
@@ -3999,7 +3999,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     }
     if (sitzung && sitzung.name && !eigen && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) >= 0) {
       var wl = freundWuensche(login);
-      if (wl.length) h += '<div class="fwunsch"><b>💜 Wünscht sich</b>' + wl.map(function (id) { var a = kosArtikel(id), ic = id.indexOf('rahmen_') === 0 ? '🖼️' : id.indexOf('banner_') === 0 ? '🏞️' : '🏷️'; return '<button class="wchip" data-wschenk="' + esc(id) + '" data-wan="' + esc(login) + '" title="Verschenken">' + ic + ' ' + esc(a.name) + '</button>'; }).join('') + '</div>';
+      if (wl.length) h += '<div class="fwunsch"><b>💜 Wünscht sich</b>' + wl.map(function (id) { var a = kosArtikel(id), ic = id.indexOf('rahmen_') === 0 ? '🖼️' : id.indexOf('banner_') === 0 ? '🏞️' : id.indexOf('effekt_') === 0 ? '✨' : '🏷️'; return '<button class="wchip" data-wschenk="' + esc(id) + '" data-wan="' + esc(login) + '" title="Verschenken">' + ic + ' ' + esc(a.name) + '</button>'; }).join('') + '</div>';
     }
     if (wb) h += '<div class="fwerb leise">🌱 hat ' + wb + (wb === 1 ? ' Person' : ' Leute') + ' zu Kazetopia gebracht</div>';
     if (sitzung && !eigen && freunde.meine && freunde.meine.ich.indexOf(login) >= 0 && freunde.meine.mich.indexOf(login) < 0)
