@@ -900,6 +900,13 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes neffwelle { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
   @keyframes neffneon { 0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 8px currentColor; } 50% { text-shadow: 0 0 3px currentColor, 0 0 14px currentColor; } }
   .neffshop { font-size: 20px; font-weight: 800; }
+  /* 🏅 Gründungsmitglied + 💰 Für dich */
+  .gruenderhw { margin: 10px 0 12px; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255,209,102,.35); background: linear-gradient(135deg, rgba(255,209,102,.10), rgba(255,159,67,.06)); font-size: 13px; line-height: 1.4; }
+  .gruenderhw b { color: var(--gold); }
+  .shopfuer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .shopfuer .sfchip { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); color: inherit; border-radius: 999px; padding: 3px 10px; font: 700 12.5px inherit; font-family: inherit; cursor: pointer; }
+  .shopfuer .sfchip:hover { background: rgba(255,255,255,.14); }
+  .shopfuer .sfweg { margin-left: auto; background: none; border: 0; color: var(--grau); font-size: 15px; cursor: pointer; padding: 0 2px; }
   /* 🛠️ Admin neu */
   .adminreiter { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
   .adminreiter::-webkit-scrollbar { display: none; } .adminreiter button { flex: none; white-space: nowrap; }
@@ -1165,7 +1172,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     }).catch(function () { return null; });
   }
   function einloggenFragen() {
-    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Mit Twitch anmelden</b><div class="kk">Freiwillig – nur für Spiele-Voting, Profil gestalten und Zeni-Shop nötig</div></div></div>' +
+    var h = '<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>Mit Twitch anmelden</b><div class="kk">Freiwillig – nur für Spiele-Voting, Profil gestalten und Zeni-Shop nötig</div></div></div>' + gruenderHinweis() +
       '<p>Beim Anmelden speichern wir in einer Datenbank in Frankfurt (Supabase):</p>' +
       '<p>• deine Twitch-ID und deinen Twitch-Namen<br>• deine bei Twitch hinterlegte E-Mail-Adresse (wird von Twitch mitgeschickt, nie angezeigt und nicht genutzt)<br>• deine Spiele-Vorschläge (sichtbar mit deinem Namen) und deine Stimme (öffentlich nur als Gesamtzahl)<br>• deine Shop-Bestellungen (welcher Artikel – gekaufte Artikel sind auf deiner Profilkarte sichtbar) sowie eingelöste Codes und das Willkommensgeschenk (welcher Code, wann)</p>' +
       '<p>Die Seite bekommt <b>keine Rechte</b> auf dein Twitch-Konto. Du kannst dich jederzeit abmelden und dein Konto mit <b>„Meine Daten löschen“</b> sofort selbst komplett entfernen.</p>' +
@@ -1339,6 +1346,32 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       });
     }
   }
+  // 🏅 Gründungsmitglied: die ersten 50 Mitglieder bekommen den Titel für immer
+  var gruenderFrei = null;
+  function gruenderHinweis() { return gruenderFrei > 0 ? '<div class="gruenderhw">🏅 Noch <b>' + gruenderFrei + (gruenderFrei === 1 ? ' Platz' : ' Plätze') + '</b> als <b>Gründungsmitglied</b> – wer sich jetzt anmeldet, behält den Titel für immer</div>' : ''; }
+  function gruenderCheck() {
+    if (!sitzung || !sitzung.name || sitzung.name === 'kazenity') return;
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/gruender_check', { method: 'POST', body: {} }); }).then(function (r) {
+      if (!r || !r.ok || !r.neu) return;
+      var t = document.createElement('div'); t.className = 'gehtoast';
+      t.innerHTML = '<span>🏅</span><div><small>Willkommen in Kazetopia · Mitglied #' + r.nr + '</small><b>Neuer Titel: „Gründungsmitglied“</b></div>';
+      document.body.appendChild(t);
+      setTimeout(function () { t.classList.add('weg'); }, 7000); setTimeout(function () { t.remove(); }, 7700);
+      liveLaden();
+    }).catch(function () { });
+  }
+  // 💰 Shop: „Mit deinen Zeni drin“ – dezent, einmal am Tag wegklickbar
+  function shopFuerDich(me, stand) {
+    if (!me || me === 'kazenity') return '';
+    var heute = new Date().toISOString().slice(0, 10);
+    try { if (localStorage.getItem('kz_fuerdich') === heute) return ''; } catch (x) { }
+    var sh = daten.shop || {}, typ = {};
+    var l = (sh.artikel || []).filter(function (a) { return a.kaufbar !== false && !a.thron && !a.einmalig && !a.still && shopZustand(a) === 'kaufen'; })
+      .sort(function (a, b) { return preisVon(b) - preisVon(a); })
+      .filter(function (a) { var t = a.id.split('_')[0]; if (typ[t]) return false; typ[t] = 1; return true; }).slice(0, 3);
+    if (!l.length) return '';
+    return '<div class="shopneu shopfuer">💰 Mit deinen <b>' + zahl(stand) + ' Zeni</b> drin: ' + l.map(function (a) { return '<button class="sfchip" data-probe="' + esc(a.id) + '">' + esc(a.name) + '</button>'; }).join(' ') + '<button class="sfweg" id="fuerweg" aria-label="Ausblenden">✕</button></div>';
+  }
   // 🎮 Kazes Fazit zu den Spielbewertungen (Idee von theashborn0)
   var fazitD = {};
   function noteZahl(r) { var m = String(r || '').replace(',', '.').match(/([0-9]+(\.[0-9]+)?)/); return m ? parseFloat(m[1]) : NaN; }
@@ -1362,11 +1395,13 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     return Promise.all([
       fetch(SB_URL + '/rest/v1/rpc/kos_live', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
       fetch(SB_URL + '/rest/v1/profil_oeffentlich?select=*', { headers: hd }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-      fetch(SB_URL + '/rest/v1/rpc/fazit_alle', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      fetch(SB_URL + '/rest/v1/rpc/fazit_alle', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(SB_URL + '/rest/v1/rpc/gruender_frei', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
     ]).then(function (r) {
       var neu = JSON.stringify(r);
       if (r[0]) kosLive = r[0];
       if (r[2] && typeof r[2] === 'object') fazitD = r[2];
+      if (typeof r[3] === 'number') gruenderFrei = r[3];
       if (Array.isArray(r[1])) designLive = r[1];
       liveMischen();
       if (neu !== liveLaden.alt) { liveLaden.alt = neu; farbCache = {}; if (typeof zeigen === 'function' && daten) zeigen(); }
@@ -1530,7 +1565,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (!sh || !sh.artikel) return '<div class="liste"><div class="leer">Der Zeni-Shop öffnet bald. 🛍️</div></div>';
     var me = sitzung && sitzung.name, stand = me ? (liveZeni !== null ? liveZeni : ((sh.zeni || {})[me] || 0)) : 0;
     var h = '<div class="shopkopf"><div><b>🛍️ ZENI-SHOP</b><div class="leise">Gib deine Zeni aus dem Stream für Rahmen, Banner und Titel auf deiner Profilkarte aus. Feste Preise, kein Zufall.</div></div>' +
-      (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw tw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>';
+      (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw tw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>' + (me ? '' : gruenderHinweis());
+    h += shopFuerDich(me, stand);
     if (shopNeuJetzt.length) h += '<div class="shopneu">✨ <b>' + shopNeuJetzt.length + (shopNeuJetzt.length === 1 ? ' neuer Artikel' : ' neue Artikel') + '</b> seit deinem letzten Besuch – mit „Neu“ markiert</div>';
     h += '<div class="shopcode"><button class="vlink" id="shopcode">🎟️ Code einlösen</button></div><!--SFILTER-->';
     var an = sh.angebot && kosArtikel(sh.angebot.id);
@@ -1650,6 +1686,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if ($('sfleisten')) $('sfleisten').onchange = function () { shopFilterSetzen('leisten', this.checked); };
     if ($('sfreset')) $('sfreset').onclick = function () { shopF = { typ: 'rahmen', stufe: '', sort: shopF.sort, leisten: false }; shopFilterSetzen('typ', 'rahmen'); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-probe]'), function (b) { b.onclick = function () { anprobieren(b.getAttribute('data-probe')); }; });
+    if ($('fuerweg')) $('fuerweg').onclick = function () { try { localStorage.setItem('kz_fuerdich', new Date().toISOString().slice(0, 10)); } catch (x) { } var e = this.parentNode; if (e) e.remove(); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-wunsch]'), function (b) { b.onclick = function () { wunschUmschalten(b.getAttribute('data-wunsch')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-schenk]'), function (b) { b.onclick = function () { geschenkDialog(b.getAttribute('data-schenk')); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.sbtn[data-login]'), function (b) { b.onclick = einloggenFragen; });
@@ -4951,7 +4988,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 👤 „Ich“: alles Persönliche an einem Ort
   function ichHtml() {
     if (!sitzung) {
-      return '<div class="sbox ichbox"><h3>👤 DEIN KAZETOPIA</h3><p>Mit Twitch anmelden und du bekommst:</p><ul class="ichvorteile"><li>🍀 jeden Tag den <b>Glücks-Knopf</b> (100 bis 10.000 Zeni)</li><li>🛍️ den <b>Zeni-Shop</b> für Rahmen, Banner und Titel</li><li>✏️ deine eigene <b>Profilkarte</b></li><li>🎟️ <b>Codes</b> einlösen und 🤝 <b>Freunde</b> einladen</li><li>🎮 beim <b>Spiele-Voting</b> mitbestimmen</li></ul><button class="vtw tw" id="ichlogin">Mit Twitch anmelden</button>' +
+      return '<div class="sbox ichbox"><h3>👤 DEIN KAZETOPIA</h3><p>Mit Twitch anmelden und du bekommst:</p><ul class="ichvorteile"><li>🍀 jeden Tag den <b>Glücks-Knopf</b> (100 bis 10.000 Zeni)</li><li>🛍️ den <b>Zeni-Shop</b> für Rahmen, Banner und Titel</li><li>✏️ deine eigene <b>Profilkarte</b></li><li>🎟️ <b>Codes</b> einlösen und 🤝 <b>Freunde</b> einladen</li><li>🎮 beim <b>Spiele-Voting</b> mitbestimmen</li></ul>' + gruenderHinweis() + '<button class="vtw tw" id="ichlogin">Mit Twitch anmelden</button>' +
         (ich ? '' : '<p class="leise">Ohne Anmeldung: such dich unter 🏆 Ranglisten und tipp bei deinem Namen auf ⭐ Das bin ich.</p>') + '</div>' + ichKacheln(false);
     }
     var z = liveZeni !== null ? liveZeni : (daten.shop && daten.shop.zeni ? daten.shop.zeni[sitzung.name] : null);
@@ -5352,7 +5389,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     liveMischen(); setTimeout(liveLaden, 300);
     plaetzeMerken(d);
     kopfleiste();
-    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); setTimeout(gsLaden, 4000); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
+    if (sitzung) nutzerLaden().then(function () { kopfleiste(); zeigen(); werbenPruefen(); if (!codeOffenPruefen()) willkommenPruefen(); setTimeout(adminMeldungen, 1500); setTimeout(geheimPruefen, 2500); setTimeout(serieBesuch, 3200); setTimeout(jubToast, 5200); setTimeout(gruenderCheck, 6500); setTimeout(gsLaden, 4000); if (location.hash === '#tresor') setTimeout(tresorDialog, 800); if (location.hash === '#post') setTimeout(posteingangOeffnen, 900); pushPruefen(); });
     reiterMarkieren();
     $('stand').textContent = 'Stand: ' + (d.stand || '–');
     if (d._offline) { var ob = document.createElement('div'); ob.className = 'offlineband'; ob.textContent = '📴 Gerade keine Verbindung – du siehst den letzten Stand vom ' + (d.stand || 'letzten Besuch') + '.'; var hd = document.querySelector('header'); if (hd) hd.parentNode.insertBefore(ob, hd.nextSibling); }
