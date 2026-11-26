@@ -14,10 +14,19 @@ self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || u.origin !== self.location.origin) return;   // fremde Adressen (Daten, Login) nie anfassen
   var shell = e.request.mode === 'navigate' || SHELL.some(function (p) { return u.pathname.endsWith(p.replace('./', '/')); });
   if (!shell) return;
-  e.respondWith(fetch(e.request).then(function (r) {
-    if (r && r.ok) { var kopie = r.clone(); caches.open(CACHE).then(function (c) { c.put(e.request.mode === 'navigate' ? './index.html' : e.request, kopie); }); }
+  // ⚡ Zuerst frisch aus dem Netz – dauert das länger als 2,5 Sek. (schlechtes Netz), sofort die gespeicherte Seite zeigen
+  var schluessel = e.request.mode === 'navigate' ? './index.html' : e.request;
+  var netz = fetch(e.request).then(function (r) {
+    if (r && r.ok) { var kopie = r.clone(); caches.open(CACHE).then(function (c) { c.put(schluessel, kopie); }); }
     return r;
-  }).catch(function () { return caches.match(e.request.mode === 'navigate' ? './index.html' : e.request).then(function (r) { return r || caches.match('./'); }); }));
+  });
+  var ausCache = function () { return caches.match(schluessel).then(function (r) { return r || caches.match('./'); }); };
+  e.respondWith(new Promise(function (fertig) {
+    var erledigt = false, gib = function (r) { if (!erledigt && r) { erledigt = true; fertig(r); } };
+    var uhr = setTimeout(function () { ausCache().then(gib); }, 2500);
+    netz.then(function (r) { clearTimeout(uhr); gib(r); }).catch(function () { clearTimeout(uhr); ausCache().then(function (r) { gib(r); if (!erledigt) { erledigt = true; fertig(Response.error()); } }); });
+    netz.catch(function () { });
+  }));
 });
 
 // 🔔 Push-Benachrichtigungen (nur wenn unter „Ich“ aktiviert)

@@ -1307,7 +1307,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   function ichAbgleichen(n) { n = String(n || '').toLowerCase(); if (!n || ich === n) return; ich = n; try { localStorage.setItem('kz_ich', n); } catch (x) { } }
   function dl(n) { return ' data-l="' + esc(String(n || '').toLowerCase()) + '"'; }
   // ================= Kosmetik & Zeni-Shop =================
-  var KOS_BASIS = 'https://raw.githubusercontent.com/Kazenity/kazetopia/main/bilder/kos/';
+  var KOS_BASIS = 'bilder/kos/';
   function kosBild(id) { if (!/^[a-z0-9_]+$/.test(id)) return ''; var a = kosArtikel(id), e = a && /^(png|jpg|webp)$/.test(a.bild || '') ? a.bild : 'webp'; return KOS_BASIS + id + '.' + e + (a && a.v ? '?v=' + a.v : ''); }
   function shopArtikel() { return (daten && daten.shop && daten.shop.artikel) || []; }
   function kosArtikel(id) { return shopArtikel().filter(function (a) { return a.id === id; })[0]; }
@@ -1939,7 +1939,15 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
 
   // Datenschutz: nur Bilder von GitHub (eigene Kopien) oder eingebettete Bilddaten anzeigen – nie direkt von Twitch
-  function sicher(u) { u = String(u || ''); return (u.indexOf('data:image/') === 0 || u.indexOf('https://raw.githubusercontent.com/Kazenity/') === 0 || u.indexOf('bilder/') === 0) ? u : ''; }
+  // ⚡ Bilder über die schnelle Seite (GitHub Pages) statt über raw.githubusercontent laden – Rückfall siehe unten
+  var RAW_BASIS = 'https://raw.githubusercontent.com/Kazenity/kazetopia/main/';
+  function sicher(u) { u = String(u || ''); if (u.indexOf(RAW_BASIS + 'bilder/') === 0) return u.substring(RAW_BASIS.length); return (u.indexOf('data:image/') === 0 || u.indexOf('https://raw.githubusercontent.com/Kazenity/') === 0 || u.indexOf('bilder/') === 0) ? u : ''; }
+  // Ganz neue Bilder sind auf der Seite manchmal erst nach 1–2 Minuten da → dann einmal direkt von GitHub holen
+  document.addEventListener('error', function (e) {
+    var t = e.target; if (!t || t.tagName !== 'IMG' || t.getAttribute('data-fb')) return;
+    var src = t.getAttribute('src') || ''; if (src.indexOf('bilder/') !== 0) return;
+    t.setAttribute('data-fb', '1'); t.src = RAW_BASIS + src;
+  }, true);
   function bild(n, gross) {
     var p = prof(n);
     var buchstabe = esc(String(p.n || '?').charAt(0).toUpperCase());
