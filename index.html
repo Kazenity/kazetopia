@@ -900,6 +900,27 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes neffwelle { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
   @keyframes neffneon { 0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 8px currentColor; } 50% { text-shadow: 0 0 3px currentColor, 0 0 14px currentColor; } }
   .neffshop { font-size: 20px; font-weight: 800; }
+  /* 💬 Kazes Fazit */
+  .spiel .urt { display: block; font-size: 11.5px; font-weight: 700; color: var(--grau); letter-spacing: .3px; text-transform: uppercase; }
+  .fzknopf { margin-top: 6px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: inherit; border-radius: 999px; padding: 4px 10px; font: 700 12px inherit; font-family: inherit; cursor: pointer; }
+  .fzknopf:hover { background: rgba(255,255,255,.16); }
+  .fzkopf { display: flex; gap: 14px; align-items: center; margin: 6px 0 12px; }
+  .fzkopf img, .fzcv { width: 84px; height: 112px; object-fit: cover; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); font-size: 30px; }
+  .fzname { font-weight: 800; font-size: 18px; line-height: 1.2; }
+  .fznote { display: inline-block; margin-top: 6px; background: linear-gradient(135deg, #ffd166, #ff9f43); color: #2a1600; font-weight: 900; border-radius: 8px; padding: 3px 10px; font-size: 16px; }
+  .fzurteil { margin-top: 4px; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--gold); }
+  .fzsatz { font-size: 16px; font-weight: 700; font-style: italic; line-height: 1.45; padding: 10px 14px; border-left: 3px solid var(--gold); background: rgba(255,255,255,.04); border-radius: 0 10px 10px 0; margin-bottom: 12px; }
+  .fzpc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fzpc > div { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 12px; }
+  .fzpc h4 { margin: 0 0 6px; font-size: 13px; }
+  .fzpc ul { margin: 0; padding: 0; list-style: none; }
+  .fzpc li { padding: 4px 0 4px 20px; position: relative; font-size: 13.5px; line-height: 1.35; }
+  .fzpro li::before { content: '✓'; position: absolute; left: 2px; color: #7bd88f; font-weight: 900; }
+  .fzcon li::before { content: '✗'; position: absolute; left: 2px; color: #ff6b6b; font-weight: 900; }
+  .fzfuer { margin-top: 10px; font-size: 13.5px; line-height: 1.4; }
+  .fzyt { display: inline-block; margin-top: 10px; }
+  .fzfeld { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .fzfeld input { flex: 1; }
+  @media (max-width: 560px) { .fzpc { grid-template-columns: 1fr; } }
   /* 🖼️ Kauf-Hintergründe (Profilkarte) – bewegt nur im Profil und in der Shop-Vorschau */
   .bg-sakura { background: radial-gradient(ellipse 7px 4px at 30% 40%, rgba(255,200,222,.95), transparent 75%) 0 0/83px 97px, radial-gradient(ellipse 5px 3px at 70% 20%, rgba(255,230,240,.85), transparent 75%) 21px 37px/127px 113px, radial-gradient(ellipse 4px 6px at 50% 50%, rgba(255,170,200,.8), transparent 75%) 47px 11px/61px 71px, radial-gradient(ellipse at 85% 15%, rgba(255,230,240,.35), transparent 55%), linear-gradient(135deg, rgba(255,120,170,.55), rgba(120,40,90,.55) 60%, rgba(30,10,30,.2)); }
   .bg-neon { background: radial-gradient(circle at 72% 58%, rgba(255,214,120,.9) 0 22px, rgba(255,120,150,.35) 23px, transparent 46px), repeating-linear-gradient(0deg, rgba(0,240,255,.22) 0 1px, transparent 1px 16px) 0 100%/100% 45% no-repeat, linear-gradient(180deg, rgba(255,60,170,.6), rgba(255,140,60,.45) 45%, rgba(40,10,70,.75)); }
@@ -1290,14 +1311,34 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       });
     }
   }
+  // 🎮 Kazes Fazit zu den Spielbewertungen (Idee von theashborn0)
+  var fazitD = {};
+  function noteZahl(r) { var m = String(r || '').replace(',', '.').match(/([0-9]+(\.[0-9]+)?)/); return m ? parseFloat(m[1]) : NaN; }
+  function urteil(r) { var n = noteZahl(r); if (isNaN(n)) return ''; return n >= 9.5 ? 'Meisterwerk' : n >= 9 ? 'Herausragend' : n >= 8 ? 'Sehr gut' : n >= 7 ? 'Gut' : n >= 6 ? 'Solide' : 'Durchwachsen'; }
+  function fazitHtml(x, f) {
+    f = f || {};
+    var li = function (a, k) { return (a || []).length ? '<ul class="' + k + '">' + a.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '<p class="leise">–</p>'; };
+    return '<div class="fzkopf">' + (sicher(x.b) ? '<img alt="" src="' + esc(sicher(x.b)) + '">' : '<span class="fzcv">🎮</span>') +
+      '<div><div class="fzname">' + esc(x.n) + '</div><div class="fznote">⭐ ' + esc(x.r || '') + '</div><div class="fzurteil">' + esc(urteil(x.r)) + '</div></div></div>' +
+      (f.s ? '<div class="fzsatz">„' + esc(f.s) + '“</div>' : '') +
+      '<div class="fzpc"><div><h4>👍 Das hat mir gefallen</h4>' + li(f.p, 'fzpro') + '</div><div><h4>👎 Darum fehlen Punkte</h4>' + li(f.c, 'fzcon') + '</div></div>' +
+      (f.f ? '<div class="fzfuer"><b>🎯 Empfehlung:</b> ' + esc(f.f) + '</div>' : '') +
+      (x.link ? '<a class="yt fzyt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ Ganze Serie auf YouTube</a>' : '');
+  }
+  function fazitDialog(i) {
+    var x = (daten && daten.spiele || [])[i]; if (!x) return;
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>💬 Kazes Fazit</b></div></div>' + fazitHtml(x, fazitD[x.n]) + '</div>');
+  }
   function liveLaden() {
     var hd = { apikey: SB_KEY, 'Content-Type': 'application/json' };
     return Promise.all([
       fetch(SB_URL + '/rest/v1/rpc/kos_live', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-      fetch(SB_URL + '/rest/v1/profil_oeffentlich?select=*', { headers: hd }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      fetch(SB_URL + '/rest/v1/profil_oeffentlich?select=*', { headers: hd }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(SB_URL + '/rest/v1/rpc/fazit_alle', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
     ]).then(function (r) {
       var neu = JSON.stringify(r);
       if (r[0]) kosLive = r[0];
+      if (r[2] && typeof r[2] === 'object') fazitD = r[2];
       if (Array.isArray(r[1])) designLive = r[1];
       liveMischen();
       if (neu !== liveLaden.alt) { liveLaden.alt = neu; farbCache = {}; if (typeof zeigen === 'function' && daten) zeigen(); }
@@ -4103,7 +4144,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['geheim', '🔒 Geheim'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['geheim', '🔒 Geheim'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['fazit', '💬 Fazit'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
@@ -4124,10 +4165,45 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       [['santat1', 'normal'], ['santat2', 'gold']].forEach(function (x) { var b = $(x[0]); if (b) b.onclick = function () { profilZu(); setTimeout(function () { santaZeigen(x[1]); }, 700); }; });
       rpc('admin_bereiche').then(function (b) {
         var el = $('adm'); if (!el || !(b || []).length) return;
-        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut', zeitung: '📰 Zeitung', rueckblick: '📊 Rückblick' };
+        var max = b[0].n || 1, NAME = { start: '🏠 Start', zeni: '💰 Zeni-Rangliste', watchtime: '⏱️ Watchtime-Rangliste', chat: '💬 Chat-Rangliste', bingo: '🎯 Bingo', danke: '💖 Danke', emotes: '😄 Emotes', clips: '🎬 Clips', ruhm: '🏛️ Ruhmeshalle', spiele: '🎮 Spiele', shop: '🛍️ Shop', ich: '👤 Ich', glueck: '🍀 Glücks-Knopf gedrückt', code: '🎟️ Code-Fenster', einladen: '🤝 Einladen', app: '📱 App', anprobieren: '👀 Anprobieren', fazit: '💬 Kazes Fazit', teilen: '📤 Profil geteilt', mehr: '▾ Mehr in „Dein Bereich“', thsakura: '🎨 Theme Sakura', thmitternacht: '🎨 Theme Mitternacht', thmatcha: '🎨 Theme Matcha', thglut: '🎨 Theme Glut', zeitung: '📰 Zeitung', rueckblick: '📊 Rückblick' };
         el.insertAdjacentHTML('beforeend', '<div class="sbox"><h3>👀 WAS WIRD GENUTZT? (7 TAGE)</h3>' + b.map(function (x) { return '<div class="kzzeile"><b>' + esc(NAME[x.b] || x.b) + '</b><span><span class="balken"><i style="width:' + Math.round(x.n / max * 100) + '%"></i></span></span><span class="leise">' + zahl(x.n) + '×</span></div>'; }).join('') + '<p class="leise">Anonym gezählt: wie oft ein Bereich geöffnet wurde, nicht von wem.</p></div>');
       }).catch(function () { });
     }).catch(fehler);
+    if (tab === 'fazit') {
+      var spl = (daten && daten.spiele || []).filter(function (x) { return x.r; });
+      var fzWahl = function (i) {
+        var x = spl[i], f = fazitD[x.n] || {}, v = function (a, k) { return esc((a || [])[k] || ''); };
+        var feld = function (id, wert, max, ph) { return '<div class="fzfeld"><input id="' + id + '" maxlength="' + max + '" value="' + wert + '" placeholder="' + esc(ph) + '"><span class="leise" data-zz="' + id + '"></span></div>'; };
+        $('fzform').innerHTML = '<div class="sbox"><h3>✍️ ' + esc(x.n) + ' · ⭐ ' + esc(x.r) + ' · ' + esc(urteil(x.r)) + '</h3>' +
+          '<p class="leise">Fazit in einem Satz (max. 140)</p>' + feld('fzs', esc(f.s || ''), 140, 'z. B. Die beste Open-World-Story, die ich je gespielt habe.') +
+          '<p class="leise">👍 Das hat mir gefallen (bis zu 3, je max. 80)</p>' + [0, 1, 2].map(function (k) { return feld('fzp' + k, v(f.p, k), 80, 'Pro ' + (k + 1)); }).join('') +
+          '<p class="leise">👎 Darum fehlen Punkte (bis zu 3, je max. 80)</p>' + [0, 1, 2].map(function (k) { return feld('fzc' + k, v(f.c, k), 80, 'Contra ' + (k + 1)); }).join('') +
+          '<p class="leise">🎯 Empfehlung für … (max. 140)</p>' + feld('fzf', esc(f.f || ''), 140, 'z. B. Story-Fans und alle, die sich Zeit lassen') +
+          '<div class="edknoepfe"><button class="vtw" id="fzsave">Speichern</button><button class="vlink" id="fzdel">Fazit löschen</button></div><div id="fzmsg" class="leise"></div></div>' +
+          '<div class="sbox"><h3>👀 VORSCHAU</h3><div id="fzvor"></div></div>';
+        var lesen = function () { var g = function (id) { return ($(id).value || '').trim(); }; return { s: g('fzs'), p: [g('fzp0'), g('fzp1'), g('fzp2')].filter(Boolean), c: [g('fzc0'), g('fzc1'), g('fzc2')].filter(Boolean), f: g('fzf') }; };
+        var vor = function () { $('fzvor').innerHTML = fazitHtml(x, lesen()); Array.prototype.forEach.call(document.querySelectorAll('[data-zz]'), function (z) { var e = $(z.getAttribute('data-zz')); z.textContent = e.value.length + '/' + e.maxLength; }); };
+        Array.prototype.forEach.call(document.querySelectorAll('#fzform input'), function (e) { e.oninput = vor; });
+        vor();
+        var senden = function (d) {
+          $('fzmsg').textContent = 'Speichere …';
+          rpc('admin_fazit_setzen', { p_spiel: x.n, p_satz: d.s, p_pro: d.p, p_contra: d.c, p_fuer: d.f }).then(function (r) {
+            if (r && r.geloescht) delete fazitD[x.n]; else fazitD[x.n] = { s: d.s, p: d.p, c: d.c, f: d.f };
+            $('fzmsg').textContent = r && r.geloescht ? '🗑️ Fazit gelöscht.' : '✅ Gespeichert – ist sofort für alle sichtbar.';
+            fzListe();
+          }).catch(function (e) { $('fzmsg').textContent = '❌ ' + (/404|PGRST202/.test(e.message) ? 'Supabase-Update 53 fehlt noch.' : e.message); });
+        };
+        $('fzsave').onclick = function () { senden(lesen()); };
+        $('fzdel').onclick = function () { if (this.dataset.ok) senden({ s: '', p: [], c: [], f: '' }); else { this.dataset.ok = 1; this.textContent = 'Wirklich löschen?'; } };
+      };
+      var fzListe = function () {
+        var el = $('fzliste'); if (!el) return;
+        el.innerHTML = spl.map(function (x, i) { return '<button class="kzzeile" data-fzi="' + i + '" style="width:100%;text-align:left;cursor:pointer"><b>' + esc(x.n) + '</b><span class="leise">⭐ ' + esc(x.r) + '</span><span>' + (fazitD[x.n] ? '✅' : '✍️') + '</span></button>'; }).join('');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-fzi]'), function (b) { b.onclick = function () { fzWahl(+b.getAttribute('data-fzi')); $('fzform').scrollIntoView({ behavior: 'smooth' }); }; });
+      };
+      $('adm').innerHTML = '<div class="sbox"><h3>💬 KAZES FAZIT · ' + Object.keys(fazitD).length + '/' + spl.length + ' GESCHRIEBEN</h3><p class="leise">Tippe auf ein Spiel. ✅ = Fazit vorhanden. Spiele ohne Fazit zeigen nur Note und Urteil.</p><div id="fzliste"></div></div><div id="fzform"></div>';
+      fzListe();
+    }
     if (tab === 'geheim') rpc('admin_geheim').then(function (r) {
       var pro = {}, wer = {};
       (r || []).forEach(function (x) { (pro[x.l] = pro[x.l] || []).push(x); wer[x.id] = (wer[x.id] || 0) + 1; });
@@ -4982,12 +5058,13 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       }
       var sp = daten.spiele || [];
       var hs = '';
-      sp.forEach(function (x) {
-        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (sicher(x.b) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.b)) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span>' : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
+      sp.forEach(function (x, si) {
+        hs += '<div class="spiel">' + (x.live ? '<div class="lv">● LIVE</div>' : '') + '<div class="cv">' + (sicher(x.b) ? '<img loading="lazy" alt="" src="' + esc(sicher(x.b)) + '">' : '🎮') + '</div><div class="t"><b title="' + esc(x.n) + '">' + esc(x.n) + '</b>' + (x.r ? '<span class="rt">⭐ ' + esc(x.r) + '</span><span class="urt">' + esc(urteil(x.r)) + '</span>' + (fazitD[x.n] ? '<button class="fzknopf" data-fazit="' + si + '">💬 Kazes Fazit</button>' : '') : '<span class="rt laeuft">▶ Läuft gerade</span>') + (x.link ? '<br><a class="yt" href="' + esc(x.link) + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') + '</div></div>';
       });
       $('liste').className = '';
       $('liste').innerHTML = sw + (sp.length ? '<div class="kacheln spiele">' + hs + '</div>' : '<div class="liste"><div class="leer">Noch keine Spiele eingetragen.</div></div>');
       $('spschalter').onclick = function (e) { var b = e.target.closest('button'); if (b) { spieleAnsicht = b.getAttribute('data-s'); zeigen(); } };
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fazit]'), function (b) { b.onclick = function () { zaehlen('fazit'); fazitDialog(+b.getAttribute('data-fazit')); }; });
       $('hinweis').textContent = 'Unsere Story-Games mit Kazes Bewertung';
       return true;
     }
