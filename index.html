@@ -2278,6 +2278,31 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   ansichtAnwenden();
   // 💡 Ideen & Feedback: ohne Limit, nur Kaze liest es. Hilfreich = 2.500 (erste der Woche) / 500 (weitere), umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“
+  // 🧾 Buchungen in Klartext (Admin)
+  function admBuchText(a, v, l) {
+    a = String(a || '');
+    var nm = function (id) { return kosName(id); };
+    if (a.indexOf('geschenk:') === 0) { var g = a.split(':'); return l && v !== l ? '🎁 von ' + v + ' bekommen: ' + nm(g[1]) : '🎁 an ' + g[2] + ' verschenkt: ' + nm(g[1]); }
+    if (a.indexOf('farbe:') === 0) return '🎨 Rahmen umgefärbt: ' + nm(a.split(':')[1]);
+    if (a.indexOf('zeni:') !== 0) return '🛍️ ' + nm(a);
+    var c = a.substring(5), m;
+    if ((m = c.match(/^__PASSW\d+-(\d+)/))) return '🎫 Saisonpass Stufe ' + m[1];
+    if (c.indexOf('__PASS') === 0) return '🎫 Saisonpass-Belohnung';
+    if (c.indexOf('__XDREH') === 0) return '🍀 Extra-Dreh (Saisonpass)';
+    if (c.indexOf('__GLUECK') === 0) return '🍀 Glücks-Knopf';
+    if (c.indexOf('__SERIEM') === 0) return '🔥 Serien-Meilenstein';
+    if (c.indexOf('__SERIE') === 0) return '🔥 Besuchs-Serie';
+    if (c.indexOf('__TRESOR-EIN') === 0) return '🔐 Tresor eingezahlt';
+    if (c.indexOf('__TRESOR') === 0) return '🔐 Tresor ausgezahlt';
+    if (c.indexOf('__SANTA') === 0) return '🎅 Weihnachtsmann gefangen';
+    if (c.indexOf('__FEEDBACK') === 0) return '💡 Feedback-Belohnung';
+    if (c.indexOf('__WILLKOMMEN') === 0) return '👋 Willkommens-Geschenk';
+    if (c.indexOf('__VIP') === 0) return '💎 VIP gewonnen';
+    if (c.indexOf('__GEHEIM') === 0) return '🔒 Geheimnis entdeckt';
+    if (c.indexOf('__') === 0) return '⚙️ ' + c.substring(2).split('-')[0];
+    return '🎟️ Code „' + c + '“ eingelöst';
+  }
+  function admBetrag(p) { p = +p || 0; if (!p) return ''; return '<b class="' + (p < 0 ? 'admup' : 'admdn') + '">' + (p < 0 ? '+' : '−') + zahl(Math.abs(p)) + ' Zeni</b>'; }
   var FB_VORLAGEN = [
     ['💜 Kommt auf die Liste', 'Danke für die Idee! 💜 Die kommt auf meine Liste – ich melde mich, sobald es etwas Neues dazu gibt.'],
     ['🔧 Ich bau es', 'Starke Idee, danke dir! 💜 Ich setze das gerade um – du siehst es bald auf Kazetopia.'],
@@ -4226,12 +4251,11 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
         '<div class="leise" style="margin-top:8px">💰 ' + zahl(u.zeni7) + ' Zeni im Shop ausgegeben (7 Tage) · 🍀 heute ' + u.glueckHeute + '× Glücks-Knopf' + (u.botwartet ? ' · ⏳ <b>' + u.botwartet + ' Buchungen warten auf den Bot</b>' : '') + '</div></div>';
       var vip = (u.glueck || []).filter(function (g) { return g.g === 'vip'; });
       if (vip.length) h += '<div class="sbox"><h3>💎 VIP GEWONNEN</h3>' + vip.map(function (g) { return '<div class="kzzeile"><b>' + esc(g.l) + '</b><span class="leise">' + esc(g.d) + ' · in Twitch vergeben, nach 1 Monat entfernen</span></div>'; }).join('') + '</div>';
-      h += '<div class="sbox"><h3>🛍️ LETZTE BUCHUNGEN</h3>' + ((u.letzte || []).map(function (k) { var a = String(k.a || ''); return '<div class="kzzeile"><b>' + esc(k.l) + '</b><span>' + (a.indexOf('zeni:') === 0 ? (a.indexOf('__GLUECK') > 0 ? '🍀 Glücks-Knopf' : a.indexOf('__WILLKOMMEN') > 0 ? '🎁 Willkommen' : a.indexOf('__VIP') > 0 ? '💎 VIP' : '🎟️ ' + esc(a.substring(5))) + (k.p < 0 ? ' +' + zahl(-k.p) : '') : esc(kosName(a)) + (k.p > 0 ? ' · ' + zahl(k.p) : '')) + '</span><span class="leise">' + wann(k.t) + (k.s === 'bezahlt' ? ' ⏳' : '') + '</span></div>'; }).join('') || '<p class="leise">Noch nichts.</p>') + '</div>';
+      h += '<div class="sbox"><h3>🛍️ LETZTE BUCHUNGEN</h3>' + ((u.letzte || []).map(function (k) { var bt = admBetrag(k.p); return '<div class="admpush"><div class="admpushk"><b>' + esc(prof(k.l).n || k.l) + '</b><span class="leise">' + wann(k.t) + '</span></div><div>' + esc(admBuchText(k.a, k.l, '')) + '</div><div class="leise">' + (bt ? bt + ' · ' : '') + (k.s === 'bezahlt' ? '⏳ wartet auf den Bot' : '✓ gebucht') + '</div></div>'; }).join('') || '<p class="leise">Noch nichts.</p>') + '</div>';
       if ((u.werben || []).length) h += '<div class="sbox"><h3>🌱 GEWORBEN</h3>' + u.werben.map(function (w) { return '<div class="kzzeile"><b>' + esc(w.g) + '</b><span>von ' + esc(w.w) + '</span><span class="leise">' + (w.s === 'belohnt' ? '✅' : w.s === 'abgelehnt' ? '✖️' : '⏳ wartet') + '</span></div>'; }).join('') + '</div>';
       var gross = (u.glueck || []).filter(function (g) { return g.g !== 'vip'; });
       if (gross.length) h += '<div class="sbox"><h3>🍀 GROSSE GLÜCKS-GEWINNE</h3>' + gross.map(function (g) { return '<div class="kzzeile"><b>' + esc(g.l) + '</b><span>' + glueckText(g.g, g.z) + '</span><span class="leise">' + esc(g.d) + '</span></div>'; }).join('') + '</div>';
       rpc('admin_meldungen').then(function (m) { var el = $('adm'); if (!el || !(m || []).length) return; el.insertAdjacentHTML('afterbegin', '<div class="sbox"><h3>🚩 GEMELDETE NACHRICHTEN</h3>' + m.map(function (x) { return '<div class="kzzeile"><b>' + esc(x.von) + ' → ' + esc(x.an) + '</b><span>„' + esc(x.text || '') + '“</span><span class="leise">' + wann(x.t) + '</span></div>'; }).join('') + '<p class="leise">Gemeldete Nachrichten sieht der Empfänger nicht mehr. Bei Problemen kannst du im Protokoll nachsehen oder die Person ansprechen.</p></div>'); }).catch(function () { });
-      h = '<div class="sbox"><h3>🎅 WEIHNACHTSMANN TESTEN</h3><p class="leise">Lässt ihn sofort einmal fliegen – nur bei dir, ohne echte Zeni. Gut zum Zeigen im Stream.</p><div class="admfbk2"><button class="vtw" id="santat1">🎅 Normal</button><button class="vtw" id="santat2">🛷 Golden</button></div></div>' + h;
       $('adm').innerHTML = h;
       [['santat1', 'normal'], ['santat2', 'gold']].forEach(function (x) { var b = $(x[0]); if (b) b.onclick = function () { profilZu(); setTimeout(function () { santaZeigen(x[1]); }, 700); }; });
       rpc('admin_bereiche').then(function (b) {
@@ -4280,17 +4304,6 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       $('adm').innerHTML = '<div class="sbox"><h3>🔍 NUTZER NACHSCHLAGEN</h3><p class="leise">Für Rückfragen wie „Mein Geschenk ist nicht da“: Zeni, Besitz, Buchungen, Freunde – alles auf einen Blick.</p>' +
         '<div class="admsuche"><input class="admfeld" id="nlin" list="nlliste" placeholder="Twitch-Name, z. B. joe3000" autocomplete="off" autocapitalize="none" value="' + esc(admNutzer) + '"><button class="vtw" id="nlok">Suchen</button></div>' +
         '<datalist id="nlliste">' + Object.keys(namen).sort().map(function (k) { return '<option value="' + esc(k) + '">'; }).join('') + '</datalist></div><div id="nlerg"></div>';
-      var buchText = function (x, l) {
-        var a = String(x.a || ''), nm = function (id) { var k = kosArtikel(id); return k ? k.name : id; };
-        if (a.indexOf('geschenk:') === 0) { var g = a.split(':'); return x.v === l ? '🎁 an ' + g[2] + ' verschenkt: ' + nm(g[1]) : '🎁 von ' + x.v + ' bekommen: ' + nm(g[1]); }
-        if (a.indexOf('farbe:') === 0) return '🎨 Umgefärbt: ' + nm(a.split(':')[1]);
-        if (a.indexOf('zeni:') === 0) {
-          var c = a.substring(5), M = [['__GLUECK', '🍀 Glücks-Knopf'], ['__SERIEM', '🔥 Serien-Meilenstein'], ['__SERIE', '🔥 Besuchs-Serie'], ['__PASS', '🎫 Saisonpass'], ['__SANTA', '🎅 Weihnachtsmann'], ['__FEEDBACK', '💡 Feedback-Belohnung'], ['__TRESOR', '🔐 Tresor'], ['__WILLKOMMEN', '👋 Willkommen'], ['__GEHEIM', '🔒 Geheimnis']];
-          for (var i = 0; i < M.length; i++) if (c.indexOf(M[i][0]) === 0) return M[i][1];
-          return c.indexOf('__') === 0 ? '⚙️ ' + c.substring(2).split('-')[0] : '🎟️ Code ' + c;
-        }
-        return (x.p > 0 ? '🛍️ Gekauft: ' : '🎁 Erhalten: ') + nm(a);
-      };
       var suchen = function () {
         var l = ($('nlin').value || '').trim().toLowerCase().replace(/^@/, ''); if (!l) return;
         admNutzer = l; $('nlerg').innerHTML = '<p class="leise">Lade …</p>';
@@ -4307,7 +4320,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
             '<p class="leise">🔐 Tresor: ' + trText + ' · 👥 ' + (n.freunde || []).length + ' Freunde · 🔒 ' + (n.geheim || 0) + ' Geheimnisse · 💡 ' + (n.feedback || 0) + ' Feedbacks</p></div>';
           h += '<div class="sbox"><h3>🧾 LETZTE BUCHUNGEN</h3>' + ((n.buchungen || []).map(function (x) {
             var pl = x.v === l ? -(+x.p || 0) : 0, betr = pl ? (pl > 0 ? '+' : '−') + zahl(Math.abs(pl)) : '';
-            return '<div class="admpush"><div class="admpushk"><b>' + esc(buchText(x, l)) + '</b><span class="leise">' + wann(x.t) + '</span></div><div class="leise">' + (betr ? '<b class="' + (pl > 0 ? 'admup' : 'admdn') + '">' + betr + ' Zeni</b> · ' : '') + (x.s === 'bezahlt' ? '⏳ wartet auf den Bot' : x.s === 'gebucht' ? '✓ gebucht' : esc(x.s)) + (x.n ? ' · „' + esc(x.n) + '“' : '') + '</div></div>';
+            return '<div class="admpush"><div class="admpushk"><b>' + esc(admBuchText(x.a, x.v, l)) + '</b><span class="leise">' + wann(x.t) + '</span></div><div class="leise">' + (betr ? '<b class="' + (pl > 0 ? 'admup' : 'admdn') + '">' + betr + ' Zeni</b> · ' : '') + (x.s === 'bezahlt' ? '⏳ wartet auf den Bot' : x.s === 'gebucht' ? '✓ gebucht' : esc(x.s)) + (x.n ? ' · „' + esc(x.n) + '“' : '') + '</div></div>';
           }).join('') || '<p class="leise">Keine Buchungen.</p>') + '</div>';
           h += '<div class="sbox"><h3>🎒 BESITZ</h3>' + ((n.besitz || []).length ? '<div class="admchips">' + n.besitz.map(function (id) { var k = kosArtikel(id); return '<span>' + esc(k ? k.name : id) + '</span>'; }).join('') + '</div>' : '<p class="leise">Noch nichts.</p>') + '</div>';
           h += '<div class="sbox"><h3>👥 FREUNDE (GEGENSEITIG)</h3>' + ((n.freunde || []).length ? '<div class="admchips">' + n.freunde.map(function (f) { return '<span class="admname" data-nf="' + esc(f) + '">' + esc(prof(f).n || f) + '</span>'; }).join('') + '</div>' : '<p class="leise">Keine.</p>') + '</div>';
