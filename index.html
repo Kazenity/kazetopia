@@ -353,6 +353,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .rwrap .rahmen { position: absolute; left: 50%; top: 50%; width: 162%; height: 162%; transform: translate(-50%, -50%); pointer-events: none; }
 .rwrap .rtint { mix-blend-mode: multiply; }
   .karte .kopf .rwrap .av { border-color: transparent; }
+  .rwrap .av { background-clip: padding-box; }  /* kein farbiger Ring zwischen Bild und Rahmen */
   .kopf.mitbanner { background-size: cover; background-position: right center; min-height: 110px; padding: 18px 14px 18px 22px; }
   .kopf.mitbanner .rwrap { margin: 6px 10px 6px 4px; }
   .kopf.design:not(.mitbanner) .rwrap { margin: 10px 12px 10px 9px; }
