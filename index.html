@@ -900,6 +900,21 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes neffwelle { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
   @keyframes neffneon { 0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 8px currentColor; } 50% { text-shadow: 0 0 3px currentColor, 0 0 14px currentColor; } }
   .neffshop { font-size: 20px; font-weight: 800; }
+  /* 🛠️ Admin neu */
+  .admgruppen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 8px; }
+  .admgruppen button { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: inherit; border-radius: 12px; padding: 10px 4px; font: 700 13px inherit; font-family: inherit; cursor: pointer; }
+  .admgruppen button.aktiv { background: var(--rosa); color: #2a0f1c; border-color: transparent; }
+  .admauf { display: grid; gap: 8px; }
+  .admkarte { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 14px; color: inherit; font-family: inherit; cursor: pointer; }
+  .admkarte:hover { background: rgba(255,255,255,.09); } .admkarte.still { cursor: default; opacity: .75; }
+  .admkarte b { display: block; font-size: 14.5px; } .admkarte small { display: block; color: var(--grau); font-size: 12px; margin-top: 2px; }
+  .admico { font-size: 22px; flex: none; } .admpf { margin-left: auto; font-size: 22px; color: var(--grau); }
+  .admok { padding: 14px; text-align: center; font-weight: 700; background: rgba(123,216,143,.1); border-radius: 12px; }
+  .admkpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .admkpi > div { background: rgba(255,255,255,.05); border-radius: 12px; padding: 10px; text-align: center; }
+  .admkpi b { display: block; font-size: 20px; } .admkpi span { display: block; font-size: 11.5px; color: var(--grau); margin: 2px 0 4px; }
+  .admkpi i { font-style: normal; font-size: 12px; font-weight: 800; } .admup { color: #7bd88f; } .admdn { color: #ff6b6b; } .admgl { color: var(--grau); }
+  @media (max-width: 420px) { .admgruppen button { font-size: 11.5px; padding: 9px 2px; } .admkpi b { font-size: 17px; } }
   /* 💬 Kazes Fazit */
   .spiel .urt { display: block; font-size: 11.5px; font-weight: 700; color: var(--grau); letter-spacing: .3px; text-transform: uppercase; }
   .fzknopf { margin-top: 6px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: inherit; border-radius: 999px; padding: 4px 10px; font: 700 12px inherit; font-family: inherit; cursor: pointer; }
@@ -919,6 +934,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .fzcon li::before { content: '✗'; position: absolute; left: 2px; color: #ff6b6b; font-weight: 900; }
   .fzfuer { margin-top: 10px; font-size: 13.5px; line-height: 1.4; }
   .fzyt { display: inline-block; margin-top: 10px; }
+  .fzzeile { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; color: inherit; font-family: inherit; cursor: pointer; }
+  .fzzeile b { flex: 1; font-size: 14px; } .fzzeile:hover { background: rgba(255,255,255,.09); }
   .fzfeld { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .fzfeld input { flex: 1; }
   @media (max-width: 560px) { .fzpc { grid-template-columns: 1fr; } }
   /* 🖼️ Kauf-Hintergründe (Profilkarte) – bewegt nur im Profil und in der Shop-Vorschau */
@@ -4144,13 +4161,46 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var reiterH = '<div class="unterreiter adminreiter">' + [['start', '📊 Übersicht'], ['plan', '📅 Streamplan'], ['push', '🔔 Push'], ['protokoll', '📜 Protokoll'], ['geheim', '🔒 Geheim'], ['feedback', '💡 Feedback'], ['umfragen', '🗳️ Umfragen'], ['voting', '🎮 Spiele-Voting'], ['fazit', '💬 Fazit'], ['codes', '🎟️ Codes']].map(function (x) { return '<button data-adm="' + x[0] + '"' + (x[0] === tab ? ' class="aktiv"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+    var ADM_GR = [['heute', '🏠 Heute', ['start']], ['comm', '📥 Community', ['feedback', 'voting', 'umfragen']], ['inh', '✏️ Inhalte', ['plan', 'fazit', 'push', 'codes']], ['zahl', '📊 Zahlen', ['nutzung', 'protokoll', 'geheim']]];
+    var ADM_N = { start: '🏠 Heute', feedback: '💡 Feedback', voting: '🎮 Spiele-Vorschläge', umfragen: '🗳️ Umfragen', plan: '📅 Streamplan', fazit: '💬 Fazit', push: '🔔 Push', codes: '🎟️ Codes', nutzung: '👀 Nutzung & Buchungen', protokoll: '📜 Protokoll', geheim: '🔒 Geheim' };
+    var admGr = ADM_GR.filter(function (g) { return g[2].indexOf(tab) >= 0; })[0] || ADM_GR[0];
+    var reiterH = '<div class="admgruppen">' + ADM_GR.map(function (g) { return '<button data-adm="' + g[2][0] + '"' + (g === admGr ? ' class="aktiv"' : '') + '>' + g[1] + '</button>'; }).join('') + '</div>' +
+      (admGr[2].length > 1 ? '<div class="unterreiter adminreiter">' + admGr[2].map(function (x) { return '<button data-adm="' + x + '"' + (x === tab ? ' class="aktiv"' : '') + '>' + ADM_N[x] + '</button>'; }).join('') + '</div>' : '');
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
     var fehler = function (x) { var el = $('adm'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202/.test(x.message) ? 'Supabase-Update 18 fehlt noch.' : x.message) + '</p>'; };
     function wann(t) { var d = new Date(t); return isNaN(d) ? '' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-    if (tab === 'start') rpc('admin_uebersicht').then(function (u) {
+    if (tab === 'start') {
+      $('adm').innerHTML = '<p class="leise">Lade …</p>';
+      Promise.all([rpc('admin_aufgaben').catch(function () { return null; }), rpc('admin_uebersicht').catch(function () { return {}; }), rpc('admin_meldungen').catch(function () { return []; })]).then(function (r) {
+        var a = r[0] || {}, u = r[1] || {}, m = r[2] || [];
+        var spl = (daten && daten.spiele || []).filter(function (x) { return x.r; }), ohneFz = spl.filter(function (x) { return !fazitD[x.n]; }).length;
+        var vip = (u.glueck || []).filter(function (g) { return g.g === 'vip'; });
+        var auf = [];
+        if (a.fb) auf.push(['feedback', '💡', a.fb + (a.fb === 1 ? ' neues Feedback' : ' neue Feedbacks'), 'Antworten oder einsortieren']);
+        if (a.vor) auf.push(['voting', '🎮', a.vor + (a.vor === 1 ? ' Spiel-Vorschlag wartet' : ' Spiel-Vorschläge warten'), 'Freigeben oder ablehnen']);
+        if (m.length) auf.push(['#meld', '🚩', m.length + (m.length === 1 ? ' gemeldete Nachricht' : ' gemeldete Nachrichten'), 'Unten ansehen']);
+        if (vip.length) auf.push(['#vip', '💎', vip.length + '× VIP beim Glücks-Knopf gewonnen', 'In Twitch vergeben']);
+        if (ohneFz) auf.push(['fazit', '✍️', ohneFz + ' Spiele ohne Fazit', 'Kazes Fazit schreiben']);
+        if (a.bot > 0) auf.push(['', '⏳', a.bot + ' Buchungen warten auf den Bot', 'Werden beim nächsten Bot-Start gebucht']);
+        var pfeil = function (n, v) { n = +n || 0; v = +v || 0; if (n === v) return '<i class="admgl">→</i>'; return n > v ? '<i class="admup">↑ ' + (v ? Math.round((n - v) / v * 100) + ' %' : 'neu') + '</i>' : '<i class="admdn">↓ ' + Math.round((v - n) / v * 100) + ' %</i>'; };
+        var h = '<div class="sbox"><h3>📋 WAS IST ZU TUN?</h3>' + (auf.length ? '<div class="admauf">' + auf.map(function (x) { return '<button class="admkarte' + (x[0] ? '' : ' still') + '" data-sprung="' + x[0] + '"><span class="admico">' + x[1] + '</span><span><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></span>' + (x[0] ? '<span class="admpf">›</span>' : '') + '</button>'; }).join('') + '</div>' : '<div class="admok">✅ Alles erledigt – nichts offen.</div>') + '</div>';
+        if (r[0]) h += '<div class="sbox"><h3>📈 DIESE WOCHE</h3><div class="admkpi">' +
+          '<div><b>' + zahl(a.aktiv7) + '</b><span>aktive Besucher</span>' + pfeil(a.aktiv7, a.aktiv7_vw) + '</div>' +
+          '<div><b>' + zahl(a.neu7) + '</b><span>neue Mitglieder</span>' + pfeil(a.neu7, a.neu7_vw) + '</div>' +
+          '<div><b>' + zahl(a.zeni7) + '</b><span>Zeni ausgegeben</span>' + pfeil(a.zeni7, a.zeni7_vw) + '</div>' +
+          '</div><p class="leise">Heute schon ' + zahl(a.heute) + ' angemeldete Besucher · Pfeile im Vergleich zur Vorwoche</p></div>';
+        else h += '<div class="sbox"><p class="leise">❌ Supabase-Update 54 fehlt noch.</p></div>';
+        if (m.length) h += '<div class="sbox" id="admmeld"><h3>🚩 GEMELDETE NACHRICHTEN</h3>' + m.map(function (x) { return '<div class="kzzeile"><b>' + esc(x.von) + ' → ' + esc(x.an) + '</b><span>„' + esc(x.text || '') + '“</span><span class="leise">' + wann(x.t) + '</span></div>'; }).join('') + '</div>';
+        if (vip.length) h += '<div class="sbox" id="admvip"><h3>💎 VIP GEWONNEN</h3>' + vip.map(function (g) { return '<div class="kzzeile"><b>' + esc(g.l) + '</b><span class="leise">' + esc(g.d) + ' · in Twitch vergeben, nach 1 Monat entfernen</span></div>'; }).join('') + '</div>';
+        h += '<div class="sbox"><h3>🎬 FÜR DEN STREAM</h3><p class="leise">Weihnachtsmann sofort einmal fliegen lassen – nur bei dir, ohne echte Zeni.</p><div class="admfbk2"><button class="vtw" id="santat1">🎅 Normal</button><button class="vtw" id="santat2">✨ Goldener Schlitten</button></div></div>';
+        $('adm').innerHTML = h;
+        [['santat1', 'normal'], ['santat2', 'gold']].forEach(function (x) { var b = $(x[0]); if (b) b.onclick = function () { profilZu(); setTimeout(function () { santaZeigen(x[1]); }, 700); }; });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-sprung]'), function (b) { b.onclick = function () { var z = b.getAttribute('data-sprung'); if (!z) return; if (z === '#meld' || z === '#vip') { var e = $(z === '#meld' ? 'admmeld' : 'admvip'); if (e) e.scrollIntoView({ behavior: 'smooth' }); } else adminOeffnen(z); }; });
+      });
+    }
+    if (tab === 'nutzung') rpc('admin_uebersicht').then(function (u) {
       var h = '<div class="sbox"><div class="plz vier"><div><b>' + zahl(u.heute) + '</b>Aufrufe heute</div><div><b>' + zahl(u.woche) + '</b>7 Tage</div><div><b>' + zahl(u.konten) + '</b>Konten (+' + u.neue7 + ')</div><div><b>' + zahl(u.kaeufe7) + '</b>Käufe 7 T.</div></div>' +
         '<div class="leise" style="margin-top:8px">💰 ' + zahl(u.zeni7) + ' Zeni im Shop ausgegeben (7 Tage) · 🍀 heute ' + u.glueckHeute + '× Glücks-Knopf' + (u.botwartet ? ' · ⏳ <b>' + u.botwartet + ' Buchungen warten auf den Bot</b>' : '') + '</div></div>';
       var vip = (u.glueck || []).filter(function (g) { return g.g === 'vip'; });
@@ -4198,7 +4248,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       };
       var fzListe = function () {
         var el = $('fzliste'); if (!el) return;
-        el.innerHTML = spl.map(function (x, i) { return '<button class="kzzeile" data-fzi="' + i + '" style="width:100%;text-align:left;cursor:pointer"><b>' + esc(x.n) + '</b><span class="leise">⭐ ' + esc(x.r) + '</span><span>' + (fazitD[x.n] ? '✅' : '✍️') + '</span></button>'; }).join('');
+        el.innerHTML = spl.map(function (x, i) { return '<button class="fzzeile" data-fzi="' + i + '"><b>' + esc(x.n) + '</b><span class="leise">⭐ ' + esc(x.r) + '</span><span>' + (fazitD[x.n] ? '✅' : '✍️') + '</span></button>'; }).join('');
         Array.prototype.forEach.call(document.querySelectorAll('[data-fzi]'), function (b) { b.onclick = function () { fzWahl(+b.getAttribute('data-fzi')); $('fzform').scrollIntoView({ behavior: 'smooth' }); }; });
       };
       $('adm').innerHTML = '<div class="sbox"><h3>💬 KAZES FAZIT · ' + Object.keys(fazitD).length + '/' + spl.length + ' GESCHRIEBEN</h3><p class="leise">Tippe auf ein Spiel. ✅ = Fazit vorhanden. Spiele ohne Fazit zeigen nur Note und Urteil.</p><div id="fzliste"></div></div><div id="fzform"></div>';
