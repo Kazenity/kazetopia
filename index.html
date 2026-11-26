@@ -901,6 +901,17 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   @keyframes neffneon { 0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 8px currentColor; } 50% { text-shadow: 0 0 3px currentColor, 0 0 14px currentColor; } }
   .neffshop { font-size: 20px; font-weight: 800; }
   /* 🛠️ Admin neu */
+  .adminreiter { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+  .adminreiter::-webkit-scrollbar { display: none; } .adminreiter button { flex: none; white-space: nowrap; }
+  .admbadge { display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: #ff5c5c; color: #fff; font-size: 11px; font-weight: 800; line-height: 16px; }
+  .admvorl { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+  .admvorl button { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: inherit; border-radius: 999px; padding: 5px 10px; font: 700 12px inherit; font-family: inherit; cursor: pointer; }
+  .admzz { text-align: right; font-size: 11.5px; margin: -2px 0 6px; }
+  .admname { cursor: pointer; text-decoration: underline dotted; }
+  .admpush { background: rgba(255,255,255,.04); border-radius: 10px; padding: 9px 12px; margin-bottom: 6px; font-size: 13.5px; line-height: 1.4; }
+  .admpushk { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 2px; } .admpushk .leise { flex: none; font-size: 12px; }
+  .admsuche { display: flex; gap: 8px; } .admsuche input { flex: 1; }
+  .admchips { display: flex; flex-wrap: wrap; gap: 6px; } .admchips span { background: rgba(255,255,255,.06); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
   .admgruppen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 8px; }
   .admgruppen button { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: inherit; border-radius: 12px; padding: 10px 4px; font: 700 13px inherit; font-family: inherit; cursor: pointer; }
   .admgruppen button.aktiv { background: var(--rosa); color: #2a0f1c; border-color: transparent; }
@@ -2267,7 +2278,13 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   ansichtAnwenden();
   // 💡 Ideen & Feedback: ohne Limit, nur Kaze liest es. Hilfreich = 2.500 (erste der Woche) / 500 (weitere), umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“
-  var fbAnsicht = 'offen', protoFilter = 'alle', protoTage = 7;
+  var FB_VORLAGEN = [
+    ['💜 Kommt auf die Liste', 'Danke für die Idee! 💜 Die kommt auf meine Liste – ich melde mich, sobald es etwas Neues dazu gibt.'],
+    ['🔧 Ich bau es', 'Starke Idee, danke dir! 💜 Ich setze das gerade um – du siehst es bald auf Kazetopia.'],
+    ['✅ Ist live', 'Ist umgesetzt! 🎉 Danke für die Idee – schau gleich mal rein. Als Dankeschön gibt es Zeni und den Titel „Ideengeber“ 💜'],
+    ['✖️ Passt nicht', 'Danke dir für die Idee! 💜 Das passt aktuell leider nicht zu Kazetopia, weil ']
+  ];
+  var fbAnsicht = 'offen', protoFilter = 'alle', protoTage = 7, admNutzer = '';
   var FB_STATUS = { neu: ['⏳', 'Kaze liest es bald'], in_arbeit: ['🔧', 'in Bearbeitung · +2.500 Zeni'], hilfreich: ['💡', 'hilfreich · +2.500 Zeni'], umgesetzt: ['✅', 'umgesetzt · +25.000 Zeni'], abgelehnt: ['✖️', 'passt gerade nicht'] };
   function feedbackDialog() {
     zaehlen('feedback');
@@ -4161,14 +4178,18 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var ADM_GR = [['heute', '🏠 Heute', ['start']], ['comm', '📥 Community', ['feedback', 'voting', 'umfragen']], ['inh', '✏️ Inhalte', ['plan', 'fazit', 'push', 'codes']], ['zahl', '📊 Zahlen', ['nutzung', 'protokoll', 'geheim']]];
-    var ADM_N = { start: '🏠 Heute', feedback: '💡 Feedback', voting: '🎮 Spiele-Vorschläge', umfragen: '🗳️ Umfragen', plan: '📅 Streamplan', fazit: '💬 Fazit', push: '🔔 Push', codes: '🎟️ Codes', nutzung: '👀 Nutzung & Buchungen', protokoll: '📜 Protokoll', geheim: '🔒 Geheim' };
+    var ADM_GR = [['heute', '🏠 Heute', ['start']], ['comm', '📥 Community', ['feedback', 'voting', 'umfragen', 'nutzer']], ['inh', '✏️ Inhalte', ['plan', 'fazit', 'push', 'codes']], ['zahl', '📊 Zahlen', ['nutzung', 'protokoll', 'geheim']]];
+    var ADM_N = { start: '🏠 Heute', feedback: '💡 Feedback', voting: '🎮 Spiele-Vorschläge', umfragen: '🗳️ Umfragen', nutzer: '🔍 Nutzer', plan: '📅 Streamplan', fazit: '💬 Fazit', push: '🔔 Push', codes: '🎟️ Codes', nutzung: '👀 Nutzung & Buchungen', protokoll: '📜 Protokoll', geheim: '🔒 Geheim' };
     var admGr = ADM_GR.filter(function (g) { return g[2].indexOf(tab) >= 0; })[0] || ADM_GR[0];
-    var reiterH = '<div class="admgruppen">' + ADM_GR.map(function (g) { return '<button data-adm="' + g[2][0] + '"' + (g === admGr ? ' class="aktiv"' : '') + '>' + g[1] + '</button>'; }).join('') + '</div>' +
+    var reiterH = '<div class="admgruppen">' + ADM_GR.map(function (g) { return '<button data-adm="' + g[2][0] + '" data-admg="' + g[0] + '"' + (g === admGr ? ' class="aktiv"' : '') + '>' + g[1] + '</button>'; }).join('') + '</div>' +
       (admGr[2].length > 1 ? '<div class="unterreiter adminreiter">' + admGr[2].map(function (x) { return '<button data-adm="' + x + '"' + (x === tab ? ' class="aktiv"' : '') + '>' + ADM_N[x] + '</button>'; }).join('') + '</div>' : '');
     karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Nur für dich sichtbar · Änderungen gelten sofort</div></div></div>' + reiterH + '<div id="adm">Lade …</div></div>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-adm]'), function (b) { b.onclick = function () { adminOeffnen(b.getAttribute('data-adm')); }; });
     var rpc = function (n, b) { return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/' + n, { method: 'POST', body: b || {} }); }); };
+    rpc('admin_aufgaben').then(function (a) {
+      var setz = function (g, n) { var b = document.querySelector('[data-admg="' + g + '"]'); if (b && n > 0 && !b.querySelector('.admbadge')) b.insertAdjacentHTML('beforeend', ' <span class="admbadge">' + n + '</span>'); };
+      setz('comm', (+a.fb || 0) + (+a.vor || 0)); setz('heute', +a.meld || 0);
+    }).catch(function () { });
     var fehler = function (x) { var el = $('adm'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202/.test(x.message) ? 'Supabase-Update 18 fehlt noch.' : x.message) + '</p>'; };
     function wann(t) { var d = new Date(t); return isNaN(d) ? '' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
     if (tab === 'start') {
@@ -4254,6 +4275,50 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       $('adm').innerHTML = '<div class="sbox"><h3>💬 KAZES FAZIT · ' + Object.keys(fazitD).length + '/' + spl.length + ' GESCHRIEBEN</h3><p class="leise">Tippe auf ein Spiel. ✅ = Fazit vorhanden. Spiele ohne Fazit zeigen nur Note und Urteil.</p><div id="fzliste"></div></div><div id="fzform"></div>';
       fzListe();
     }
+    if (tab === 'nutzer') {
+      var namen = {}; Object.keys(daten && daten.spieler || {}).forEach(function (k) { namen[k] = 1; }); Object.keys(daten && daten.profile || {}).forEach(function (k) { namen[k] = 1; });
+      $('adm').innerHTML = '<div class="sbox"><h3>🔍 NUTZER NACHSCHLAGEN</h3><p class="leise">Für Rückfragen wie „Mein Geschenk ist nicht da“: Zeni, Besitz, Buchungen, Freunde – alles auf einen Blick.</p>' +
+        '<div class="admsuche"><input class="admfeld" id="nlin" list="nlliste" placeholder="Twitch-Name, z. B. joe3000" autocomplete="off" autocapitalize="none" value="' + esc(admNutzer) + '"><button class="vtw" id="nlok">Suchen</button></div>' +
+        '<datalist id="nlliste">' + Object.keys(namen).sort().map(function (k) { return '<option value="' + esc(k) + '">'; }).join('') + '</datalist></div><div id="nlerg"></div>';
+      var buchText = function (x, l) {
+        var a = String(x.a || ''), nm = function (id) { var k = kosArtikel(id); return k ? k.name : id; };
+        if (a.indexOf('geschenk:') === 0) { var g = a.split(':'); return x.v === l ? '🎁 an ' + g[2] + ' verschenkt: ' + nm(g[1]) : '🎁 von ' + x.v + ' bekommen: ' + nm(g[1]); }
+        if (a.indexOf('farbe:') === 0) return '🎨 Umgefärbt: ' + nm(a.split(':')[1]);
+        if (a.indexOf('zeni:') === 0) {
+          var c = a.substring(5), M = [['__GLUECK', '🍀 Glücks-Knopf'], ['__SERIEM', '🔥 Serien-Meilenstein'], ['__SERIE', '🔥 Besuchs-Serie'], ['__PASS', '🎫 Saisonpass'], ['__SANTA', '🎅 Weihnachtsmann'], ['__FEEDBACK', '💡 Feedback-Belohnung'], ['__TRESOR', '🔐 Tresor'], ['__WILLKOMMEN', '👋 Willkommen'], ['__GEHEIM', '🔒 Geheimnis']];
+          for (var i = 0; i < M.length; i++) if (c.indexOf(M[i][0]) === 0) return M[i][1];
+          return c.indexOf('__') === 0 ? '⚙️ ' + c.substring(2).split('-')[0] : '🎟️ Code ' + c;
+        }
+        return (x.p > 0 ? '🛍️ Gekauft: ' : '🎁 Erhalten: ') + nm(a);
+      };
+      var suchen = function () {
+        var l = ($('nlin').value || '').trim().toLowerCase().replace(/^@/, ''); if (!l) return;
+        admNutzer = l; $('nlerg').innerHTML = '<p class="leise">Lade …</p>';
+        rpc('admin_nutzer', { p_login: l }).then(function (n) {
+          var bek = n.zeni !== null || n.mitglied || (n.buchungen || []).length;
+          if (!bek) { $('nlerg').innerHTML = '<div class="sbox"><p class="leise">Zu „' + esc(l) + '“ gibt es keine Daten. Tippfehler?</p></div>'; return; }
+          var eff = (+n.zeni || 0) - (+n.offen || 0), tr = n.tresor, se = n.serie;
+          var trText = !tr ? '–' : tr.status === 'aktiv' ? zahl(tr.betrag) + ' bis ' + wann(tr.faellig) : tr.status === 'abgeholt' ? 'zuletzt ' + zahl(tr.betrag) + (tr.zins !== null ? ' · ' + tr.zins + ' %' : '') : esc(tr.status);
+          var h = '<div class="sbox"><h3>👤 ' + esc(prof(l).n || l) + (n.mitglied ? ' · MITGLIED #' + n.mitglied.nr : ' · NICHT ANGEMELDET') + '</h3>' +
+            (n.mitglied ? '<p class="leise">Angemeldet seit ' + wann(n.mitglied.seit) + (n.wt10 ? ' · ✓ über 10 Std. Watchtime' : ' · unter 10 Std. Watchtime') + '</p>' : '') +
+            '<div class="admkpi"><div><b>' + zahl(eff) + '</b><span>Zeni</span>' + ((+n.offen || 0) !== 0 ? '<i class="admgl">' + ((+n.offen) > 0 ? '−' : '+') + zahl(Math.abs(+n.offen)) + ' warten auf Bot</i>' : '') + '</div>' +
+            '<div><b>🔥 ' + (se ? se.tage : 0) + '</b><span>Serie (Rekord ' + (se ? se.beste : 0) + ')</span></div>' +
+            '<div><b>' + (n.besitz || []).length + '</b><span>Shop-Teile</span></div></div>' +
+            '<p class="leise">🔐 Tresor: ' + trText + ' · 👥 ' + (n.freunde || []).length + ' Freunde · 🔒 ' + (n.geheim || 0) + ' Geheimnisse · 💡 ' + (n.feedback || 0) + ' Feedbacks</p></div>';
+          h += '<div class="sbox"><h3>🧾 LETZTE BUCHUNGEN</h3>' + ((n.buchungen || []).map(function (x) {
+            var pl = x.v === l ? -(+x.p || 0) : 0, betr = pl ? (pl > 0 ? '+' : '−') + zahl(Math.abs(pl)) : '';
+            return '<div class="admpush"><div class="admpushk"><b>' + esc(buchText(x, l)) + '</b><span class="leise">' + wann(x.t) + '</span></div><div class="leise">' + (betr ? '<b class="' + (pl > 0 ? 'admup' : 'admdn') + '">' + betr + ' Zeni</b> · ' : '') + (x.s === 'bezahlt' ? '⏳ wartet auf den Bot' : x.s === 'gebucht' ? '✓ gebucht' : esc(x.s)) + (x.n ? ' · „' + esc(x.n) + '“' : '') + '</div></div>';
+          }).join('') || '<p class="leise">Keine Buchungen.</p>') + '</div>';
+          h += '<div class="sbox"><h3>🎒 BESITZ</h3>' + ((n.besitz || []).length ? '<div class="admchips">' + n.besitz.map(function (id) { var k = kosArtikel(id); return '<span>' + esc(k ? k.name : id) + '</span>'; }).join('') + '</div>' : '<p class="leise">Noch nichts.</p>') + '</div>';
+          h += '<div class="sbox"><h3>👥 FREUNDE (GEGENSEITIG)</h3>' + ((n.freunde || []).length ? '<div class="admchips">' + n.freunde.map(function (f) { return '<span class="admname" data-nf="' + esc(f) + '">' + esc(prof(f).n || f) + '</span>'; }).join('') + '</div>' : '<p class="leise">Keine.</p>') + '</div>';
+          $('nlerg').innerHTML = h;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-nf]'), function (b) { b.onclick = function () { $('nlin').value = b.getAttribute('data-nf'); suchen(); $('nlin').scrollIntoView({ behavior: 'smooth' }); }; });
+        }).catch(function (x) { $('nlerg').innerHTML = '<div class="sbox"><p class="leise">❌ ' + esc(/404|PGRST202/.test(x.message) ? 'Supabase-Update 55 fehlt noch.' : x.message) + '</p></div>'; });
+      };
+      $('nlok').onclick = suchen;
+      $('nlin').onkeydown = function (e) { if (e.key === 'Enter') suchen(); };
+      if (admNutzer) suchen();
+    }
     if (tab === 'geheim') rpc('admin_geheim').then(function (r) {
       var pro = {}, wer = {};
       (r || []).forEach(function (x) { (pro[x.l] = pro[x.l] || []).push(x); wer[x.id] = (wer[x.id] || 0) + 1; });
@@ -4274,7 +4339,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       $('adm').innerHTML = '<div class="sbox"><div class="plz vier"><div><b>' + zahl(p.leute) + '</b>Leute</div><div><b>' + zahl(p.geraete) + '</b>Geräte</div><div><b>' + zahl((p.arten || {}).live || 0) + '</b>🔴 Live an</div><div><b>' + zahl((p.arten || {}).update || 0) + '</b>📢 Update an</div></div></div>' +
         '<div class="sbox"><h3>📢 NEU AUF KAZETOPIA</h3><p class="leise">Geht an alle mit „📢 Neu auf Kazetopia“. Höchstens ein Update-Push pro Tag – nur für echte Neuigkeiten.</p>' +
         '<textarea class="admfeld" id="pushtext" maxlength="120" rows="2" placeholder="z. B. 🔐 Neu: der Zeni-Tresor – schließ Zeni ein und hol dir Zins!"></textarea><div class="admfbk2"><button class="vtw" id="pushsend">📢 Senden</button><span class="leise" id="pushinfo"></span></div></div>' +
-        '<div class="sbox"><h3>📜 ZULETZT GESENDET</h3>' + ((p.letzte || []).map(function (x) { return '<div class="kzzeile"><b>' + (A[x.art] || x.art) + '</b><span>' + esc(x.text) + '</span><span class="leise">' + wann(x.t) + (x.ok ? '' : ' ⏳') + '</span></div>'; }).join('') || '<p class="leise">Noch nichts.</p>') + '<p class="leise">🔐 Tresor, 🔥 Serie und 🍀 Glück gehen automatisch an die, die es eingeschaltet haben. Live geht automatisch beim Streamstart.</p></div>';
+        '<div class="sbox"><h3>📜 ZULETZT GESENDET</h3>' + ((p.letzte || []).map(function (x) { return '<div class="admpush"><div class="admpushk"><b>' + (A[x.art] || x.art) + '</b><span class="leise">' + wann(x.t) + (x.ok ? '' : ' ⏳') + '</span></div><div>' + esc(x.text) + '</div></div>'; }).join('') || '<p class="leise">Noch nichts.</p>') + '<p class="leise">🔐 Tresor, 🔥 Serie und 🍀 Glück gehen automatisch an die, die es eingeschaltet haben. Live geht automatisch beim Streamstart.</p></div>';
       $('pushsend').onclick = function () {
         var t = $('pushtext').value.trim(), b = this;
         if (t.length < 5) { $('pushinfo').textContent = 'Bitte einen Text eingeben.'; return; }
@@ -4337,8 +4402,9 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       $('adm').innerHTML = fbReiter + (f.length ? '<p class="leise">' + (neu ? '<b>' + neu + ' neu</b> · ' : '') + '🔧 In Bearbeitung / 💡 Hilfreich = 2.500 Zeni (erste Idee der Woche) bzw. 500 Zeni (jede weitere) · ✅ Umgesetzt = immer 25.000 Zeni + Titel „Ideengeber“ (gezahlt wird nur der Unterschied)</p>' + f.map(function (x) {
         var st = FB_STATUS[x.s] || FB_STATUS.neu;
         var eigene = x.l === 'kazenity';
-        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + (eigene ? ' eigene' : '') + '"><div class="admfbk"><b>' + (eigene ? '💭 Eigene Idee' : esc(x.l)) + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
-          '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="2" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea>' +
+        return '<div class="sbox admfb' + (x.s === 'neu' ? ' neu' : '') + (eigene ? ' eigene' : '') + '"><div class="admfbk"><b>' + (eigene ? '💭 Eigene Idee' : '<span class="admname" data-nl="' + esc(x.l) + '">' + esc(x.l) + ' 🔍</span>') + '</b><span class="leise">' + wann(x.t) + ' · ' + st[0] + ' ' + esc(STNAME[x.s] || x.s) + '</span></div><div class="admfbt">' + esc(x.x) + '</div>' +
+          (eigene ? '' : '<div class="admvorl">' + FB_VORLAGEN.map(function (v, k) { return '<button data-vorl="' + k + '" data-vfb="' + x.id + '">' + v[0] + '</button>'; }).join('') + '</div>') +
+          '<textarea class="admfeld" data-fba="' + x.id + '" maxlength="300" rows="3" placeholder="Antwort an ' + esc(x.l) + ' (optional, erscheint in seinem Posteingang)">' + esc(x.a || '') + '</textarea><div class="admzz leise" data-zzfb="' + x.id + '"></div>' +
           '<input class="admfeld" data-fbo="' + x.id + '" maxlength="80" placeholder="Nur bei „Umgesetzt“: kurzer Satz für die Startseite (optional)" value="' + esc(x.o || '') + '">' +
           '<div class="admfbk2"><button class="vlink" data-fbaw="' + x.id + '">💬 Nur Antwort senden</button><button class="vlink" data-fb="' + x.id + '" data-fs="in_arbeit">🔧 In Bearbeitung</button><button class="vlink" data-fb="' + x.id + '" data-fs="hilfreich">💡 Hilfreich</button><button class="vtw" data-fb="' + x.id + '" data-fs="umgesetzt">✅ Umgesetzt</button><button class="vlink" data-fb="' + x.id + '" data-fs="abgelehnt">✖️ Passt nicht</button>' + (x.ar ? '<button class="vlink" data-fbar="' + x.id + '" data-wert="0">↩ Zurückholen</button>' : '<button class="vlink" data-fbar="' + x.id + '" data-wert="1">☑️ Erledigt → Archiv</button>') + '</div></div>';
       }).join('') : '<p class="leise">' + (imArchiv ? 'Das Archiv ist leer. Umgesetztes und „Passt nicht“ landen automatisch hier.' : inMerk ? 'Der Ideengarten ist leer. Alles, was du auf 💡 Hilfreich setzt, wächst hier – und oben kannst du eigene Ideen pflanzen.' : inArbeit ? 'Gerade wird nichts gebaut. Setz eine Idee auf 🔧 In Bearbeitung, dann steht sie hier.' : 'Kein neues Feedback. Unter „Ich“ → „💡 Ideen & Feedback“ können Angemeldete Ideen schicken.') + '</p>');
@@ -4352,6 +4418,14 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
         }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
       };
       Array.prototype.forEach.call(document.querySelectorAll('[data-fbv]'), function (b) { b.onclick = function () { fbAnsicht = b.getAttribute('data-fbv'); adminOeffnen('feedback'); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-nl]'), function (b) { b.onclick = function () { admNutzer = b.getAttribute('data-nl'); adminOeffnen('nutzer'); }; });
+      var zz = function (id) { var t = document.querySelector('[data-fba="' + id + '"]'), z = document.querySelector('[data-zzfb="' + id + '"]'); if (t && z) z.textContent = t.value.length + '/300'; };
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fba]'), function (t) { var id = t.getAttribute('data-fba'); t.addEventListener('input', function () { zz(id); }); zz(id); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-vorl]'), function (b) { b.onclick = function () {
+        var id = b.getAttribute('data-vfb'), t = document.querySelector('[data-fba="' + id + '"]'); if (!t) return;
+        t.value = FB_VORLAGEN[+b.getAttribute('data-vorl')][1].slice(0, 300); zz(id);
+        try { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } catch (x) { }
+      }; });
       Array.prototype.forEach.call(document.querySelectorAll('[data-fbar]'), function (b) { b.onclick = function () {
         var id = Number(b.getAttribute('data-fbar')); b.disabled = true;
         antwortSenden(id).then(function () { return rpc('admin_feedback_archiv', { p_id: id, p_archiv: b.getAttribute('data-wert') === '1' }); }).then(function () { adminOeffnen('feedback'); }).catch(fehler);
