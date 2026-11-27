@@ -466,7 +466,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .advtuer.advzu { opacity: .45; cursor: default; filter: saturate(.6); }
   .advtuer.advheute { border-color: #ffd98a; box-shadow: 0 0 0 2px rgba(255,217,138,.55), 0 0 18px rgba(255,190,90,.55); animation: advpuls 1.8s ease-in-out infinite; }
   .advtuer.advoffen { background: linear-gradient(160deg, rgba(255,244,220,.14), rgba(255,244,220,.05)); border-style: dashed; color: var(--hell); }
-  .advtuer.advvp { background: linear-gradient(160deg, #5a2a33, #3a1a22); } .advtuer.frage { outline: 2px solid #ffd98a; }
+  .advtuer.advvp { background: repeating-linear-gradient(135deg, #3a1a22 0 6px, #2f151c 6px 12px); border-color: rgba(200,160,90,.35); } .advtuer.frage { outline: 2px solid #ffd98a; }
   .advtuer.klapp { transform: rotateY(-75deg); box-shadow: -6px 0 18px rgba(0,0,0,.4); }
   @keyframes advpuls { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
   .advziel, .advcode, .advinfo, .advfrage { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 10px 12px; margin: 10px 0; font-size: 13.5px; }
@@ -2396,7 +2396,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (c.indexOf('__WILLKOMMEN') === 0) return '👋 Willkommens-Geschenk';
     if (c.indexOf('__VIP') === 0) return '💎 VIP gewonnen';
     if (c.indexOf('__GEHEIM') === 0) return '🔒 Geheimnis entdeckt';
-    if ((m = c.match(/^__ADVENTNACH-(\d+)/))) return '🎄 Türchen ' + m[1] + ' nachgeholt';
+    if ((m = c.match(/^__ADVENTNACH-(\d+)/))) return '🔒 Siegel gebrochen: Türchen ' + m[1];
     if ((m = c.match(/^__ADVENTZIEL-(\d+)/))) return '🎄 Gemeinschafts-Ziel Türchen ' + m[1];
     if ((m = c.match(/^__ADVENTCODE-(\d+)/))) return '🎙️ Stream-Codewort Türchen ' + m[1];
     if ((m = c.match(/^__ADVENT-(\d+)/))) return '🎄 Adventskalender Türchen ' + m[1];
@@ -3969,7 +3969,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   var adv = null, advBaeume = {}, advLaedt = null;
   var ADV_ORDNUNG = [7, 18, 3, 22, 11, 1, 15, 9, 24, 5, 13, 20, 2, 17, 8, 12, 23, 6, 14, 4, 19, 10, 16, 21];
   var ADV_GROSS = [6, 13, 20, 24];
-  function advAktiv() { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); return (m === 11 && t >= 28) || m === 12 || (m === 1 && t <= 6); }
+  function advAktiv() { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); return (m === 11 && t >= 28) || (m === 12 && t <= 24); }
   function advLaden() {
     if (advLaedt) return advLaedt;
     var p = sitzung ? sFrisch().then(function () { return sbFetch('/rest/v1/rpc/advent_status', { method: 'POST', body: {} }); })
@@ -4036,12 +4036,12 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       var o = advOffen(t), zu = !adv.heute || t > adv.heute, heute = adv.amtag && t === adv.heute, gross = ADV_GROSS.indexOf(t) >= 0;
       var cls = o ? 'advoffen' : zu ? 'advzu' : heute ? 'advheute' : 'advvp';
       return '<button class="advtuer ' + cls + (gross ? ' gross' : '') + '" data-advt="' + t + '"' + (zu ? ' disabled' : '') + '><span class="advnr">' + t + '</span>' +
-        (o ? '<span class="advico">' + advIcon(o) + '</span>' : zu ? '' : heute ? '<span class="advhint">öffnen</span>' : '<span class="advhint">↺ ' + zahl(adv.nach_preis) + '</span>') + '</button>';
+        (o ? '<span class="advico">' + advIcon(o) + '</span>' : zu ? '' : heute ? '<span class="advhint">öffnen</span>' : '<span class="advhint">🔒 ' + zahl(adv.nach_preis) + '</span>') + '</button>';
     }).join('') + '</div>';
     var n = offen.length;
     h += '<div class="advunten">' + advBaum(n, offen) + '<div><b>🌲 Dein Weihnachtsbaum · ' + n + ' / 24</b><small>Jedes Türchen hängt eine Kugel auf, die Adventssonntage zünden eine Kerze an, Heiligabend setzt den Stern.</small>' +
       '<small>🏆 Alle 24 Türchen: Titel <b>„Adventswichtel“</b> + Rahmen <b>„Adventskranz“</b>' + (n === 24 ? ' + 🎅 Rahmen <b>„Weihnachtsmann“</b> – <b>geschafft! 🎉</b>' : ' – und eine geheime Überraschung 🤫') + '</small>' +
-      '<small>🔒 Was drin ist, sieht man erst beim Öffnen – für alle gleich. Verpasst? Nachholen kostet ' + zahl(adv.nach_preis) + ' Zeni.</small>' +
+      '<small>🎁 Was drin ist, sieht man erst beim Öffnen – für alle gleich.</small><small>🔒 Verpasste Türchen werden versiegelt. Das Siegel lässt sich bis Heiligabend mit Zeni brechen – ab 5.000 Zeni, jedes weitere Siegel wird teurer (höchstens ' + zahl(adv.nach_max || 30000) + ').</small>' +
       (adv.geheim ? '<small>🕵️ Geheimes Türchen gefunden ✓</small>' : adv.heute ? '<small>🤫 Irgendwo auf Kazetopia versteckt sich noch ein 25. Türchen …</small>' : '') + '</div></div>';
     el.innerHTML = h;
     if ($('advlogin')) $('advlogin').onclick = einloggenFragen;
@@ -4058,7 +4058,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (nach && !b.classList.contains('frage')) {
       Array.prototype.forEach.call(document.querySelectorAll('.advtuer.frage'), function (x) { x.classList.remove('frage'); });
       b.classList.add('frage');
-      $('advergebnis').innerHTML = '<div class="advfrage">Türchen ' + t + ' verpasst – für <b>' + zahl(adv.nach_preis) + ' Zeni</b> nachholen? <button class="vtw" id="advja">Ja, nachholen</button> <button class="vlink" id="advnein">Abbrechen</button></div>';
+      $('advergebnis').innerHTML = '<div class="advfrage">🔒 Türchen ' + t + ' ist versiegelt. Siegel für <b>' + zahl(adv.nach_preis) + ' Zeni</b> brechen?<br><small class="leise">Jedes weitere Siegel kostet 5.000 Zeni mehr.</small><br><button class="vtw" id="advja">Siegel brechen</button> <button class="vlink" id="advnein">Abbrechen</button></div>';
       $('advja').onclick = function () { advTuer(t, b); };
       $('advnein').onclick = function () { b.classList.remove('frage'); $('advergebnis').innerHTML = ''; };
       return;
@@ -4080,7 +4080,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   function advErgebnisHtml(o, t, alt) {
     var gsHinweis = o.gs === 'dreh' ? 'Einlösen unter 🎫 Saisonpass → Gutscheine.' : o.gs === 'booster' ? 'Einlösen unter 🎫 Saisonpass → Gutscheine, sobald dein Tresor läuft.'
       : o.gs ? 'Ist automatisch aktiv und gilt beim nächsten Mal (steht unter 🎫 Saisonpass → Gutscheine).' : o.artikel ? 'Liegt schon in deinem Profil-Editor bereit.' : '';
-    return '<div class="advgeschenk' + (alt ? ' alt' : '') + '"><span class="advgi">' + advIcon(o) + '</span><div><small>Türchen ' + t + (o.nach ? ' · nachgeholt' : '') + '</small><b>' + esc(o.label) + '</b>' + (gsHinweis ? '<small>' + gsHinweis + '</small>' : '') +
+    return '<div class="advgeschenk' + (alt ? ' alt' : '') + '"><span class="advgi">' + advIcon(o) + '</span><div><small>Türchen ' + t + (o.nach ? ' · Siegel gebrochen' : '') + '</small><b>' + esc(o.label) + '</b>' + (gsHinweis ? '<small>' + gsHinweis + '</small>' : '') +
       (o.gs ? '<button class="vlink" data-advgs="1">Zu deinen Gutscheinen ›</button>' : '') + '</div></div>';
   }
   function advZeigenEvents() { Array.prototype.forEach.call(document.querySelectorAll('[data-advgs]'), function (b) { b.onclick = function () { passReiter = 'gut'; gsDaten = null; passDialog(); }; }); }
@@ -4146,7 +4146,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       if (!sub) return;
       return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_meine', { method: 'POST', body: { p_endpoint: sub.endpoint } }); }).then(function (r) {
         pushArten = r && r.arten ? r.arten : null;
-        if (!pushArten) return pushSpeichern(['live', 'update', 'advent']);   // Abo im Browser, aber nicht (mehr) bei uns → neu eintragen
+        if (!pushArten) return pushSpeichern(['live', 'update']);   // Abo im Browser, aber nicht (mehr) bei uns → neu eintragen
       });
     }).catch(function () { });
   }
@@ -4217,7 +4217,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
           if (p !== 'granted') throw new Error('Nicht erlaubt – ohne Erlaubnis im Browser geht es nicht.');
           return navigator.serviceWorker.ready;
         }).then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64zuBytes(PUSH_KEY) }); })
-          .then(function (sub) { pushAbo = sub; return pushSpeichern(['live', 'update', 'advent']); })
+          .then(function (sub) { pushAbo = sub; return pushSpeichern(['live', 'update']); })
           .then(function () { pushDialog(); if (reiter === 'ich') zeigen(); })
           .catch(function (x) { k.disabled = false; $('puinfo').textContent = '❌ ' + (/404|PGRST202/.test(x.message) ? 'Benachrichtigungen sind noch nicht freigeschaltet.' : x.message); });
       };
@@ -4846,7 +4846,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       h += '<div class="sbox"><h3>📅 TÜRCHEN & CODEWÖRTER</h3><p class="leise">Codewörter gelten nur an ihrem Tag. Leer lassen = kein Stream-Türchen. Buchstaben und Ziffern, ohne Leerzeichen.</p>' +
         tage.map(function (x) {
           var vorbei = h0 && x.tag < h0 && h0 <= 24;
-          return '<div class="kzzeile advadmz' + (x.tag === h0 ? ' heute' : '') + '"><b>' + x.tag + '.12.</b><span>' + esc(x.label) + '<br><small class="leise">' + (x.offen || x.nach ? '✓ ' + x.offen + ' am Tag · ↺ ' + x.nach + ' nachgeholt' + (x.code ? ' · 🎙️ ' + x.codes + '× Codewort' : '') : 'noch niemand') + '</small></span>' +
+          return '<div class="kzzeile advadmz' + (x.tag === h0 ? ' heute' : '') + '"><b>' + x.tag + '.12.</b><span>' + esc(x.label) + '<br><small class="leise">' + (x.offen || x.nach ? '✓ ' + x.offen + ' am Tag · 🔒 ' + x.nach + ' Siegel gebrochen' + (x.code ? ' · 🎙️ ' + x.codes + '× Codewort' : '') : 'noch niemand') + '</small></span>' +
             '<input class="advcodefeld" data-advc="' + x.tag + '" maxlength="20" value="' + esc(x.code || '') + '" placeholder="kein Codewort"' + (vorbei ? ' disabled' : '') + '></div>';
         }).join('') + '<div class="edknoepfe"><button class="vtw" id="advcodesok">Codewörter speichern</button></div><p class="leise" id="advcinfo2"></p></div>';
       $('adm').innerHTML = h;
