@@ -456,6 +456,35 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .angebot .svor { width: 110px; height: 70px; margin: 0; flex: 0 0 auto; } .angebot .svor.bnr { border-radius: 8px; }
   .angebot .svor .av { width: 40px; height: 40px; font-size: 16px; }
   .angebot b { font-size: 15px; } .angebot .leise { font-size: 12px; color: var(--grau); }
+  /* 🎄 Adventskalender */
+  .advkarte .advkz { display: flex; align-items: center; gap: 12px; } .advkarte .advkz > div { flex: 1; min-width: 0; } .advkarte b { display: block; letter-spacing: 1px; font-size: 14px; } .advkarte small { color: var(--grau); font-size: 12.5px; line-height: 1.35; display: block; }
+  .advki { font-size: 30px; } .advkarte.neu { border-color: #d9b45a; box-shadow: 0 0 16px rgba(217,180,90,.25); } .advkarte { cursor: pointer; }
+  .advgrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; margin: 12px 0; perspective: 600px; }
+  .advtuer { position: relative; aspect-ratio: 1; border-radius: 12px; border: 1px solid rgba(217,180,90,.45); background: linear-gradient(160deg, #7a1f2b, #4b1220); color: #fff4dc; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 2px; transition: transform .5s, box-shadow .3s; transform-origin: left center; }
+  .advtuer.gross { background: linear-gradient(160deg, #1d5c38, #0f3b23); }
+  .advtuer .advnr { font-size: 17px; font-weight: 800; line-height: 1; } .advtuer .advhint { font-size: 9.5px; font-weight: 700; opacity: .85; } .advtuer .advico { font-size: 15px; line-height: 1; }
+  .advtuer.advzu { opacity: .45; cursor: default; filter: saturate(.6); }
+  .advtuer.advheute { border-color: #ffd98a; box-shadow: 0 0 0 2px rgba(255,217,138,.55), 0 0 18px rgba(255,190,90,.55); animation: advpuls 1.8s ease-in-out infinite; }
+  .advtuer.advoffen { background: linear-gradient(160deg, rgba(255,244,220,.14), rgba(255,244,220,.05)); border-style: dashed; color: var(--hell); }
+  .advtuer.advvp { background: linear-gradient(160deg, #5a2a33, #3a1a22); } .advtuer.frage { outline: 2px solid #ffd98a; }
+  .advtuer.klapp { transform: rotateY(-75deg); box-shadow: -6px 0 18px rgba(0,0,0,.4); }
+  @keyframes advpuls { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .advziel, .advcode, .advinfo, .advfrage { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; padding: 10px 12px; margin: 10px 0; font-size: 13.5px; }
+  .advziel small, .advcode small { display: block; color: var(--grau); margin-top: 4px; } .advinfo.gold { border-color: #d9b45a; }
+  .advbalken { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 7px; } .advbalken i { display: block; height: 100%; background: linear-gradient(90deg, #ff6b8a, #ffd166); border-radius: 99px; transition: width .6s; }
+  .advcode .vneu { margin-top: 8px; }
+  .advgeschenk { display: flex; gap: 12px; align-items: center; background: linear-gradient(135deg, rgba(217,180,90,.18), var(--flaeche)); border: 1px solid #d9b45a; border-radius: 16px; padding: 12px 14px; margin: 10px 0; animation: advauf .5s ease-out; }
+  .advgeschenk.alt { animation: none; border-color: var(--rand); background: var(--flaeche); }
+  .advgeschenk .advgi { font-size: 34px; } .advgeschenk b { display: block; font-size: 16px; } .advgeschenk small { display: block; color: var(--grau); font-size: 12px; } .advgeschenk .vlink { margin-top: 4px; padding: 0; }
+  @keyframes advauf { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+  .advunten { display: flex; gap: 14px; align-items: center; margin-top: 6px; } .advunten small { display: block; color: var(--grau); font-size: 12px; margin-top: 4px; }
+  .advbaum { width: 92px; flex: 0 0 auto; } .advstern { filter: drop-shadow(0 0 4px #ffd166); } .advflamme { animation: advflack 1.2s ease-in-out infinite alternate; transform-origin: center bottom; }
+  @keyframes advflack { from { opacity: .75; } to { opacity: 1; } }
+  .advflocken { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; } .advflocken i { position: absolute; top: -20px; color: #fff; font-style: normal; animation: advfall 2.4s ease-in forwards; text-shadow: 0 0 6px rgba(255,255,255,.8); }
+  @keyframes advfall { to { transform: translateY(105vh) rotate(200deg); opacity: .2; } }
+  .advadmcode { background: linear-gradient(135deg, #0b0b0d, #1d1a14); border: 1px solid #d9b45a; border-radius: 14px; padding: 12px; margin: 8px 0; text-align: center; } .advadmcode b { display: block; font-size: 24px; letter-spacing: 3px; color: #f3d98a; margin: 4px 0; } .advadmcode small { color: #d9c592; }
+  .advadmz { align-items: center; } .advadmz.heute { border-color: #d9b45a; } .advcodefeld { width: 120px; flex: 0 0 auto; background: var(--bg); color: var(--hell); border: 1px solid var(--rand); border-radius: 8px; padding: 6px 8px; font-family: inherit; text-transform: uppercase; }
+  #xcount { cursor: default; user-select: none; -webkit-user-select: none; }
   .bfband { display: flex; flex-direction: column; gap: 2px; text-align: center; background: linear-gradient(135deg, #0b0b0d, #1d1a14 60%, #0b0b0d); border: 1px solid #d9b45a; border-radius: 16px; padding: 12px 16px; margin: 14px 0 4px; box-shadow: 0 0 18px rgba(217,180,90,.25); }
   .bfband b { color: #f3d98a; letter-spacing: 2px; font-size: 15px; } .bfband span { color: #fff; font-weight: 700; font-size: 14px; } .bfband small { color: #d9c592; font-size: 12px; }
   .sbadge.bf { background: #0b0b0d; color: #f3d98a; box-shadow: inset 0 0 0 1px #d9b45a; }
@@ -1722,7 +1751,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   var shopPoll = null;
   // 🎁 Verschenken an Freunde (Idee von TheAshborn0) – Regeln prüft Supabase (Update 32)
   function verschenkbar(a) { return a && a.kaufbar !== false && !a.thron && !a.einmalig && !a.gutschein && !a.quest && a.stufe !== 'x' && /^(rahmen|banner|titel|effekt|hintergrund)_/.test(a.id); }
-  function geschenkPreis(a) { return Math.ceil(preisVon(a) * 1.25 / 100) * 100; }
+  function gsAktiv(art) { return (gsDaten || []).some(function (g) { return g.art === art && g.eingeloest && !g.benutzt; }); }
+  function geschenkPreis(a) { return gsAktiv('geschenk') ? preisVon(a) : Math.ceil(preisVon(a) * 1.25 / 100) * 100; }
   // 💬 Nachricht beim Verschenken / Danke sagen (Idee von joe3000): Freitext bis 100 Zeichen, Vorschläge zum Antippen
   var gsText = '';
   var GS_VORSCHLAG = ['Genieß es! 🎁', 'Passt perfekt zu dir 💜', 'Frohe Weihnachten! 🎄', 'Einfach so, weil du toll bist ✨', 'Jetzt bist du dran mit Angeben 😎'];
@@ -1756,6 +1786,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     var m = freunde.meine;
     if (!m) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><p class="leise">Lade deine Freunde …</p></div>'); meineFreundeLaden().then(function () { geschenkDialog(id, gewaehlt); }); return; }
     if (wunschF === null) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><p class="leise">Lade Wunschlisten …</p></div>'); wuenscheLaden().then(function () { geschenkDialog(id, gewaehlt); }); return; }
+    if (gsDaten === null) { karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><p class="leise">Lade …</p></div>'); gsLaden().then(function () { geschenkDialog(id, gewaehlt); }); return; }
     var typ = id.indexOf('rahmen_') === 0 ? 'Rahmen' : id.indexOf('banner_') === 0 ? 'Banner' : 'Titel', pg = geschenkPreis(a);
     var it = m.ich_t || {}, mt = m.mich_t || {};
     var liste = (m.ich || []).filter(function (f) { return (m.mich || []).indexOf(f) >= 0; }).map(function (f) {
@@ -1775,7 +1806,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       return '<button class="gsf' + (gewaehlt === x.l ? ' an' : '') + '" data-gsf="' + esc(x.l) + '"' + (aus ? ' disabled' : '') + '>' + bild(x.l) + '<b' + fs(x.l) + '>' + esc(prof(x.l).n || x.l) + '</b>' + (grund ? '<small>' + grund + '</small>' : '') + '</button>';
     }).join('') + '</div>';
     h += '<p style="font-size:16px;margin:12px 0 4px">' + (gewaehlt ? '<b>' + esc(a.name) + '</b> an <b>' + esc(prof(gewaehlt).n || gewaehlt) + '</b> für <b>' + zahl(pg) + ' Zeni</b>?' : 'Wähl einen Freund aus.') + '</p>';
-    h += '<p class="leise">Geschenke kosten 25 % mehr als der Shoppreis (' + zahl(preisVon(a)) + ' → ' + zahl(pg) + ' Zeni). Du kannst <b>1 Geschenk pro Woche</b> machen, an Freunde ab 14 Tagen Freundschaft mit mindestens 10 Std. Watchtime. Zeni selbst kann man nicht verschenken.</p>';
+    h += '<p class="leise">' + (gsAktiv('geschenk') ? '🎁 <b>Dein Geschenk-Gutschein ist aktiv:</b> kein Aufpreis, du zahlst nur den Shoppreis (' + zahl(pg) + ' Zeni).' : 'Geschenke kosten 25 % mehr als der Shoppreis (' + zahl(preisVon(a)) + ' → ' + zahl(pg) + ' Zeni).') + ' Du kannst <b>1 Geschenk pro Woche</b> machen, an Freunde ab 14 Tagen Freundschaft mit mindestens 10 Std. Watchtime. Zeni selbst kann man nicht verschenken.</p>';
     h += '<h4>NACHRICHT (FREIWILLIG)</h4><div class="gsvorschl">' + GS_VORSCHLAG.map(function (v) { return '<button data-gsv="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div>' +
       '<textarea class="admfeld" id="gstext" maxlength="100" rows="2" placeholder="z. B. Genieß deinen neuen Titel, ich hoffe er gefällt dir :)">' + esc(gsText) + '</textarea><div class="leise" id="gszahl" style="text-align:right">' + gsText.length + '/100</div>';
     h += '<p class="gsregel">⚠️ Handel gegen echtes Geld ist verboten und führt zum Ausschluss aus Kazetopia.</p>';
@@ -1791,7 +1822,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       var nachricht = gsText.trim();
       sFrisch().then(function () { return sbFetch('/rest/v1/rpc/verschenken', { method: 'POST', body: nachricht ? { p_artikel: id, p_an: gewaehlt, p_nachricht: nachricht } : { p_artikel: id, p_an: gewaehlt } }); })
         .then(function (r) {
-          gsText = '';
+          gsText = ''; gsDaten = null;
           if (r && typeof r.rest === 'number') liveZeni = r.rest;
           $('karte').querySelector('.ds').innerHTML = '<div class="kopf"><div><b>🎉 Verschenkt!</b><div class="kk">' + esc(a.name) + ' gehört jetzt ' + esc(prof(gewaehlt).n || gewaehlt) + '</div></div></div><p>' + esc(prof(gewaehlt).n || gewaehlt) + ' bekommt eine Nachricht im Posteingang. Die ' + zahl(r && r.preis || pg) + ' Zeni werden in 1–2 Minuten von deinem Stand abgezogen.</p><div class="edknoepfe"><button class="vlink" id="gszu">Schön!</button></div>';
           $('gszu').onclick = profilZu; zeigen();
@@ -2358,6 +2389,10 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (c.indexOf('__WILLKOMMEN') === 0) return '👋 Willkommens-Geschenk';
     if (c.indexOf('__VIP') === 0) return '💎 VIP gewonnen';
     if (c.indexOf('__GEHEIM') === 0) return '🔒 Geheimnis entdeckt';
+    if ((m = c.match(/^__ADVENTNACH-(\d+)/))) return '🎄 Türchen ' + m[1] + ' nachgeholt';
+    if ((m = c.match(/^__ADVENTZIEL-(\d+)/))) return '🎄 Gemeinschafts-Ziel Türchen ' + m[1];
+    if ((m = c.match(/^__ADVENTCODE-(\d+)/))) return '🎙️ Stream-Codewort Türchen ' + m[1];
+    if ((m = c.match(/^__ADVENT-(\d+)/))) return '🎄 Adventskalender Türchen ' + m[1];
     if (c.indexOf('__') === 0) return '⚙️ ' + c.substring(2).split('-')[0];
     return '🎟️ Code „' + c + '“ eingelöst';
   }
@@ -2421,6 +2456,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     h += jubKarte();
     h += besuchKarte();
     h += umfrageKarte();
+    h += advKarte();
     h += zeitungKarte(true);
     // Countdown ganz nach oben, wenn Kaze live ist oder niemand angemeldet ist (dann zählen Glück & Quests noch nicht)
     var planOben = !!(daten.live && daten.live.an) || !(sitzung && sitzung.name);
@@ -3090,7 +3126,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     var eigen = sitzung && sitzung.name === login;
     h += '<div class="kopf' + (dz.h || bannerStil(login) ? ' design' : '') + (dz.h ? ' bg-' + dz.h : '') + (bannerStil(login) ? ' mitbanner' : '') + '"' + bannerStil(login) + '>' + avatarMitRahmen(login) + '<div><b' + fs(login) + '>' + esc(name) + '</b>' + (dz.t ? '<div class="titel">« ' + esc(dz.t) + ' »</div>' : '') +
       (r ? '<div class="rang">' + r[1] + ' ' + esc(r[2]) + '</div>' : '') + (rolle(login) ? ' <div class="rang rolle">' + ROLLE[rolle(login)][0] + ' ' + ROLLE[rolle(login)][1] + '</div>' : '') + (sp.tier >= 2 ? ' <div class="rang tier t' + sp.tier + '">' + (sp.tier === 3 ? '👑 Tier-3-Sub' : '💜 Tier-2-Sub') + '</div>' : '') +
-      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + (sp.ds ? ' · 🔥 ' + sp.ds + ' am Stück' : '') + '</div>' + rivale(platz, std) +
+      '<div class="kk">⚡ Kampfkraft <b>' + zahl(kk) + '</b>' + (kk > 9000 ? ' · über 9000!' : '') + (platz ? ' · Watchtime-Platz ' + platz : '') + (sp.ds ? ' · 🔥 ' + sp.ds + ' am Stück' : '') + (advAktiv() && advBaeume[login] ? ' · 🎄 ' + advBaeume[login] + '/24 Türchen' : '') + '</div>' + rivale(platz, std) +
       (sitzung && sitzung.name ? '' : '<button class="ichknopf' + (ich === login ? ' ja' : '') + '" id="ichknopf" data-ich="' + esc(login) + '">' + (ich === login ? '✓ Das bist du' : '⭐ Das bin ich') + '</button>') + (eigen ? ' <button class="ichknopf" id="gestalten">✏️ Profil gestalten</button>' : '') + ' <button class="ichknopf" id="teilen">📤 Als Bild teilen</button>' + freundKnopf(login) + '</div></div>';
 
     h += freundeHtml(login);
@@ -3489,6 +3525,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     booster: ['🔐', 'Tresor-Booster', '+1 % Zins auf deinen laufenden Tresor (höchstens +3 %). Erst Zeni einschließen, dann einlösen.'],
     gutschein: ['🛍️', 'Shop-Gutschein', 'Dein nächster Kauf im Shop kostet 20 % weniger (nicht beim Thron).'],
     umfaerben: ['🖌️', 'Gratis-Umfärben', 'Deine nächste Rahmen-Umfärbung ist kostenlos.'],
+    geschenk: ['🎁', 'Geschenk-Gutschein', 'Dein nächstes Geschenk an einen Freund kostet keinen Aufpreis (statt +25 %).'],
     zbooster: ['⚡', 'Zeni-Booster', 'In den nächsten 2 Streams, die du schaust: +1 Zeni pro Minute Zuschauen extra (ab 10 Min., gebucht nach dem Stream).']
   };
   function gsLaden() {
@@ -3504,6 +3541,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (g.art === 'booster') return '✓ +1 % auf deinen Tresor';
     if (g.art === 'gutschein') return g.benutzt ? '✓ Benutzt: ' + esc(kosName(i.artikel) || i.artikel || '') + ' für ' + zahl(i.preis || 0) + ' statt ' + zahl(i.statt || 0) + ' Zeni' : '✅ Aktiv – dein nächster Shop-Kauf kostet 20 % weniger';
     if (g.art === 'umfaerben') return g.benutzt ? '✓ Benutzt' : '✅ Aktiv – deine nächste Umfärbung ist gratis';
+    if (g.art === 'geschenk') return g.benutzt ? '✓ Benutzt: ' + esc(kosName(i.artikel) || i.artikel || '') + ' an ' + esc(prof(i.an).n || i.an || '') + ' verschenkt' : '✅ Aktiv – dein nächstes Geschenk kostet keinen Aufpreis';
     if (g.art === 'zbooster') { var n = (i.streams || []).length; return g.benutzt ? '✓ 2 Streams geboostet' : '⚡ Aktiv – ' + n + ' von 2 Streams geboostet'; }
     return '✓';
   }
@@ -3511,9 +3549,9 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     if (!sitzung) return '<p class="leise">Melde dich an, um deine Gutscheine zu sehen.</p>';
     if (gsDaten === null) { gsLaden().then(function () { if (passReiter === 'gut') passTeil(); }); return '<p class="leise">Lade …</p>'; }
     if (!gsDaten.length) return '<p class="leise">Noch keine Gutscheine. Die gibt es auf den Stufen 3, 7, 9, 12, 14, 17 … – einfach weiterspielen.</p>';
-    return '<p class="leise">Gutscheine aus dem Saisonpass. Einlösen, wann du willst – bis 31 Tage nach Saisonende.</p>' + gsDaten.map(function (g) {
+    return '<p class="leise">Gutscheine aus Saisonpass und Adventskalender. Einlösen, wann du willst – bis 31 Tage nach Saisonende.</p>' + gsDaten.map(function (g) {
       var a = GS_INFO[g.art] || ['🎟️', g.art, ''];
-      return '<div class="pch"><b>' + a[0] + ' ' + a[1] + '</b> <span class="leise">· Stufe ' + g.stufe + '</span><br><span class="leise">' + a[2] + '</span>' +
+      return '<div class="pch"><b>' + a[0] + ' ' + a[1] + '</b> <span class="leise">· ' + (g.stufe > 100 ? '🎄 Adventskalender, Türchen ' + (g.stufe - 100) : 'Stufe ' + g.stufe) + '</span><br><span class="leise">' + a[2] + '</span>' +
         (g.eingeloest ? '<br><b>' + gsStatus(g) + '</b>' : '<div class="edknoepfe" style="margin-top:8px"><button class="vtw" data-gs="' + g.id + '">Einlösen</button></div><p class="leise" id="gsi' + g.id + '"></p>') + '</div>';
     }).join('');
   }
@@ -3919,6 +3957,167 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     };
   }
 
+  // 🎄 Adventskalender (1.–24.12.): jeden Tag ein Türchen, Belohnungen fest und für alle gleich, aber geheim bis zum Öffnen.
+  //    Gemeinschafts-Ziel pro Tag, Stream-Codewort an Streamtagen, verpasste Türchen für Zeni nachholen, Weihnachtsbaum, geheimes Türchen.
+  var adv = null, advBaeume = {}, advLaedt = null;
+  var ADV_ORDNUNG = [7, 18, 3, 22, 11, 1, 15, 9, 24, 5, 13, 20, 2, 17, 8, 12, 23, 6, 14, 4, 19, 10, 16, 21];
+  var ADV_GROSS = [6, 13, 20, 24];
+  function advAktiv() { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); return (m === 11 && t >= 28) || m === 12 || (m === 1 && t <= 6); }
+  function advLaden() {
+    if (advLaedt) return advLaedt;
+    var p = sitzung ? sFrisch().then(function () { return sbFetch('/rest/v1/rpc/advent_status', { method: 'POST', body: {} }); })
+      : fetch(SB_URL + '/rest/v1/rpc/advent_status', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; });
+    advLaedt = p.then(function (r) { adv = r || null; advLaedt = null; return adv; }).catch(function () { advLaedt = null; return adv; });
+    return advLaedt;
+  }
+  function advOffen(tag) { return adv && (adv.offen || []).filter(function (o) { return o.tag === tag; })[0]; }
+  function advZahl() { return adv ? (adv.offen || []).length : 0; }
+  function advIcon(o) {
+    if (!o) return '🎁';
+    if (o.gs) return { dreh: '🍀', umfaerben: '🎨', booster: '🔐', gutschein: '🛍️', geschenk: '🎁' }[o.gs] || '🎟️';
+    if (o.artikel && o.artikel.indexOf('banner_') === 0) return '🏔️';
+    if (o.artikel && o.artikel.indexOf('titel_') === 0) return '🏷️';
+    return '💰';
+  }
+  function advKurz() {
+    if (!adv) return 'jeden Tag ein Türchen';
+    if (!adv.heute) return 'startet am 1. Dezember';
+    return advZahl() + ' / 24 geöffnet' + (adv.amtag && !advOffen(adv.heute) ? ' · heute noch zu!' : '');
+  }
+  function advKarte() {
+    if (!adv || !adv.heute || !adv.amtag) return '';
+    if (!sitzung) return '<div class="sbox advkarte" data-adv="1"><div class="advkz"><span class="advki">🎄</span><div><b>ADVENTSKALENDER · TÜRCHEN ' + adv.heute + '</b><small>Mit Twitch anmelden und jeden Tag ein Türchen öffnen</small></div><button class="vbtn" data-adv="1">Ansehen ›</button></div></div>';
+    if (advOffen(adv.heute)) return '';
+    return '<div class="sbox advkarte neu" data-adv="1"><div class="advkz"><span class="advki">🎄</span><div><b>TÜRCHEN ' + adv.heute + ' IST OFFEN!</b><small>' + (adv.anzahl ? adv.anzahl + ' von ' + adv.ziel + ' haben heute schon geöffnet' : 'Sei heute der Erste') + '</small></div><button class="vbtn" data-adv="1">Öffnen ›</button></div></div>';
+  }
+  // 🌲 Weihnachtsbaum: jede geöffnete Tür hängt eine Kugel auf, an den Adventssonntagen eine Kerze, am 24. den Stern
+  var ADV_PLATZ = [[60,50],[52,63],[68,64],[45,77],[60,79],[75,76],[40,92],[53,94],[67,93],[80,90],[34,107],[47,110],[61,111],[74,108],[87,105],[29,122],[42,126],[56,127],[70,126],[83,123],[25,138],[39,142],[95,138],[60,30]];
+  var ADV_KUGEL = ['#ff6b8a', '#ffd166', '#7ad3ff', '#c792ea', '#ff9e5e', '#9be564'];
+  function advBaum(n, offen) {
+    var s = '<svg class="advbaum" viewBox="0 0 120 170" aria-hidden="true"><rect x="53" y="146" width="14" height="16" rx="2" fill="#7a4a2a"/>' +
+      '<path d="M60 22 L98 72 H82 L106 106 H88 L114 146 H6 L32 106 H14 L38 72 H22 Z" fill="#1f6b3f"/><path d="M60 22 L98 72 H82 L106 106 H88 L114 146 H60 Z" fill="#185934"/>' +
+      '<path d="M30 100 Q60 112 92 96 M22 134 Q60 148 100 130" stroke="#ffd98a" stroke-width="1.4" fill="none" stroke-dasharray="2 3" opacity=".8"/>';
+    for (var i = 1; i <= 24; i++) {
+      var p = ADV_PLATZ[i - 1], an = offen.indexOf(i) >= 0;
+      if (i === 24) s += an ? '<path class="advstern" d="M60 6 L64 17 L76 17 L66 24 L70 35 L60 28 L50 35 L54 24 L44 17 L56 17 Z" fill="#ffd166"/>' : '<path d="M60 6 L64 17 L76 17 L66 24 L70 35 L60 28 L50 35 L54 24 L44 17 L56 17 Z" fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-dasharray="2 2"/>';
+      else if (ADV_GROSS.indexOf(i) >= 0) s += '<rect x="' + (p[0] - 2.5) + '" y="' + (p[1] - 4) + '" width="5" height="9" rx="1.2" fill="' + (an ? '#fff4e0' : 'rgba(255,255,255,.15)') + '"/>' + (an ? '<ellipse class="advflamme" cx="' + p[0] + '" cy="' + (p[1] - 7) + '" rx="2.2" ry="3.6" fill="#ffb347"/>' : '');
+      else s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (an ? 4.2 : 3) + '" fill="' + (an ? ADV_KUGEL[i % ADV_KUGEL.length] : 'rgba(255,255,255,.14)') + '"' + (an ? ' stroke="#fff" stroke-opacity=".5" stroke-width=".8"' : '') + '/>';
+    }
+    return s + '</svg>';
+  }
+  function advDialog() {
+    zaehlen('advent');
+    karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🎄 Adventskalender</b><div class="kk">Jeden Tag ein Türchen – vom 1. bis 24. Dezember</div></div></div><div id="advinh"><p class="leise">Lade …</p></div></div>');
+    advLaden().then(function () { advZeigen(); });
+  }
+  function advZeigen(ergebnis) {
+    var el = $('advinh'); if (!el) return;
+    if (!adv) { el.innerHTML = '<p class="leise">❌ Der Adventskalender lädt gerade nicht. Versuch es gleich nochmal.</p>'; return; }
+    var offen = (adv.offen || []).map(function (o) { return o.tag; }), h = '';
+    if (!adv.heute) {
+      var bis = Math.max(1, Math.ceil((new Date(new Date().getFullYear(), 11, 1) - new Date()) / 864e5));
+      h += '<div class="advinfo">❄️ Das erste Türchen öffnet sich am <b>1. Dezember</b> – noch ' + (bis === 1 ? '1 Tag' : bis + ' Tage') + '.</div>';
+    } else if (adv.amtag) {
+      var pz = Math.min(100, Math.round(adv.anzahl / Math.max(1, adv.ziel) * 100));
+      h += '<div class="advziel"><div class="advzt">🎄 <b>' + adv.anzahl + ' / ' + adv.ziel + '</b> haben Türchen ' + adv.heute + ' heute geöffnet' + (adv.erreicht ? ' – <b>Ziel geschafft! +' + zahl(adv.bonus) + ' Zeni für alle</b>' : '') + '</div><div class="advbalken"><i style="width:' + pz + '%"></i></div>' +
+        (adv.erreicht ? '' : '<small>Schaffen es heute ' + adv.ziel + ' Leute, bekommt jeder, der heute geöffnet hat, <b>+' + zahl(adv.bonus) + ' Zeni</b> extra. Sag es weiter!</small>') + '</div>';
+      if (sitzung && adv.code_heute && advOffen(adv.heute) && !adv.code_ok) h += '<div class="advcode"><b>🎙️ Stream-Codewort</b><small>Kaze nennt heute im Stream ein Codewort – eingeben und <b>+' + zahl(adv.code_bonus) + ' Zeni</b> bekommen.</small><div class="vneu"><input id="advcin" maxlength="24" placeholder="Codewort aus dem Stream" autocomplete="off"><button id="advcok">Einlösen</button></div><p class="leise" id="advcinfo"></p></div>';
+      else if (sitzung && adv.code_heute && adv.code_ok) h += '<div class="advinfo">🎙️ Stream-Codewort für heute eingelöst ✓</div>';
+    }
+    if (!sitzung) h += '<div class="advinfo">🔑 <b>Mit Twitch anmelden</b>, um Türchen zu öffnen. <button class="vtw tw" id="advlogin">Anmelden</button></div>';
+    h += '<div id="advergebnis">' + (ergebnis || '') + '</div><div class="advgrid">' + ADV_ORDNUNG.map(function (t) {
+      var o = advOffen(t), zu = !adv.heute || t > adv.heute, heute = adv.amtag && t === adv.heute, gross = ADV_GROSS.indexOf(t) >= 0;
+      var cls = o ? 'advoffen' : zu ? 'advzu' : heute ? 'advheute' : 'advvp';
+      return '<button class="advtuer ' + cls + (gross ? ' gross' : '') + '" data-advt="' + t + '"' + (zu ? ' disabled' : '') + '><span class="advnr">' + t + '</span>' +
+        (o ? '<span class="advico">' + advIcon(o) + '</span>' : zu ? '' : heute ? '<span class="advhint">öffnen</span>' : '<span class="advhint">↺ ' + zahl(adv.nach_preis) + '</span>') + '</button>';
+    }).join('') + '</div>';
+    var n = offen.length;
+    h += '<div class="advunten">' + advBaum(n, offen) + '<div><b>🌲 Dein Weihnachtsbaum · ' + n + ' / 24</b><small>Jedes Türchen hängt eine Kugel auf, die Adventssonntage zünden eine Kerze an, Heiligabend setzt den Stern.</small>' +
+      '<small>🏆 Alle 24 Türchen: Titel <b>„Adventswichtel“</b> + Rahmen <b>„Adventskranz“</b>' + (n === 24 ? ' – <b>geschafft! 🎉</b>' : '') + '</small>' +
+      '<small>🔒 Was drin ist, sieht man erst beim Öffnen – für alle gleich. Verpasst? Nachholen kostet ' + zahl(adv.nach_preis) + ' Zeni.</small>' +
+      (adv.geheim ? '<small>🕵️ Geheimes Türchen gefunden ✓</small>' : adv.heute ? '<small>🤫 Irgendwo auf Kazetopia versteckt sich noch ein 25. Türchen …</small>' : '') + '</div></div>';
+    el.innerHTML = h;
+    if ($('advlogin')) $('advlogin').onclick = einloggenFragen;
+    if ($('advcok')) $('advcok').onclick = advCodeSenden;
+    if ($('advcin')) $('advcin').onkeydown = function (e) { if (e.key === 'Enter') advCodeSenden(); };
+    Array.prototype.forEach.call(el.querySelectorAll('[data-advt]'), function (b) { b.onclick = function () { advTuer(Number(b.getAttribute('data-advt')), b); }; });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-advgs]'), function (b) { b.onclick = function () { passReiter = 'gut'; gsDaten = null; passDialog(); }; });
+  }
+  function advTuer(t, b) {
+    var o = advOffen(t);
+    if (o) { $('advergebnis').innerHTML = advErgebnisHtml(o, t, true); advZeigenEvents(); return; }
+    if (!sitzung) { einloggenFragen(); return; }
+    var nach = !(adv.amtag && t === adv.heute);
+    if (nach && !b.classList.contains('frage')) {
+      Array.prototype.forEach.call(document.querySelectorAll('.advtuer.frage'), function (x) { x.classList.remove('frage'); });
+      b.classList.add('frage');
+      $('advergebnis').innerHTML = '<div class="advfrage">Türchen ' + t + ' verpasst – für <b>' + zahl(adv.nach_preis) + ' Zeni</b> nachholen? <button class="vtw" id="advja">Ja, nachholen</button> <button class="vlink" id="advnein">Abbrechen</button></div>';
+      $('advja').onclick = function () { advTuer(t, b); };
+      $('advnein').onclick = function () { b.classList.remove('frage'); $('advergebnis').innerHTML = ''; };
+      return;
+    }
+    b.disabled = true; b.classList.add('klapp');
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/advent_oeffnen', { method: 'POST', body: { p_tag: t } }); }).then(function (r) {
+      if (r && typeof r.rest === 'number') { liveZeni = r.rest; zeniOben(); }
+      if (r && r.artikel) sofortBesitz[r.artikel] = true;
+      if (r && r.komplett) { sofortBesitz.titel_adventswichtel = true; sofortBesitz.rahmen_adventskranz = true; }
+      gsDaten = null;
+      return new Promise(function (ok) { setTimeout(ok, 650); }).then(function () { return advLaden(); }).then(function () {
+        var html = advErgebnisHtml(r, t, false);
+        if (r.bonus) html += '<div class="advinfo">🎄 Gemeinschafts-Ziel geschafft – <b>+' + zahl(adv.bonus) + ' Zeni</b> für alle, die heute geöffnet haben!</div>';
+        if (r.komplett) html += '<div class="advinfo gold">🏆 Alle 24 Türchen geöffnet! Titel <b>„Adventswichtel“</b> und Rahmen <b>„Adventskranz“</b> gehören jetzt dir.</div>';
+        advZeigen(html); advSchnee(); if (reiter === 'start' || reiter === 'ich') zeigen();
+      });
+    }).catch(function (x) { b.disabled = false; b.classList.remove('klapp'); $('advergebnis').innerHTML = '<div class="advfrage">❌ ' + esc(x.message) + '</div>'; });
+  }
+  function advErgebnisHtml(o, t, alt) {
+    var gsHinweis = o.gs === 'dreh' ? 'Einlösen unter 🎫 Saisonpass → Gutscheine.' : o.gs === 'booster' ? 'Einlösen unter 🎫 Saisonpass → Gutscheine, sobald dein Tresor läuft.'
+      : o.gs ? 'Ist automatisch aktiv und gilt beim nächsten Mal (steht unter 🎫 Saisonpass → Gutscheine).' : o.artikel ? 'Liegt schon in deinem Profil-Editor bereit.' : '';
+    return '<div class="advgeschenk' + (alt ? ' alt' : '') + '"><span class="advgi">' + advIcon(o) + '</span><div><small>Türchen ' + t + (o.nach ? ' · nachgeholt' : '') + '</small><b>' + esc(o.label) + '</b>' + (gsHinweis ? '<small>' + gsHinweis + '</small>' : '') +
+      (o.gs ? '<button class="vlink" data-advgs="1">Zu deinen Gutscheinen ›</button>' : '') + '</div></div>';
+  }
+  function advZeigenEvents() { Array.prototype.forEach.call(document.querySelectorAll('[data-advgs]'), function (b) { b.onclick = function () { passReiter = 'gut'; gsDaten = null; passDialog(); }; }); }
+  function advCodeSenden() {
+    var c = ($('advcin').value || '').trim(); if (!c) { $('advcinfo').textContent = 'Gib zuerst das Codewort ein.'; return; }
+    $('advcok').disabled = true; $('advcinfo').textContent = 'Wird geprüft …';
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/advent_code', { method: 'POST', body: { p_code: c } }); }).then(function (r) {
+      if (r && typeof r.rest === 'number') { liveZeni = r.rest; zeniOben(); }
+      return advLaden().then(function () { advZeigen('<div class="advgeschenk"><span class="advgi">🎙️</span><div><small>Stream-Codewort</small><b>+' + zahl(r.zeni) + ' Zeni</b></div></div>'); advSchnee(); });
+    }).catch(function (x) { $('advcok').disabled = false; $('advcinfo').textContent = '❌ ' + x.message; });
+  }
+  function advSchnee() {
+    if (!saisonAn()) return;
+    var box = document.createElement('div'); box.className = 'advflocken';
+    for (var i = 0; i < 18; i++) { var f = document.createElement('i'); f.textContent = ['❄', '❅', '✦'][i % 3]; f.style.left = Math.round(Math.random() * 100) + '%'; f.style.animationDelay = (Math.random() * .6).toFixed(2) + 's'; f.style.fontSize = (10 + Math.random() * 12).toFixed(0) + 'px'; box.appendChild(f); }
+    var k = $('karte'); (k || document.body).appendChild(box); setTimeout(function () { box.remove(); }, 2600);
+  }
+  // 🤫 Geheimes 25. Türchen: dreimal schnell auf den Countdown „Noch X Tage bis Heiligabend“ tippen
+  var advTipps = [];
+  function advGeheimTipp() {
+    var j = Date.now(); advTipps = advTipps.filter(function (x) { return j - x < 1500; }); advTipps.push(j);
+    if (advTipps.length < 3 || !sitzung) return; advTipps = [];
+    sFrisch().then(function () { return sbFetch('/rest/v1/rpc/advent_geheim', { method: 'POST', body: {} }); }).then(function (r) {
+      if (!r || !r.ok || !r.neu) return;
+      sofortBesitz.titel_tuerchendetektiv = true; if (adv) adv.geheim = true;
+      var d = document.createElement('div'); d.className = 'gehtoast';
+      d.innerHTML = '<span>🕵️</span><div><small>🎄 Das geheime 25. Türchen!</small><b>Titel „Türchen-Detektiv“</b></div>';
+      document.body.appendChild(d); advSchnee();
+      setTimeout(function () { d.classList.add('weg'); }, 5500); setTimeout(function () { d.remove(); }, 6200);
+    }).catch(function () { });
+  }
+  function advBaeumeLaden() {
+    fetch(SB_URL + '/rest/v1/rpc/advent_baeume', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : {}; }).then(function (r) { advBaeume = r || {}; }).catch(function () { });
+  }
+  if (advAktiv()) advBaeumeLaden();
+
+  document.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('[data-adv]') : null; if (t) { e.preventDefault(); advDialog(); } });
+  if (advAktiv()) {
+    setTimeout(function () { advLaden().then(function () { if (daten && (reiter === 'start' || reiter === 'ich')) zeigen(); }); }, 2500);
+    setInterval(function () { if (!document.hidden) advLaden(); }, 5 * 60 * 1000);
+  }
+  (function () { var c = document.getElementById('xcount'); if (c) c.addEventListener('click', advGeheimTipp); })();
+
   // 🔔 Push-Benachrichtigungen (Web Push). Am iPhone nur, wenn Kazetopia als App auf dem Homescreen liegt.
   var PUSH_KEY = 'BDE6Tp1ZIo33qNAwFEwQYuafGL6g3BfDq0DbWffiihSndubHBvU7fwj9pZZatrag44h3xG8feD1Rt6TVwGVT41U';
   var PUSH_ARTEN = [['live', '🔴 Kaze ist live', 'sobald der Stream startet'], ['update', '📢 Neu auf Kazetopia', 'wenn es neue Funktionen gibt'],
@@ -3926,7 +4125,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
                     ['glueck', '🍀 Glücks-Knopf bereit', 'mittags, wenn du ihn noch nicht gedrückt hast'],
                     ['rueckblick', '📊 Stream-Rückblick', 'nach jedem Stream: wie du abgeschnitten hast'],
                     ['post', '📬 Posteingang', 'wenn du eine neue Nachricht bekommst (Freunde, Geschenke, Antworten)'],
-                    ['zeitung', '📰 Kazetopia-Zeitung', 'sonntags, wenn die neue Wochenausgabe da ist']];
+                    ['zeitung', '📰 Kazetopia-Zeitung', 'sonntags, wenn die neue Wochenausgabe da ist'],
+                    ['advent', '🎄 Adventskalender', 'um 10 Uhr, wenn ein neues Türchen offen ist (1.–24.12.)']];
   var pushAbo = null, pushArten = null;
   function pushMoeglich() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol === 'https:'; }
   function istIos() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
@@ -3939,7 +4139,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       if (!sub) return;
       return sFrisch().then(function () { return sbFetch('/rest/v1/rpc/push_meine', { method: 'POST', body: { p_endpoint: sub.endpoint } }); }).then(function (r) {
         pushArten = r && r.arten ? r.arten : null;
-        if (!pushArten) return pushSpeichern(['live', 'update']);   // Abo im Browser, aber nicht (mehr) bei uns → neu eintragen
+        if (!pushArten) return pushSpeichern(['live', 'update', 'advent']);   // Abo im Browser, aber nicht (mehr) bei uns → neu eintragen
       });
     }).catch(function () { });
   }
@@ -3987,7 +4187,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   function hashOeffnen(h) {
     if (h === '#push') pushVerlaufDialog(); else if (h === '#zeitung') zeitungDialog(0); else if (h === '#rueckblick') rbDialog();
-    else if (h === '#post' && sitzung) posteingangOeffnen(); else if (h === '#tresor' && sitzung) tresorDialog();
+    else if (h === '#post' && sitzung) posteingangOeffnen(); else if (h === '#tresor' && sitzung) tresorDialog(); else if (h === '#advent') advDialog();
   }
   function pushDialogInnen() {
     zaehlen('push');
@@ -4010,7 +4210,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
           if (p !== 'granted') throw new Error('Nicht erlaubt – ohne Erlaubnis im Browser geht es nicht.');
           return navigator.serviceWorker.ready;
         }).then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64zuBytes(PUSH_KEY) }); })
-          .then(function (sub) { pushAbo = sub; return pushSpeichern(['live', 'update']); })
+          .then(function (sub) { pushAbo = sub; return pushSpeichern(['live', 'update', 'advent']); })
           .then(function () { pushDialog(); if (reiter === 'ich') zeigen(); })
           .catch(function (x) { k.disabled = false; $('puinfo').textContent = '❌ ' + (/404|PGRST202/.test(x.message) ? 'Benachrichtigungen sind noch nicht freigeschaltet.' : x.message); });
       };
@@ -4262,8 +4462,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // 🛠️ Admin-Bereich für Kaze (am Handy nutzbar; Supabase prüft, dass wirklich kazenity angemeldet ist)
   function adminOeffnen(tab) {
     if (!sitzung || sitzung.name !== 'kazenity') { if (ich === 'kazenity') karteOeffnen('<button class="zu" id="zu" aria-label="Schließen">×</button><div class="ds"><div class="kopf"><div><b>🛠️ Admin</b><div class="kk">Deine Anmeldung ist abgelaufen</div></div></div><p class="leise">Bitte oben rechts neu mit Twitch anmelden und den Admin-Bereich dann wieder öffnen.</p></div>'); return; }
-    var ADM_GR = [['heute', '🏠 Heute', ['start']], ['comm', '📥 Community', ['feedback', 'voting', 'umfragen', 'nutzer']], ['inh', '✏️ Inhalte', ['plan', 'fazit', 'push', 'codes']], ['zahl', '📊 Zahlen', ['nutzung', 'protokoll', 'geheim']]];
-    var ADM_N = { start: '🏠 Heute', feedback: '💡 Feedback', voting: '🎮 Spiele-Vorschläge', umfragen: '🗳️ Umfragen', nutzer: '🔍 Nutzer', plan: '📅 Streamplan', fazit: '💬 Fazit', push: '🔔 Push', codes: '🎟️ Codes', nutzung: '👀 Nutzung & Buchungen', protokoll: '📜 Protokoll', geheim: '🔒 Geheim' };
+    var ADM_GR = [['heute', '🏠 Heute', ['start']], ['comm', '📥 Community', ['feedback', 'voting', 'umfragen', 'nutzer']], ['inh', '✏️ Inhalte', ['plan', 'advent', 'fazit', 'push', 'codes']], ['zahl', '📊 Zahlen', ['nutzung', 'protokoll', 'geheim']]];
+    var ADM_N = { advent: '🎄 Advent', start: '🏠 Heute', feedback: '💡 Feedback', voting: '🎮 Spiele-Vorschläge', umfragen: '🗳️ Umfragen', nutzer: '🔍 Nutzer', plan: '📅 Streamplan', fazit: '💬 Fazit', push: '🔔 Push', codes: '🎟️ Codes', nutzung: '👀 Nutzung & Buchungen', protokoll: '📜 Protokoll', geheim: '🔒 Geheim' };
     var admGr = ADM_GR.filter(function (g) { return g[2].indexOf(tab) >= 0; })[0] || ADM_GR[0];
     var reiterH = '<div class="admgruppen">' + ADM_GR.map(function (g) { return '<button data-adm="' + g[2][0] + '" data-admg="' + g[0] + '"' + (g === admGr ? ' class="aktiv"' : '') + '>' + g[1] + '</button>'; }).join('') + '</div>' +
       (admGr[2].length > 1 ? '<div class="unterreiter adminreiter">' + admGr[2].map(function (x) { return '<button data-adm="' + x + '"' + (x === tab ? ' class="aktiv"' : '') + '>' + ADM_N[x] + '</button>'; }).join('') + '</div>' : '');
@@ -4278,11 +4478,13 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     function wann(t) { var d = new Date(t); return isNaN(d) ? '' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
     if (tab === 'start') {
       $('adm').innerHTML = '<p class="leise">Lade …</p>';
-      Promise.all([rpc('admin_aufgaben').catch(function () { return null; }), rpc('admin_uebersicht').catch(function () { return {}; }), rpc('admin_meldungen').catch(function () { return []; })]).then(function (r) {
+      Promise.all([rpc('admin_aufgaben').catch(function () { return null; }), rpc('admin_uebersicht').catch(function () { return {}; }), rpc('admin_meldungen').catch(function () { return []; }), rpc('admin_advent').catch(function () { return null; })]).then(function (r) {
         var a = r[0] || {}, u = r[1] || {}, m = r[2] || [];
         var spl = (daten && daten.spiele || []).filter(function (x) { return x.r; }), ohneFz = spl.filter(function (x) { return !fazitD[x.n]; }).length;
         var vip = (u.glueck || []).filter(function (g) { return g.g === 'vip'; });
         var auf = [];
+        var ad = r[3], adT = ad && ad.heute && (ad.tage || []).filter(function (x) { return x.tag === ad.heute && x.code; })[0];
+        if (adT && new Date().getMonth() === 11 && new Date().getDate() <= 24) auf.push(['advent', '🎙️', 'Heute im Stream sagen: „' + esc(adT.code) + '“', 'Codewort fürs Stream-Türchen (+' + zahl(ad.konfig ? ad.konfig.code_bonus : 1000) + ' Zeni)']);
         if (a.fb) auf.push(['feedback', '💡', a.fb + (a.fb === 1 ? ' neues Feedback' : ' neue Feedbacks'), 'Antworten oder einsortieren']);
         if (a.vor) auf.push(['voting', '🎮', a.vor + (a.vor === 1 ? ' Spiel-Vorschlag wartet' : ' Spiel-Vorschläge warten'), 'Freigeben oder ablehnen']);
         if (m.length) auf.push(['#meld', '🚩', m.length + (m.length === 1 ? ' gemeldete Nachricht' : ' gemeldete Nachrichten'), 'Unten ansehen']);
@@ -4626,6 +4828,31 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       Array.prototype.forEach.call(document.querySelectorAll('[data-pf]'), function (b) { b.onclick = function () { protoFilter = b.getAttribute('data-pf'); adminOeffnen('protokoll'); }; });
       Array.prototype.forEach.call(document.querySelectorAll('[data-pt]'), function (b) { b.onclick = function () { protoTage = Number(b.getAttribute('data-pt')); adminOeffnen('protokoll'); }; });
     }).catch(fehler);
+    if (tab === 'advent') rpc('admin_advent').then(function (r) {
+      var h0 = r.heute || 0, k = r.konfig || {}, tage = r.tage || [];
+      var heuteT = tage.filter(function (x) { return x.tag === h0; })[0];
+      var h = '<div class="sbox"><h3>🎄 ADVENTSKALENDER</h3>' +
+        (h0 ? '<p>Heute ist <b>Türchen ' + h0 + '</b> offen' + (heuteT ? ' · ' + heuteT.offen + ' geöffnet (Ziel ' + k.ziel + ')' : '') + '.</p>' : '<p class="leise">Startet am 1. Dezember um 0 Uhr.</p>') +
+        (heuteT && heuteT.code ? '<div class="advadmcode">🎙️ Heute im Stream sagen:<b>' + esc(heuteT.code) + '</b><small>Wer es im heutigen Türchen eingibt, bekommt +' + zahl(k.code_bonus) + ' Zeni.</small></div>' : '') +
+        '<p class="leise">🏆 Alle 24 geöffnet: ' + zahl(r.komplett) + ' · 🕵️ Geheimes Türchen gefunden: ' + zahl(r.geheim) + '</p>' +
+        '<div class="vneu" style="margin-top:8px"><input id="advziel" type="number" min="3" max="500" value="' + (k.ziel || 20) + '"><button id="advzielok">Tagesziel speichern</button></div><p class="leise" id="advzinfo">Gemeinschafts-Ziel: so viele müssen am Tag öffnen, damit alle +' + zahl(k.bonus) + ' Zeni bekommen.</p></div>';
+      h += '<div class="sbox"><h3>📅 TÜRCHEN & CODEWÖRTER</h3><p class="leise">Codewörter gelten nur an ihrem Tag. Leer lassen = kein Stream-Türchen. Buchstaben und Ziffern, ohne Leerzeichen.</p>' +
+        tage.map(function (x) {
+          var vorbei = h0 && x.tag < h0 && h0 <= 24;
+          return '<div class="kzzeile advadmz' + (x.tag === h0 ? ' heute' : '') + '"><b>' + x.tag + '.12.</b><span>' + esc(x.label) + '<br><small class="leise">' + (x.offen || x.nach ? '✓ ' + x.offen + ' am Tag · ↺ ' + x.nach + ' nachgeholt' + (x.code ? ' · 🎙️ ' + x.codes + '× Codewort' : '') : 'noch niemand') + '</small></span>' +
+            '<input class="advcodefeld" data-advc="' + x.tag + '" maxlength="20" value="' + esc(x.code || '') + '" placeholder="kein Codewort"' + (vorbei ? ' disabled' : '') + '></div>';
+        }).join('') + '<div class="edknoepfe"><button class="vtw" id="advcodesok">Codewörter speichern</button></div><p class="leise" id="advcinfo2"></p></div>';
+      $('adm').innerHTML = h;
+      $('advzielok').onclick = function () {
+        rpc('admin_advent_ziel', { p_ziel: Number($('advziel').value) }).then(function () { $('advzinfo').textContent = '✓ Gespeichert'; }).catch(function (x) { $('advzinfo').textContent = '❌ ' + x.message; });
+      };
+      $('advcodesok').onclick = function () {
+        var felder = Array.prototype.filter.call(document.querySelectorAll('[data-advc]'), function (f) { return !f.disabled; });
+        $('advcinfo2').textContent = 'Speichere …';
+        felder.reduce(function (p, f) { return p.then(function () { return rpc('admin_advent_code', { p_tag: Number(f.getAttribute('data-advc')), p_code: f.value }); }); }, Promise.resolve())
+          .then(function () { $('advcinfo2').textContent = '✓ Alle Codewörter gespeichert'; }).catch(function (x) { $('advcinfo2').textContent = '❌ ' + x.message; });
+      };
+    }).catch(function (x) { var el = $('adm'); if (el) el.innerHTML = '<p class="leise">❌ ' + esc(/404|PGRST202|admin_advent/.test(x.message) ? 'Supabase-Update 58 fehlt noch.' : x.message) + '</p>'; });
     if (tab === 'codes') rpc('admin_codes').then(function (c) {
       var h = '<div class="sbox"><h3>＋ NEUER CODE</h3><div class="admform"><input id="acode" placeholder="CODE" maxlength="30"><button class="vlink" id="azufall">🎲</button><input id="azeni" type="number" min="0" placeholder="Zeni" value="1000"><input id="amax" type="number" min="1" placeholder="Wie viele Leute (leer = ∞)"><input id="abis" type="date"><label><input type="checkbox" id="alive"> nur live</label><button class="vtw" id="aspeichern">Anlegen</button></div><p class="leise" id="ainfo"></p></div>';
       h += (c || []).map(function (x) { var w = x.code === '__WILLKOMMEN'; return '<div class="kzzeile"><b>' + (w ? '🎁 Willkommen' : esc(x.code)) + '</b><span>' + (x.zeni ? zahl(x.zeni) + ' Zeni' : '') + (x.artikel ? ' + ' + esc(kosName(x.artikel)) : '') + ' · ' + x.anzahl + (x.max ? '/' + x.max : '') + '×' + (x.bis ? ' · bis ' + esc(String(x.bis).substring(0, 10).split('-').reverse().join('.')) : '') + (x.live ? ' · live' : '') + '</span><span class="kzknoepfe"><button class="' + (x.aktiv ? 'vtw' : 'vlink') + '" data-ca="' + esc(x.code) + '">' + (x.aktiv ? '🟢 an' : '⏸️ aus') + '</button></span></div>'; }).join('');
@@ -5010,6 +5237,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   function ichKacheln(an) {
     var k = [];
+    if (advAktiv()) k.push(['advent', '🎄', 'Adventskalender', advKurz()]);
     if (an) {
       var pu = postUngelesen();
       k.push(['post', '📬', 'Posteingang' + (pu ? ' (' + pu + ')' : ''), pu ? pu + ' neue Nachrichten' : 'Anfragen & Neuigkeiten']);
@@ -5040,6 +5268,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     Array.prototype.forEach.call(document.querySelectorAll('[data-ich-k]'), function (b) { b.onclick = function (e) {
       e.preventDefault(); var k = b.getAttribute('data-ich-k');
       if (k === 'profil') profilZeigen(sitzung.name);
+      else if (k === 'advent') advDialog();
       else if (k === 'post') posteingangOeffnen();
       else if (k === 'gestalten') designEditor(sitzung.name);
       else if (k === 'bild') karteTeilen(sitzung.name, b.querySelector('b') || b);
@@ -5426,6 +5655,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
     window.addEventListener('hashchange', function () { hashOeffnen(location.hash); });
     zLaden().then(function (d) { if (d && d.liste && d.liste.length && reiter === 'start') zeigen(); });
     if (location.hash === '#pass') setTimeout(passDialog, 700);
+    if (location.hash === '#advent') setTimeout(advDialog, 900);
     var m = location.hash.match(/^#profil=(.+)$/);
     if (m) profilZeigen(decodeURIComponent(m[1]).toLowerCase());
     if (!sitzung) codeOffenPruefen();
