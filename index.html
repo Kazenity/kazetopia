@@ -456,6 +456,9 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   .angebot .svor { width: 110px; height: 70px; margin: 0; flex: 0 0 auto; } .angebot .svor.bnr { border-radius: 8px; }
   .angebot .svor .av { width: 40px; height: 40px; font-size: 16px; }
   .angebot b { font-size: 15px; } .angebot .leise { font-size: 12px; color: var(--grau); }
+  .bfband { display: flex; flex-direction: column; gap: 2px; text-align: center; background: linear-gradient(135deg, #0b0b0d, #1d1a14 60%, #0b0b0d); border: 1px solid #d9b45a; border-radius: 16px; padding: 12px 16px; margin: 14px 0 4px; box-shadow: 0 0 18px rgba(217,180,90,.25); }
+  .bfband b { color: #f3d98a; letter-spacing: 2px; font-size: 15px; } .bfband span { color: #fff; font-weight: 700; font-size: 14px; } .bfband small { color: #d9c592; font-size: 12px; }
+  .sbadge.bf { background: #0b0b0d; color: #f3d98a; box-shadow: inset 0 0 0 1px #d9b45a; }
   .sbadge { position: absolute; top: 8px; right: 8px; background: #ff7a3d; color: #fff; font-size: 11px; font-weight: 800; border-radius: 8px; padding: 2px 7px; }
   .sbadge.rot { background: #6a2c8c; } .sbadge.sai { background: #2f6fbf; }
   .sitem.bald { opacity: .62; }
@@ -1352,6 +1355,9 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   }
   // 🏅 Gründungsmitglied: die ersten 50 Mitglieder bekommen den Titel für immer
   var gruenderFrei = null;
+  var saleD = {};   // 🖤 Sale-Preise aus Supabase { id: { preis, bis } }
+  function saleVon(id) { var x = saleD[id]; return x && new Date(x.bis).getTime() > Date.now() ? x : null; }
+  function saleAktiv() { for (var k in saleD) if (saleVon(k)) return saleD[k]; return null; }
   function gruenderHinweis() { return gruenderFrei > 0 ? '<div class="gruenderhw">🏅 Noch <b>' + gruenderFrei + (gruenderFrei === 1 ? ' Platz' : ' Plätze') + '</b> als <b>Gründungsmitglied</b> – wer sich jetzt anmeldet, behält den Titel für immer</div>' : ''; }
   function gruenderCheck() {
     if (!sitzung || !sitzung.name || sitzung.name === 'kazenity') return;
@@ -1400,12 +1406,14 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       fetch(SB_URL + '/rest/v1/rpc/kos_live', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
       fetch(SB_URL + '/rest/v1/profil_oeffentlich?select=*', { headers: hd }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
       fetch(SB_URL + '/rest/v1/rpc/fazit_alle', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-      fetch(SB_URL + '/rest/v1/rpc/gruender_frei', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      fetch(SB_URL + '/rest/v1/rpc/gruender_frei', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(SB_URL + '/rest/v1/rpc/sale_preise', { method: 'POST', headers: hd, body: '{}' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
     ]).then(function (r) {
       var neu = JSON.stringify(r);
       if (r[0]) kosLive = r[0];
       if (r[2] && typeof r[2] === 'object') fazitD = r[2];
       if (typeof r[3] === 'number') gruenderFrei = r[3];
+      if (Array.isArray(r[4])) { saleD = {}; r[4].forEach(function (x) { if (x && x.id) saleD[x.id] = x; }); }
       if (Array.isArray(r[1])) designLive = r[1];
       liveMischen();
       if (neu !== liveLaden.alt) { liveLaden.alt = neu; farbCache = {}; if (typeof zeigen === 'function' && daten) zeigen(); }
@@ -1536,7 +1544,7 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
   // Wartet eine Bestellung schon länger als 3 Min.? (Zeitpunkt nur im Browser gemerkt)
   function kaufAlt(id) { var t = 0; try { t = Number(localStorage.getItem('kz_kauf_' + id) || 0); } catch (x) { } return !t || Date.now() - t > 180000; }
   function tagesAngebot() { var t = daten && daten.shop && daten.shop.tag; return t && t.tag === heuteIso() ? t : null; }
-  function preisVon(a) { var an = daten.shop && daten.shop.angebot, ta = tagesAngebot(); return an && an.id === a.id ? an.preis : ta && ta.id === a.id ? ta.preis : a.preis; }
+  function preisVon(a) { var an = daten.shop && daten.shop.angebot, ta = tagesAngebot(), sv = saleVon(a.id), p = an && an.id === a.id ? an.preis : ta && ta.id === a.id ? ta.preis : a.preis; return sv ? Math.min(p, sv.preis) : p; }
   function shopZustand(a) {
     var me = sitzung && sitzung.name;
     if (a.einmalig) { var bes = einmalBesitzer(a.id); if (bes && bes !== me) return 'vergeben'; }
@@ -1572,16 +1580,18 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
       (me ? '<div class="shopzeni"><span>💰 ' + zahl(stand) + '</span><small>deine Zeni' + (liveZeni !== null ? ' · aktuell' : ' · Stand ' + esc(daten.stand || '')) + '</small></div>' : '<button class="vtw tw" id="shoplogin">Mit Twitch anmelden</button>') + '</div>' + (me ? '' : gruenderHinweis());
     h += shopFuerDich(me, stand);
     if (shopNeuJetzt.length) h += '<div class="shopneu">✨ <b>' + shopNeuJetzt.length + (shopNeuJetzt.length === 1 ? ' neuer Artikel' : ' neue Artikel') + '</b> seit deinem letzten Besuch – mit „Neu“ markiert</div>';
+    var bf = saleAktiv();
+    if (bf) { var bfMs = new Date(bf.bis).getTime() - Date.now(), bfStd = Math.max(1, Math.ceil(bfMs / 3600000)); h += '<div class="bfband"><b>🖤 BLACK WEEKEND</b><span>−30 % auf Rahmen, Banner und Namenseffekte</span><small>⏳ noch ' + (bfStd > 36 ? Math.ceil(bfStd / 24) + ' Tage' : bfStd + ' Std.') + ' · bis Sonntag 23:59</small></div>'; }
     h += '<div class="shopcode"><button class="vlink" id="shopcode">🎟️ Code einlösen</button></div><!--SFILTER-->';
     var an = sh.angebot && kosArtikel(sh.angebot.id);
     if (an && an.kaufbar !== false) {
       var av = an.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(an.id) + ')"></div>' : an.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(an.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(an.name) + '</span></div>';
-      h += '<div class="angebot">' + av + '<div><div class="leise">🔥 ANGEBOT DER WOCHE · bis Sonntag</div><b>' + esc(an.name) + '</b><div class="spreis"><s>' + zahl(an.preis) + '</s>' + zahl(sh.angebot.preis) + ' Zeni</div></div></div>';
+      h += '<div class="angebot">' + av + '<div><div class="leise">🔥 ANGEBOT DER WOCHE · bis Sonntag</div><b>' + esc(an.name) + '</b><div class="spreis"><s>' + zahl(an.preis) + '</s>' + zahl(preisVon(an)) + ' Zeni</div></div></div>';
     }
     var ta = tagesAngebot(), tan = ta && kosArtikel(ta.id);
     if (tan && tan.kaufbar !== false) {
       var tv = tan.id.indexOf('banner_') === 0 ? '<div class="svor bnr" style="background-image:url(' + kosBild(tan.id) + ')"></div>' : tan.id.indexOf('rahmen_') === 0 ? '<div class="svor"><span class="rwrap">' + (me ? bild(me, true) : '<span class="av">?</span>') + '<img class="rahmen" alt="" loading="lazy" src="' + kosBild(tan.id) + '"></span></div>' : '<div class="svor"><span class="stitel">' + esc(tan.name) + '</span></div>';
-      h += '<div class="angebot tagesang">' + tv + '<div><div class="leise">☀️ TAGESANGEBOT · nur heute</div><b>' + esc(tan.name) + '</b><div class="spreis"><s>' + zahl(tan.preis) + '</s>' + zahl(ta.preis) + ' Zeni</div></div></div>';
+      h += '<div class="angebot tagesang">' + tv + '<div><div class="leise">☀️ TAGESANGEBOT · nur heute</div><b>' + esc(tan.name) + '</b><div class="spreis"><s>' + zahl(tan.preis) + '</s>' + zahl(preisVon(tan)) + ' Zeni</div></div></div>';
     }
     var zl = (sh.letzte || []).filter(function (x) { return kosArtikel(x.a); }).slice(0, 6);
     var zuletztH = '';   // steht jetzt unten, damit Auslage & Co. oben bleiben
@@ -1643,8 +1653,8 @@ try { (function () { var d = new Date(), m = d.getMonth() + 1, t = d.getDate(); 
         geschuetzt: '<button class="sbtn hat" disabled>🛡️ Geschützt<small>ablösbar ab ' + (a.thronSchutzBis ? new Date(a.thronSchutzBis).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ', ' + new Date(a.thronSchutzBis).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr' : 'bald') + '</small></button>'
       }[z];
       if (vorschau && me && besitzt(me, a.id)) knopf = '<button class="sbtn hat" disabled>✓ Im Besitz</button>';
-      var rab = !vorschau && preisVon(a) !== a.preis, heuteRab = rab && tagesAngebot() && tagesAngebot().id === a.id;
-      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.thron && !vorschau ? '<span class="sbadge sai">' + (a.thronInhaber ? '👑 König: ' + esc(prof(a.thronInhaber).n || a.thronInhaber) : '👑 Thron ist frei') + '</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge">' + (heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
+      var rab = !vorschau && preisVon(a) !== a.preis, bfRab = rab && saleVon(a.id) && preisVon(a) === saleVon(a.id).preis, heuteRab = rab && !bfRab && tagesAngebot() && tagesAngebot().id === a.id;
+      var badge = shopNeuJetzt.indexOf(a.id) >= 0 && !vorschau ? '<span class="sbadge neu">✨ Neu</span>' : a.thron && !vorschau ? '<span class="sbadge sai">' + (a.thronInhaber ? '👑 König: ' + esc(prof(a.thronInhaber).n || a.thronInhaber) : '👑 Thron ist frei') + '</span>' : a.einmalig && !vorschau ? '<span class="sbadge sai">👑 Gibt es nur 1×</span>' : rab ? '<span class="sbadge' + (bfRab ? ' bf' : '') + '">' + (bfRab ? '🖤 −30 %' : heuteRab ? '☀️ −25 % heute' : '🔥 −20 %') + '</span>' : (a.auslage && !vorschau ? '<span class="sbadge rot">🔄 bis ' + tagMonat(a.auslage) + '</span>' : (a.saisonBis && !vorschau ? '<span class="sbadge sai">⏳ bis ' + tagMonat(a.saisonBis) + '</span>' : ''));
       return '<div class="sitem st-' + esc(a.stufe) + (vorschau ? ' bald' : '') + '">' + badge + vor + '<div class="sname">' + esc(typ === 'titel' ? '„' + a.name + '“' : a.name) + '</div><div class="sstufe">' + stf[0] + ' ' + stf[1] + (a.faerbbar ? ' · 🎨 umfärbbar' : '') + (a.leucht ? ' · 🌈 in deiner Namensfarbe' : '') + '</div><div class="spreis">' + (rab ? '<s>' + zahl(a.preis) + '</s>' : '') + zahl(vorschau ? a.preis : preisVon(a)) + ' Zeni</div>' + knopf + '<div class="sunten"><button class="sprobe" data-probe="' + esc(a.id) + '">👀 Anprobieren</button>' + (me && !vorschau && verschenkbar(a) ? '<button class="sgeschenk" data-schenk="' + esc(a.id) + '" title="An einen Freund verschenken" aria-label="Verschenken">🎁</button>' : '') + '<button class="swunsch' + (wuensche().indexOf(a.id) >= 0 ? ' an' : '') + '" data-wunsch="' + esc(a.id) + '" title="Auf die Wunschliste – deine Freunde sehen sie" aria-label="Wunschliste">' + (wuensche().indexOf(a.id) >= 0 ? '♥' : '♡') + '</button></div></div>';
     }
     function bereich(titel, unter, liste, vorschau) {
